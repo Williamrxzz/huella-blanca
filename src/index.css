@@ -129,6 +129,25 @@ textarea.entrada { resize: vertical; font-family: inherit; }
   font-size: 15px;
 }
 
+.lista-mascotas {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+}
+
+.lista-mascotas li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e8e6e2;
+}
+
+.lista-mascotas .nombre {
+  font-weight: 600;
+  font-size: 17px;
+}
+
 .confirmacion {
   background: #eaf4ec;
   border: 1px solid #b7dcbe;
