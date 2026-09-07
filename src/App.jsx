@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import FichaPublica from './pages/FichaPublica'
+import GeneradorQR from './pages/GeneradorQR'
 
 function Inicio() {
   return (
@@ -11,6 +12,7 @@ function Inicio() {
         de la tabla <code>placas</code>.
       </p>
       <Link className="boton" to="/m/PRUEBA">Ver ejemplo</Link>
+      <Link className="boton secundario" to="/placas">Generar QR de una placa</Link>
     </main>
   )
 }
@@ -20,6 +22,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Inicio />} />
+        <Route path="/placas" element={<GeneradorQR />} />
         <Route path="/m/:codigo" element={<FichaPublica />} />
       </Routes>
     </BrowserRouter>

@@ -76,6 +76,34 @@ h1 { font-size: 28px; margin: 16px 0 8px; }
 
 .boton:disabled { background: #b9c3ce; cursor: default; }
 
+.boton.secundario {
+  background: transparent;
+  color: #2e5c8a;
+  border: 1px solid #2e5c8a;
+  margin-top: 12px;
+}
+
+.entrada {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d8d6d1;
+  border-radius: 10px;
+  font-size: 16px;
+  margin: 16px 0;
+  font-family: inherit;
+}
+
+.qr {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e8e6e2;
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
 .ayuda { color: #6f6e6a; font-size: 14px; }
 
 code {
