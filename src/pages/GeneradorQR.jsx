@@ -1,8 +1,11 @@
 import { useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { QRCodeCanvas } from 'qrcode.react'
 
 export default function GeneradorQR() {
-  const [codigo, setCodigo] = useState('')
+  const [searchParams] = useSearchParams()
+  const [codigo, setCodigo] = useState(searchParams.get('codigo') || '')
+  const esMascotaNueva = searchParams.get('nueva') === '1'
   const contenedorRef = useRef(null)
 
   const codigoNormalizado = codigo.trim().toUpperCase()
@@ -19,10 +22,11 @@ export default function GeneradorQR() {
 
   return (
     <main className="pagina">
-      <h1>Generador de QR</h1>
+      <h1>{esMascotaNueva ? '¡Mascota cargada!' : 'Generador de QR'}</h1>
       <p className="ayuda">
-        Escribí el código de una placa para generar el QR que se imprime en la
-        chapita del collar.
+        {esMascotaNueva
+          ? 'Descargá este QR e imprimilo (podés pegarlo en el collar mientras conseguís una chapita resistente).'
+          : 'Escribí el código de una placa para generar el QR que se imprime en la chapita del collar.'}
       </p>
 
       <input
@@ -31,7 +35,7 @@ export default function GeneradorQR() {
         placeholder="Código de placa"
         value={codigo}
         onChange={(e) => setCodigo(e.target.value)}
-        autoFocus
+        autoFocus={!esMascotaNueva}
       />
 
       {url && (
@@ -42,6 +46,10 @@ export default function GeneradorQR() {
           <p className="ayuda">{url}</p>
           <button className="boton" onClick={descargar}>Descargar QR</button>
         </>
+      )}
+
+      {esMascotaNueva && (
+        <Link className="boton secundario" to="/panel">Volver a mis mascotas</Link>
       )}
     </main>
   )
