@@ -72,8 +72,9 @@ Pendiente de incorporar:
 
 Infraestructura:
 - Supabase (PostgreSQL + Auth + Storage + Edge Functions)
-- Vercel para publicar (pendiente)
-- Git ya inicializado localmente; todavía sin repositorio remoto
+- Vercel: publicado en https://huella-blanca.vercel.app, conectado al
+  repositorio de GitHub (deploy automático en cada push a `master`)
+- GitHub: `Williamrxzz/huella-blanca` (privado)
 
 Sin librerías de UI por ahora: los estilos son CSS propio en
 `src/index.css`. No agregar Tailwind ni shadcn/ui sin consultar.
@@ -255,25 +256,33 @@ Usuario", con siete listas, una por bloque.
 - Datos de prueba cargados y verificados.
 - `src/lib/supabase.js` — cliente configurado.
 - `src/App.jsx` — rutas `/`, `/placas`, `/m/:codigo`.
-- `src/pages/FichaPublica.jsx` — muestra la ficha al escanear.
-  Funcionando y verificado contra la base.
-- `src/pages/GeneradorQR.jsx` — genera y descarga el QR de una placa.
+- `src/pages/FichaPublica.jsx` — muestra la ficha al escanear y, si
+  corresponde, muestra el botón "La vi acá" (TRA11): pide ubicación con
+  `navigator.geolocation` (con límite propio de 8 s, porque algunos
+  navegadores no respetan el timeout de la API si el permiso de
+  Localización del sistema operativo está desactivado) y si falla ofrece
+  escribir una referencia manual del lugar. Llama a
+  `registrar_avistamiento`. Probado con y sin permiso concedido.
+- `src/pages/GeneradorQR.jsx` — genera y descarga el QR de una placa,
+  apuntando siempre al dominio desde el que se sirve la app
+  (`window.location.origin`).
 - `src/index.css` — estilos propios.
-- Primer commit hecho, sin repositorio remoto todavía.
+- Columnas `lat`/`lng` de `avistamientos` pasadas a nullable (se
+  necesita para el aviso sin ubicación de TRA11).
+- Repositorio remoto en GitHub (`Williamrxzz/huella-blanca`, privado).
+- **Publicado en Vercel**: https://huella-blanca.vercel.app, conectado
+  al repo de GitHub (cada push a `master` hace deploy automático a
+  producción). Variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`
+  cargadas en Vercel. Incluye `vercel.json` con reescritura SPA para que
+  `/m/:codigo` y `/placas` no den 404.
 
 ### Pendiente, en este orden
 
-1. **Botón "La vi acá"** en la ficha pública: pedir la ubicación con
-   `navigator.geolocation`, llamar a `registrar_avistamiento` y, si el
-   permiso es denegado o falla, ofrecer marcar el lugar a mano (TRA11).
-2. **Publicar en Vercel.** Es necesario antes de poder probar de verdad:
-   la geolocalización requiere HTTPS, y el QR tiene que apuntar a un
-   dominio real y no a localhost.
-3. **Login del dueño** y alta de mascota con carga de foto a Storage.
-4. **Mapa de avistamientos** con Leaflet.
-5. **Configurar la PWA** con vite-plugin-pwa para que sea instalable.
-6. **Panel de administración**: placas, comercios, agradecimientos.
-7. **Funciones de IA**: sugerir la ficha desde la foto (IA01), verificar
+1. **Login del dueño** y alta de mascota con carga de foto a Storage.
+2. **Mapa de avistamientos** con Leaflet.
+3. **Configurar la PWA** con vite-plugin-pwa para que sea instalable.
+4. **Panel de administración**: placas, comercios, agradecimientos.
+5. **Funciones de IA**: sugerir la ficha desde la foto (IA01), verificar
    la imagen (IA02) y redactar el texto de búsqueda (IA03), siempre
    desde una Edge Function para no exponer la clave de la API.
 
