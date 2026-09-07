@@ -208,6 +208,17 @@ textarea.entrada { resize: vertical; font-family: inherit; }
   text-align: center;
 }
 
+.enlace-eliminar {
+  border: 0;
+  background: none;
+  color: #8c2f2f;
+  font-size: 13px;
+  padding: 4px 0;
+  margin-top: 4px;
+  text-align: left;
+  cursor: pointer;
+}
+
 .lista-mascotas .nombre {
   font-weight: 600;
   font-size: 17px;

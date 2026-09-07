@@ -8,9 +8,10 @@ const ERRORES_VINCULAR = {
   mascota_no_encontrada: 'No pudimos identificar la mascota',
 }
 
-function FilaMascota({ mascota, onVinculada }) {
+function FilaMascota({ mascota, onVinculada, onEliminada }) {
   const [codigo, setCodigo] = useState('')
   const [vinculando, setVinculando] = useState(false)
+  const [eliminando, setEliminando] = useState(false)
   const [error, setError] = useState(null)
 
   const placaActiva = mascota.placas?.find((p) => p.estado === 'activa')
@@ -34,6 +35,20 @@ function FilaMascota({ mascota, onVinculada }) {
 
     setCodigo('')
     onVinculada()
+  }
+
+  async function eliminar() {
+    if (!confirm(`¿Eliminar a ${mascota.nombre}? Ya no va a aparecer en tu panel.`)) return
+
+    setEliminando(true)
+    const { error: errorUpdate } = await supabase
+      .from('mascotas')
+      .update({ activa: false })
+      .eq('id', mascota.id)
+
+    setEliminando(false)
+    if (errorUpdate) setError('No pudimos eliminarla: ' + errorUpdate.message)
+    else onEliminada()
   }
 
   return (
@@ -60,9 +75,14 @@ function FilaMascota({ mascota, onVinculada }) {
             <button className="boton secundario" type="submit" disabled={vinculando}>
               {vinculando ? 'Vinculando…' : 'Vincular placa'}
             </button>
-            {error && <p className="ayuda error">{error}</p>}
           </form>
         )}
+
+        <button className="enlace-eliminar" type="button" onClick={eliminar} disabled={eliminando}>
+          {eliminando ? 'Eliminando…' : 'Eliminar mascota'}
+        </button>
+
+        {error && <p className="ayuda error">{error}</p>}
       </div>
     </li>
   )
@@ -83,6 +103,7 @@ export default function Panel() {
     const { data } = await supabase
       .from('mascotas')
       .select('*, placas(codigo, estado)')
+      .eq('activa', true)
       .order('creado_en', { ascending: false })
 
     setMascotas(data || [])
@@ -109,7 +130,7 @@ export default function Panel() {
       ) : (
         <ul className="lista-mascotas">
           {mascotas.map((m) => (
-            <FilaMascota key={m.id} mascota={m} onVinculada={cargar} />
+            <FilaMascota key={m.id} mascota={m} onVinculada={cargar} onEliminada={cargar} />
           ))}
         </ul>
       )}
