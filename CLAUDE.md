@@ -63,9 +63,11 @@ Ya instalado y funcionando:
 - react-router-dom
 - @supabase/supabase-js
 - qrcode.react
+- Leaflet + react-leaflet + OpenStreetMap (mapas; **no** Google Maps,
+  que exige tarjeta). Sin `StrictMode` en `main.jsx`: el doble montaje
+  de React en desarrollo choca con la inicialización de Leaflet.
 
 Pendiente de incorporar:
-- Leaflet + OpenStreetMap (mapas; **no** Google Maps, que exige tarjeta)
 - vite-plugin-pwa (para que sea instalable)
 - Recharts (gráficos del panel de analítica)
 - API de Claude, modelo Haiku, llamada desde una Edge Function
@@ -106,10 +108,15 @@ huella-blanca/
     ├── App.jsx           (rutas)
     ├── index.css         (todos los estilos)
     ├── lib/
-    │   └── supabase.js   (cliente de Supabase)
+    │   ├── supabase.js   (cliente de Supabase)
+    │   ├── ubicacion.js  (geolocalización compartida, con timeout propio)
+    │   └── leaflet-iconos.js (fix de íconos default de Leaflet con Vite)
     └── pages/
         ├── FichaPublica.jsx
-        └── GeneradorQR.jsx
+        ├── GeneradorQR.jsx
+        ├── Login.jsx
+        ├── Panel.jsx
+        └── AltaMascota.jsx
 ```
 
 ---
@@ -127,13 +134,21 @@ auth.users), nombre, telefono, rol ('usuario' | 'comercio' | 'admin'),
 creado_en.
 
 `mascotas` — id, dueno_id (FK a perfiles), nombre, especie ('perro' |
-'gato' | 'otro'), raza, tamano, color, senas, caracter ('amigable' |
+'gato' | 'otro'), sexo ('macho' | 'hembra', nullable — las mascotas
+cargadas antes de este campo no lo tienen), raza, tamano ('pequeno' |
+'mediano' | 'grande'), color, senas, caracter ('amigable' |
 'temerosa' | 'no_acercarse'), foto_url, domicilio_lat, domicilio_lng,
 radio_metros (por defecto 1000), pausado_hasta (modo paseo),
 mostrar_salud, salud, activa, creado_en.
 
 `placas` — id, codigo (único, aleatorio), mascota_id (FK, puede ser
-nulo), estado ('sin_asignar' | 'activa' | 'baja'), creado_en.
+nulo), estado ('sin_asignar' | 'activa' | 'baja'), creado_en. Al cargar
+una mascota se genera y vincula el código al instante (`generar_placa`,
+sin costo ni espera — la fricción en el registro es el mayor riesgo del
+producto). Si el dueño consigue después una chapita física resistente
+con un código propio (por ejemplo de una veterinaria adherida), se
+vincula a mano desde el panel (`vincular_placa`) — pero nunca es un
+requisito para empezar a usar la app.
 
 `casos_perdida` — id, mascota_id, estado ('posible_perdida' | 'perdida'
 | 'cerrada' | 'descartada'), origen ('manual' | 'automatico'), mensaje,
@@ -180,6 +195,14 @@ acceda únicamente a sus mascotas, casos, escaneos y avistamientos.
 - `registrar_avistamiento(p_codigo, p_lat, p_lng, p_origen, p_situacion,
   p_mensaje, p_contacto)` → registra el aviso; funciona con o sin cuenta.
 - `distancia_metros(lat1, lng1, lat2, lng2)` → fórmula de Haversine.
+- `generar_placa(p_mascota_id uuid)` → genera un código aleatorio de 8
+  caracteres, crea la placa en estado `activa` vinculada a esa mascota y
+  devuelve el código. Valida que la mascota sea del dueño autenticado.
+  Solo ejecutable por `authenticated` (no por `anon`).
+- `vincular_placa(p_codigo text, p_mascota_id uuid)` → vincula una placa
+  ya existente en estado `sin_asignar` a una mascota propia. Devuelve
+  `{"ok": true}` o `{"ok": false, "error": "..."}` (`placa_no_encontrada`,
+  `placa_ya_asignada`, `mascota_no_encontrada`). Solo `authenticated`.
 
 Desde el frontend se llaman con `supabase.rpc('nombre', { parametros })`.
 
@@ -255,7 +278,8 @@ Usuario", con siete listas, una por bloque.
 - Esquema, políticas de seguridad y funciones ejecutados en Supabase.
 - Datos de prueba cargados y verificados.
 - `src/lib/supabase.js` — cliente configurado.
-- `src/App.jsx` — rutas `/`, `/placas`, `/m/:codigo`.
+- `src/App.jsx` — rutas `/`, `/placas`, `/login`, `/panel`,
+  `/mascotas/nueva`, `/m/:codigo`.
 - `src/pages/FichaPublica.jsx` — muestra la ficha al escanear y, si
   corresponde, muestra el botón "La vi acá" (TRA11): pide ubicación con
   `navigator.geolocation` (con límite propio de 8 s, porque algunos
@@ -266,9 +290,22 @@ Usuario", con siete listas, una por bloque.
 - `src/pages/GeneradorQR.jsx` — genera y descarga el QR de una placa,
   apuntando siempre al dominio desde el que se sirve la app
   (`window.location.origin`).
+- `src/pages/Login.jsx` — login del dueño con email y contraseña
+  (Supabase Auth).
+- `src/pages/Panel.jsx` — lista las mascotas del dueño logueado (foto,
+  nombre, especie/raza y el código de placa si ya tiene una activa). Si
+  una mascota no tiene placa, muestra un formulario para vincular una
+  existente (`vincular_placa`).
+- `src/pages/AltaMascota.jsx` — alta de mascota: nombre, especie, sexo
+  (obligatorio), raza, tamaño, color, señas, carácter, foto (a Storage,
+  bucket `fotos-mascotas`), domicilio elegido tocando un mapa de
+  Leaflet (con círculo mostrando el `radio_metros`) o con el botón de
+  ubicación actual. Al guardar, genera y vincula la placa al instante
+  (`generar_placa`) y lleva directo a descargar el QR.
 - `src/index.css` — estilos propios.
 - Columnas `lat`/`lng` de `avistamientos` pasadas a nullable (se
-  necesita para el aviso sin ubicación de TRA11).
+  necesita para el aviso sin ubicación de TRA11). Columna `sexo`
+  agregada a `mascotas` (nullable, check `macho`/`hembra`).
 - Repositorio remoto en GitHub (`Williamrxzz/huella-blanca`, privado).
 - **Publicado en Vercel**: https://huella-blanca.vercel.app, conectado
   al repo de GitHub (cada push a `master` hace deploy automático a
@@ -278,11 +315,11 @@ Usuario", con siete listas, una por bloque.
 
 ### Pendiente, en este orden
 
-1. **Login del dueño** y alta de mascota con carga de foto a Storage.
-2. **Mapa de avistamientos** con Leaflet.
-3. **Configurar la PWA** con vite-plugin-pwa para que sea instalable.
-4. **Panel de administración**: placas, comercios, agradecimientos.
-5. **Funciones de IA**: sugerir la ficha desde la foto (IA01), verificar
+1. **Mapa de avistamientos** con Leaflet (ya instalado): mostrar en el
+   panel del dueño dónde reportaron a su mascota.
+2. **Configurar la PWA** con vite-plugin-pwa para que sea instalable.
+3. **Panel de administración**: placas, comercios, agradecimientos.
+4. **Funciones de IA**: sugerir la ficha desde la foto (IA01), verificar
    la imagen (IA02) y redactar el texto de búsqueda (IA03), siempre
    desde una Edge Function para no exponer la clave de la API.
 
