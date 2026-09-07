@@ -3,6 +3,7 @@ import FichaPublica from './pages/FichaPublica'
 import GeneradorQR from './pages/GeneradorQR'
 import Login from './pages/Login'
 import Panel from './pages/Panel'
+import AltaMascota from './pages/AltaMascota'
 
 function Inicio() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/placas" element={<GeneradorQR />} />
         <Route path="/login" element={<Login />} />
         <Route path="/panel" element={<Panel />} />
+        <Route path="/mascotas/nueva" element={<AltaMascota />} />
         <Route path="/m/:codigo" element={<FichaPublica />} />
       </Routes>
     </BrowserRouter>
