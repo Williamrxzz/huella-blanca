@@ -8,11 +8,50 @@ const ETIQUETA_CARACTER = {
   no_acercarse: 'Mejor no acercarse, avisá al dueño',
 }
 
+function pedirUbicacion() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve(null)
+      return
+    }
+
+    let resuelto = false
+    const finalizar = (valor) => {
+      if (resuelto) return
+      resuelto = true
+      resolve(valor)
+    }
+
+    // Algunos navegadores (Chrome/Safari en macOS sin permiso de
+    // Localización del sistema) nunca llaman ni al éxito ni al error,
+    // ignorando el timeout de la propia API. Por eso forzamos un límite
+    // propio: el aviso no puede depender de que el navegador responda.
+    setTimeout(() => finalizar(null), 8000)
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => finalizar({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => finalizar(null),
+      { enableHighAccuracy: true, timeout: 8000 }
+    )
+  })
+}
+
 export default function FichaPublica() {
   const { codigo } = useParams()
   const [ficha, setFicha] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
+
+  const [mostrarFormulario, setMostrarFormulario] = useState(false)
+  const [buscandoUbicacion, setBuscandoUbicacion] = useState(false)
+  const [ubicacion, setUbicacion] = useState(null)
+  const [situacion, setSituacion] = useState('la_vi_pasar')
+  const [referencia, setReferencia] = useState('')
+  const [mensaje, setMensaje] = useState('')
+  const [contacto, setContacto] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const [errorEnvio, setErrorEnvio] = useState(null)
+  const [avisoEnviado, setAvisoEnviado] = useState(false)
 
   useEffect(() => {
     async function cargar() {
@@ -24,6 +63,39 @@ export default function FichaPublica() {
     }
     cargar()
   }, [codigo])
+
+  async function abrirFormulario() {
+    setMostrarFormulario(true)
+    setBuscandoUbicacion(true)
+    const resultado = await pedirUbicacion()
+    setUbicacion(resultado)
+    setBuscandoUbicacion(false)
+  }
+
+  async function enviarAviso(e) {
+    e.preventDefault()
+    setEnviando(true)
+    setErrorEnvio(null)
+
+    const origen = ubicacion ? 'gps' : 'manual'
+    const mensajeFinal = origen === 'manual' && referencia.trim()
+      ? `Lugar: ${referencia.trim()}${mensaje.trim() ? ' — ' + mensaje.trim() : ''}`
+      : mensaje.trim() || null
+
+    const { error } = await supabase.rpc('registrar_avistamiento', {
+      p_codigo: codigo,
+      p_lat: ubicacion?.lat ?? null,
+      p_lng: ubicacion?.lng ?? null,
+      p_origen: origen,
+      p_situacion: situacion,
+      p_mensaje: mensajeFinal,
+      p_contacto: contacto.trim() || null,
+    })
+
+    setEnviando(false)
+    if (error) setErrorEnvio(error.message)
+    else setAvisoEnviado(true)
+  }
 
   if (cargando) return <main className="pagina"><p>Buscando la mascota…</p></main>
 
@@ -73,7 +145,83 @@ export default function FichaPublica() {
         <p className="caracter">{ETIQUETA_CARACTER[ficha.caracter]}</p>
       )}
 
-      <button className="boton" disabled>La vi acá (próximo paso)</button>
+      {avisoEnviado ? (
+        <div className="confirmacion">
+          ¡Gracias! Avisamos al dueño de {ficha.nombre}.
+        </div>
+      ) : !mostrarFormulario ? (
+        <button className="boton" onClick={abrirFormulario}>La vi acá</button>
+      ) : (
+        <form className="formulario-aviso" onSubmit={enviarAviso}>
+          {buscandoUbicacion && (
+            <p className="ayuda">Obteniendo tu ubicación…</p>
+          )}
+
+          {!buscandoUbicacion && ubicacion && (
+            <p className="ayuda">Ubicación obtenida ✓</p>
+          )}
+
+          {!buscandoUbicacion && !ubicacion && (
+            <>
+              <p className="ayuda">
+                No pudimos obtener tu ubicación automáticamente. Contanos dónde fue.
+              </p>
+              <input
+                className="entrada"
+                type="text"
+                placeholder="Ej: esquina de San Martín y Belgrano"
+                value={referencia}
+                onChange={(e) => setReferencia(e.target.value)}
+              />
+            </>
+          )}
+
+          <div className="opciones-situacion">
+            <label>
+              <input
+                type="radio"
+                name="situacion"
+                value="la_vi_pasar"
+                checked={situacion === 'la_vi_pasar'}
+                onChange={() => setSituacion('la_vi_pasar')}
+              />
+              La vi pasar
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="situacion"
+                value="conmigo"
+                checked={situacion === 'conmigo'}
+                onChange={() => setSituacion('conmigo')}
+              />
+              Está conmigo
+            </label>
+          </div>
+
+          <textarea
+            className="entrada"
+            placeholder="Contanos más (opcional)"
+            value={mensaje}
+            onChange={(e) => setMensaje(e.target.value)}
+            rows={3}
+          />
+
+          <input
+            className="entrada"
+            type="text"
+            placeholder="Tu teléfono o Instagram, para que te contacten (opcional)"
+            value={contacto}
+            onChange={(e) => setContacto(e.target.value)}
+          />
+
+          {errorEnvio && <p className="ayuda error">{errorEnvio}</p>}
+
+          <button className="boton" type="submit" disabled={enviando || buscandoUbicacion}>
+            {enviando ? 'Enviando…' : 'Enviar aviso'}
+          </button>
+        </form>
+      )}
     </main>
   )
 }
