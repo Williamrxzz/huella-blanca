@@ -208,10 +208,65 @@ textarea.entrada { resize: vertical; font-family: inherit; }
   text-align: center;
 }
 
-.enlace {
-  color: #2e5c8a;
-  font-size: 14px;
-  margin-top: 4px;
+.acciones-mascota {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.boton-accion {
+  border: 1px solid #d8d6d1;
+  background: #fff;
+  color: #1f1f1f;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.boton-accion.peligro {
+  color: #8c2f2f;
+  border-color: #e6b4b4;
+}
+
+.superposicion {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 10;
+}
+
+.tarjeta-confirmacion {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 360px;
+  width: 100%;
+}
+
+.tarjeta-confirmacion h2 {
+  font-size: 19px;
+  margin: 0 0 8px;
+}
+
+.acciones-tarjeta {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.acciones-tarjeta .boton {
+  margin: 0;
+}
+
+.boton.peligro {
+  background: #8c2f2f;
 }
 
 .lista-avistamientos {
@@ -226,17 +281,6 @@ textarea.entrada { resize: vertical; font-family: inherit; }
   gap: 2px;
   padding: 10px 0;
   border-bottom: 1px solid #e8e6e2;
-}
-
-.enlace-eliminar {
-  border: 0;
-  background: none;
-  color: #8c2f2f;
-  font-size: 13px;
-  padding: 4px 0;
-  margin-top: 4px;
-  text-align: left;
-  cursor: pointer;
 }
 
 .lista-mascotas .nombre {

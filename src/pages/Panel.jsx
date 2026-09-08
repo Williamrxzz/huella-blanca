@@ -8,10 +8,30 @@ const ERRORES_VINCULAR = {
   mascota_no_encontrada: 'No pudimos identificar la mascota',
 }
 
+function CartelConfirmacion({ titulo, texto, onCancelar, onConfirmar, confirmando }) {
+  return (
+    <div className="superposicion">
+      <div className="tarjeta-confirmacion">
+        <h2>{titulo}</h2>
+        <p className="ayuda">{texto}</p>
+        <div className="acciones-tarjeta">
+          <button className="boton secundario" type="button" onClick={onCancelar}>
+            Cancelar
+          </button>
+          <button className="boton peligro" type="button" onClick={onConfirmar} disabled={confirmando}>
+            {confirmando ? 'Eliminando…' : 'Eliminar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function FilaMascota({ mascota, onVinculada, onEliminada }) {
   const [codigo, setCodigo] = useState('')
   const [vinculando, setVinculando] = useState(false)
   const [eliminando, setEliminando] = useState(false)
+  const [confirmando, setConfirmando] = useState(false)
   const [error, setError] = useState(null)
 
   const placaActiva = mascota.placas?.find((p) => p.estado === 'activa')
@@ -38,8 +58,6 @@ function FilaMascota({ mascota, onVinculada, onEliminada }) {
   }
 
   async function eliminar() {
-    if (!confirm(`¿Eliminar a ${mascota.nombre}? Ya no va a aparecer en tu panel.`)) return
-
     setEliminando(true)
     const { error: errorUpdate } = await supabase
       .from('mascotas')
@@ -47,6 +65,7 @@ function FilaMascota({ mascota, onVinculada, onEliminada }) {
       .eq('id', mascota.id)
 
     setEliminando(false)
+    setConfirmando(false)
     if (errorUpdate) setError('No pudimos eliminarla: ' + errorUpdate.message)
     else onEliminada()
   }
@@ -78,15 +97,26 @@ function FilaMascota({ mascota, onVinculada, onEliminada }) {
           </form>
         )}
 
-        <Link className="enlace" to={`/mascotas/${mascota.id}/editar`}>Editar</Link>
-        <Link className="enlace" to={`/mascotas/${mascota.id}/mapa`}>Ver mapa de avistamientos</Link>
-
-        <button className="enlace-eliminar" type="button" onClick={eliminar} disabled={eliminando}>
-          {eliminando ? 'Eliminando…' : 'Eliminar mascota'}
-        </button>
+        <div className="acciones-mascota">
+          <Link className="boton-accion" to={`/mascotas/${mascota.id}/editar`}>Editar</Link>
+          <Link className="boton-accion" to={`/mascotas/${mascota.id}/mapa`}>Mapa</Link>
+          <button className="boton-accion peligro" type="button" onClick={() => setConfirmando(true)}>
+            Eliminar
+          </button>
+        </div>
 
         {error && <p className="ayuda error">{error}</p>}
       </div>
+
+      {confirmando && (
+        <CartelConfirmacion
+          titulo={`¿Eliminar a ${mascota.nombre}?`}
+          texto="Ya no va a aparecer en tu panel. Los avistamientos y casos ya registrados no se borran."
+          onCancelar={() => setConfirmando(false)}
+          onConfirmar={eliminar}
+          confirmando={eliminando}
+        />
+      )}
     </li>
   )
 }
