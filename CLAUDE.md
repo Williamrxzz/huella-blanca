@@ -295,13 +295,22 @@ Usuario", con siete listas, una por bloque.
 - `src/pages/Panel.jsx` — lista las mascotas del dueño logueado (foto,
   nombre, especie/raza y el código de placa si ya tiene una activa). Si
   una mascota no tiene placa, muestra un formulario para vincular una
-  existente (`vincular_placa`).
-- `src/pages/AltaMascota.jsx` — alta de mascota: nombre, especie, sexo
-  (obligatorio), raza, tamaño, color, señas, carácter, foto (a Storage,
-  bucket `fotos-mascotas`), domicilio elegido tocando un mapa de
-  Leaflet (con círculo mostrando el `radio_metros`) o con el botón de
-  ubicación actual. Al guardar, genera y vincula la placa al instante
-  (`generar_placa`) y lleva directo a descargar el QR.
+  existente (`vincular_placa`). Cada mascota tiene enlaces para editar,
+  ver el mapa de avistamientos, y eliminar (borrado lógico).
+- `src/pages/AltaMascota.jsx` — alta **y edición** de mascota (mismo
+  formulario; `/mascotas/nueva` crea, `/mascotas/:id/editar` corrige):
+  nombre, especie, sexo (obligatorio), raza, tamaño, color, señas,
+  carácter, foto (a Storage, bucket `fotos-mascotas`), domicilio
+  elegido tocando un mapa de Leaflet (con círculo mostrando el
+  `radio_metros`, por defecto 100 m — una cuadra, para que la detección
+  automática se dispare cerca y la zona de búsqueda sea manejable) o
+  con el botón de ubicación actual. Al crear, genera y vincula la placa
+  al instante (`generar_placa`) y lleva directo a descargar el QR; al
+  editar, solo actualiza los datos (no toca la placa).
+- `src/pages/MapaAvistamientos.jsx` (`/mascotas/:id/mapa`) — mapa de
+  Leaflet con el domicilio, el círculo de radio (con leyenda explicando
+  qué es, para no confundir) y un marcador por cada avistamiento con
+  ubicación; los avisos sin ubicación exacta se listan aparte.
 - `src/index.css` — estilos propios.
 - Columnas `lat`/`lng` de `avistamientos` pasadas a nullable (se
   necesita para el aviso sin ubicación de TRA11). Columna `sexo`
@@ -315,11 +324,9 @@ Usuario", con siete listas, una por bloque.
 
 ### Pendiente, en este orden
 
-1. **Mapa de avistamientos** con Leaflet (ya instalado): mostrar en el
-   panel del dueño dónde reportaron a su mascota.
-2. **Configurar la PWA** con vite-plugin-pwa para que sea instalable.
-3. **Panel de administración**: placas, comercios, agradecimientos.
-4. **Funciones de IA**: sugerir la ficha desde la foto (IA01), verificar
+1. **Configurar la PWA** con vite-plugin-pwa para que sea instalable.
+2. **Panel de administración**: placas, comercios, agradecimientos.
+3. **Funciones de IA**: sugerir la ficha desde la foto (IA01), verificar
    la imagen (IA02) y redactar el texto de búsqueda (IA03), siempre
    desde una Edge Function para no exponer la clave de la API.
 
