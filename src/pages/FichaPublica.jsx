@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { pedirUbicacion } from '../lib/ubicacion'
+import { pedirUbicacion, pedirUbicacionSiYaHayPermiso } from '../lib/ubicacion'
 
 const ETIQUETA_CARACTER = {
   amigable: 'Es amigable',
@@ -35,6 +35,17 @@ export default function FichaPublica() {
       setCargando(false)
     }
     cargar()
+
+    async function registrarEscaneo() {
+      const ubicacion = await pedirUbicacionSiYaHayPermiso()
+      if (!ubicacion) return
+      await supabase.rpc('registrar_escaneo', {
+        p_codigo: codigo,
+        p_lat: ubicacion.lat,
+        p_lng: ubicacion.lng,
+      })
+    }
+    registrarEscaneo()
   }, [codigo])
 
   async function abrirFormulario() {

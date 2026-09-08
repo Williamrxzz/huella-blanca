@@ -25,3 +25,19 @@ export function pedirUbicacion() {
     )
   })
 }
+
+// Para TRA04: nunca le pedimos permiso de ubicación a quien solo está
+// mirando la ficha. Si el navegador ya lo tenía concedido de antes (por
+// ejemplo, por haber usado "La vi acá"), la conseguimos en silencio; si
+// no, no interrumpimos con un cartel de permiso.
+export async function pedirUbicacionSiYaHayPermiso() {
+  if (!navigator.permissions?.query) return null
+
+  try {
+    const estado = await navigator.permissions.query({ name: 'geolocation' })
+    if (estado.state !== 'granted') return null
+    return await pedirUbicacion()
+  } catch {
+    return null
+  }
+}
