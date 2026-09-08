@@ -8,16 +8,33 @@ import MapaAvistamientos from './pages/MapaAvistamientos'
 
 function Inicio() {
   return (
-    <main className="pagina">
+    <main className="pagina inicio">
+      <img className="logo" src="/pwa-512.png" alt="Huella Blanca" />
       <h1>Huella Blanca</h1>
-      <p>Red de identificación y recuperación de mascotas.</p>
-      <p className="ayuda">
-        Para probar la ficha pública, abrí <code>/m/CODIGO</code> con un código
-        de la tabla <code>placas</code>.
+      <p className="subtitulo">
+        Identificación y recuperación de mascotas perdidas mediante un
+        código QR en el collar.
       </p>
-      <Link className="boton" to="/m/PRUEBA">Ver ejemplo</Link>
-      <Link className="boton secundario" to="/placas">Generar QR de una placa</Link>
-      <Link className="boton secundario" to="/login">Ingresar como dueño</Link>
+
+      <ol className="pasos">
+        <li>
+          <span className="numero">1</span>
+          Tu mascota lleva una chapita con un código QR único.
+        </li>
+        <li>
+          <span className="numero">2</span>
+          Quien la encuentra lo escanea con la cámara y ve su ficha —
+          sin instalar nada ni registrarse.
+        </li>
+        <li>
+          <span className="numero">3</span>
+          Vos recibís el aviso al instante y coordinás el reencuentro.
+        </li>
+      </ol>
+
+      <Link className="boton" to="/login">Ingresar como dueño</Link>
+      <Link className="boton secundario" to="/m/C30A45A9">Ver un ejemplo de ficha</Link>
+      <Link className="enlace-discreto" to="/placas">Generar QR de una placa</Link>
     </main>
   )
 }
