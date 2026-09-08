@@ -285,12 +285,15 @@ Usuario", con siete listas, una por bloque.
 - `src/lib/supabase.js` — cliente configurado.
 - `src/App.jsx` — rutas `/`, `/placas`, `/login`, `/panel`,
   `/mascotas/nueva`, `/m/:codigo`.
-- `src/pages/FichaPublica.jsx` — muestra la ficha al escanear y, si
-  corresponde, muestra el botón "La vi acá" (TRA11): pide ubicación con
-  `navigator.geolocation` (con límite propio de 8 s, porque algunos
-  navegadores no respetan el timeout de la API si el permiso de
-  Localización del sistema operativo está desactivado) y si falla ofrece
-  escribir una referencia manual del lugar. Llama a
+- `src/pages/FichaPublica.jsx` — muestra la ficha al escanear. Al
+  cargar, llama a `registrar_escaneo` (TRA04) pero solo si el navegador
+  **ya tenía** el permiso de ubicación concedido de antes — nunca se le
+  pide permiso a quien solo está mirando la ficha, eso sería fricción
+  innecesaria. Además muestra el botón "La vi acá" (TRA11): ahí sí pide
+  ubicación con `navigator.geolocation` (con límite propio de 8 s,
+  porque algunos navegadores no respetan el timeout de la API si el
+  permiso de Localización del sistema operativo está desactivado) y si
+  falla ofrece escribir una referencia manual del lugar. Llama a
   `registrar_avistamiento`. Probado con y sin permiso concedido.
 - `src/pages/GeneradorQR.jsx` — genera y descarga el QR de una placa,
   apuntando siempre al dominio desde el que se sirve la app
