@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
 import { pedirUbicacion } from '../lib/ubicacion'
@@ -16,8 +16,11 @@ function SelectorMapa({ onSeleccionar }) {
 }
 
 export default function AltaMascota() {
+  const { id } = useParams()
+  const editando = Boolean(id)
   const navigate = useNavigate()
   const [sesion, setSesion] = useState(null)
+  const [cargandoMascota, setCargandoMascota] = useState(editando)
 
   const [nombre, setNombre] = useState('')
   const [especie, setEspecie] = useState('perro')
@@ -28,7 +31,8 @@ export default function AltaMascota() {
   const [senas, setSenas] = useState('')
   const [caracter, setCaracter] = useState('amigable')
   const [foto, setFoto] = useState(null)
-  const [radioMetros, setRadioMetros] = useState(1000)
+  const [fotoUrlActual, setFotoUrlActual] = useState(null)
+  const [radioMetros, setRadioMetros] = useState(100)
   const [mostrarSalud, setMostrarSalud] = useState(false)
   const [salud, setSalud] = useState('')
 
@@ -38,18 +42,51 @@ export default function AltaMascota() {
 
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState(null)
+  const [errorCarga, setErrorCarga] = useState(null)
 
   useEffect(() => {
-    async function verificarSesion() {
+    async function iniciar() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
         navigate('/login')
         return
       }
       setSesion(session)
+
+      if (!editando) return
+
+      const { data: mascota, error: errorMascota } = await supabase
+        .from('mascotas')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (errorMascota || !mascota) {
+        setErrorCarga('No pudimos encontrar esa mascota.')
+        setCargandoMascota(false)
+        return
+      }
+
+      setNombre(mascota.nombre)
+      setEspecie(mascota.especie)
+      setSexo(mascota.sexo || 'macho')
+      setRaza(mascota.raza || '')
+      setTamano(mascota.tamano || 'mediano')
+      setColor(mascota.color || '')
+      setSenas(mascota.senas || '')
+      setCaracter(mascota.caracter)
+      setFotoUrlActual(mascota.foto_url)
+      setRadioMetros(mascota.radio_metros)
+      setMostrarSalud(mascota.mostrar_salud)
+      setSalud(mascota.salud || '')
+
+      const domicilioExistente = { lat: mascota.domicilio_lat, lng: mascota.domicilio_lng }
+      setCentroMapa(domicilioExistente)
+      setDomicilio(domicilioExistente)
+      setCargandoMascota(false)
     }
-    verificarSesion()
-  }, [navigate])
+    iniciar()
+  }, [editando, id, navigate])
 
   async function usarUbicacionActual() {
     setBuscandoUbicacion(true)
@@ -75,7 +112,7 @@ export default function AltaMascota() {
 
     setGuardando(true)
 
-    let fotoUrl = null
+    let fotoUrl = fotoUrlActual
     if (foto) {
       const ruta = `${sesion.user.id}/${Date.now()}-${foto.name}`
       const { error: errorSubida } = await supabase.storage
@@ -92,25 +129,38 @@ export default function AltaMascota() {
       fotoUrl = data.publicUrl
     }
 
+    const datosMascota = {
+      nombre,
+      especie,
+      sexo,
+      raza: raza.trim() || null,
+      tamano,
+      color: color.trim() || null,
+      senas: senas.trim() || null,
+      caracter,
+      foto_url: fotoUrl,
+      domicilio_lat: domicilio.lat,
+      domicilio_lng: domicilio.lng,
+      radio_metros: radioMetros,
+      mostrar_salud: mostrarSalud,
+      salud: mostrarSalud ? (salud.trim() || null) : null,
+    }
+
+    if (editando) {
+      const { error: errorUpdate } = await supabase
+        .from('mascotas')
+        .update(datosMascota)
+        .eq('id', id)
+
+      setGuardando(false)
+      if (errorUpdate) setError(errorUpdate.message)
+      else navigate('/panel')
+      return
+    }
+
     const { data: nuevaMascota, error: errorInsert } = await supabase
       .from('mascotas')
-      .insert({
-        dueno_id: sesion.user.id,
-        nombre,
-        especie,
-        sexo,
-        raza: raza.trim() || null,
-        tamano,
-        color: color.trim() || null,
-        senas: senas.trim() || null,
-        caracter,
-        foto_url: fotoUrl,
-        domicilio_lat: domicilio.lat,
-        domicilio_lng: domicilio.lng,
-        radio_metros: radioMetros,
-        mostrar_salud: mostrarSalud,
-        salud: mostrarSalud ? (salud.trim() || null) : null,
-      })
+      .insert({ ...datosMascota, dueno_id: sesion.user.id })
       .select()
       .single()
 
@@ -135,11 +185,18 @@ export default function AltaMascota() {
     navigate(`/placas?codigo=${codigo}&nueva=1`)
   }
 
-  if (!sesion) return <main className="pagina"><p>Cargando…</p></main>
+  if (!sesion || cargandoMascota) return <main className="pagina"><p>Cargando…</p></main>
+
+  if (errorCarga) return (
+    <main className="pagina">
+      <h1>Ocurrió un problema</h1>
+      <p className="ayuda">{errorCarga}</p>
+    </main>
+  )
 
   return (
     <main className="pagina">
-      <h1>Cargar mascota</h1>
+      <h1>{editando ? 'Editar mascota' : 'Cargar mascota'}</h1>
 
       <form className="formulario-aviso" onSubmit={guardar}>
         <input
@@ -198,8 +255,12 @@ export default function AltaMascota() {
           <option value="no_acercarse">Mejor no acercarse</option>
         </select>
 
+        {fotoUrlActual && !foto && (
+          <img className="miniatura" src={fotoUrlActual} alt={nombre} />
+        )}
+
         <label className="campo-archivo">
-          Foto (opcional)
+          {fotoUrlActual ? 'Cambiar foto (opcional)' : 'Foto (opcional)'}
           <input type="file" accept="image/*" onChange={(e) => setFoto(e.target.files?.[0] || null)} />
         </label>
 
@@ -216,6 +277,7 @@ export default function AltaMascota() {
           {domicilio
             ? `Domicilio marcado (${domicilio.lat.toFixed(5)}, ${domicilio.lng.toFixed(5)}). Tocá el mapa para corregirlo.`
             : 'Tocá el mapa para marcar el domicilio.'}
+          {' '}El círculo muestra el radio de aviso configurado abajo.
         </p>
 
         <MapContainer
@@ -235,7 +297,7 @@ export default function AltaMascota() {
               <Circle
                 center={[domicilio.lat, domicilio.lng]}
                 radius={radioMetros}
-                pathOptions={{ color: '#2e5c8a' }}
+                pathOptions={{ color: '#2e5c8a', weight: 1, fillOpacity: 0.08 }}
               />
             </>
           )}
@@ -275,7 +337,7 @@ export default function AltaMascota() {
         {error && <p className="ayuda error">{error}</p>}
 
         <button className="boton" type="submit" disabled={guardando}>
-          {guardando ? 'Guardando…' : 'Guardar mascota'}
+          {guardando ? 'Guardando…' : editando ? 'Guardar cambios' : 'Guardar mascota'}
         </button>
       </form>
     </main>

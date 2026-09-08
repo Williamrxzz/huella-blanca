@@ -78,6 +78,9 @@ function FilaMascota({ mascota, onVinculada, onEliminada }) {
           </form>
         )}
 
+        <Link className="enlace" to={`/mascotas/${mascota.id}/editar`}>Editar</Link>
+        <Link className="enlace" to={`/mascotas/${mascota.id}/mapa`}>Ver mapa de avistamientos</Link>
+
         <button className="enlace-eliminar" type="button" onClick={eliminar} disabled={eliminando}>
           {eliminando ? 'Eliminando…' : 'Eliminar mascota'}
         </button>

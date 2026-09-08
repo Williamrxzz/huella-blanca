@@ -208,6 +208,26 @@ textarea.entrada { resize: vertical; font-family: inherit; }
   text-align: center;
 }
 
+.enlace {
+  color: #2e5c8a;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.lista-avistamientos {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+}
+
+.lista-avistamientos li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 0;
+  border-bottom: 1px solid #e8e6e2;
+}
+
 .enlace-eliminar {
   border: 0;
   background: none;

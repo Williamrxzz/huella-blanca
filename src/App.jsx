@@ -4,6 +4,7 @@ import GeneradorQR from './pages/GeneradorQR'
 import Login from './pages/Login'
 import Panel from './pages/Panel'
 import AltaMascota from './pages/AltaMascota'
+import MapaAvistamientos from './pages/MapaAvistamientos'
 
 function Inicio() {
   return (
@@ -30,6 +31,8 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/panel" element={<Panel />} />
         <Route path="/mascotas/nueva" element={<AltaMascota />} />
+        <Route path="/mascotas/:id/editar" element={<AltaMascota />} />
+        <Route path="/mascotas/:id/mapa" element={<MapaAvistamientos />} />
         <Route path="/m/:codigo" element={<FichaPublica />} />
       </Routes>
     </BrowserRouter>
