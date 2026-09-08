@@ -66,9 +66,14 @@ Ya instalado y funcionando:
 - Leaflet + react-leaflet + OpenStreetMap (mapas; **no** Google Maps,
   que exige tarjeta). Sin `StrictMode` en `main.jsx`: el doble montaje
   de React en desarrollo choca con la inicialización de Leaflet.
+- vite-plugin-pwa — la app es instalable (manifest + service worker
+  autogenerados). El service worker solo se activa en el build de
+  producción (`npm run build && npm run preview`), no en `npm run dev`.
+  Después de cambiar algo en `public/` (íconos, favicon) hay que
+  reconstruir para verlo: `dist/` copia esos archivos al momento del
+  build, no los sirve en vivo desde `public/`.
 
 Pendiente de incorporar:
-- vite-plugin-pwa (para que sea instalable)
 - Recharts (gráficos del panel de analítica)
 - API de Claude, modelo Haiku, llamada desde una Edge Function
 
@@ -315,6 +320,10 @@ Usuario", con siete listas, una por bloque.
 - Columnas `lat`/`lng` de `avistamientos` pasadas a nullable (se
   necesita para el aviso sin ubicación de TRA11). Columna `sexo`
   agregada a `mascotas` (nullable, check `macho`/`hembra`).
+- **PWA instalable** (vite-plugin-pwa): manifest, service worker,
+  ícono placeholder de huella blanca sobre rosa (`public/pwa-192.png`,
+  `pwa-512.png`, `apple-touch-icon.png`, `favicon.svg`) — reemplazar
+  por un diseño propio cuando haya uno.
 - Repositorio remoto en GitHub (`Williamrxzz/huella-blanca`, privado).
 - **Publicado en Vercel**: https://huella-blanca.vercel.app, conectado
   al repo de GitHub (cada push a `master` hace deploy automático a
@@ -324,11 +333,15 @@ Usuario", con siete listas, una por bloque.
 
 ### Pendiente, en este orden
 
-1. **Configurar la PWA** con vite-plugin-pwa para que sea instalable.
-2. **Panel de administración**: placas, comercios, agradecimientos.
-3. **Funciones de IA**: sugerir la ficha desde la foto (IA01), verificar
+1. **Panel de administración**: placas, comercios, agradecimientos.
+2. **Funciones de IA**: sugerir la ficha desde la foto (IA01), verificar
    la imagen (IA02) y redactar el texto de búsqueda (IA03), siempre
    desde una Edge Function para no exponer la clave de la API.
+3. **Módulo de analítica** con Recharts (DAT, pendiente más allá del
+   DAT01 ya cubierto).
+4. Optimizar el bundle: Vite avisa que el JS de producción pasa los
+   500 KB (sobre todo por Leaflet). No es urgente, pero si se nota lento
+   en el celular, dividir en chunks con `import()` dinámico.
 
 ---
 
