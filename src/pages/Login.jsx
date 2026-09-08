@@ -34,6 +34,7 @@ export default function Login() {
           className="entrada"
           type="email"
           placeholder="Email"
+          aria-label="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
@@ -43,6 +44,7 @@ export default function Login() {
           className="entrada"
           type="password"
           placeholder="Contraseña"
+          aria-label="Contraseña"
           value={contrasena}
           onChange={(e) => setContrasena(e.target.value)}
           autoComplete="current-password"

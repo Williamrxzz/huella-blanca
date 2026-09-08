@@ -203,18 +203,29 @@ export default function AltaMascota() {
           className="entrada"
           type="text"
           placeholder="Nombre"
+          aria-label="Nombre"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           required
         />
 
-        <select className="entrada" value={especie} onChange={(e) => setEspecie(e.target.value)}>
+        <select
+          className="entrada"
+          aria-label="Especie"
+          value={especie}
+          onChange={(e) => setEspecie(e.target.value)}
+        >
           <option value="perro">Perro</option>
           <option value="gato">Gato</option>
           <option value="otro">Otro</option>
         </select>
 
-        <select className="entrada" value={sexo} onChange={(e) => setSexo(e.target.value)}>
+        <select
+          className="entrada"
+          aria-label="Sexo"
+          value={sexo}
+          onChange={(e) => setSexo(e.target.value)}
+        >
           <option value="macho">Macho</option>
           <option value="hembra">Hembra</option>
         </select>
@@ -223,11 +234,17 @@ export default function AltaMascota() {
           className="entrada"
           type="text"
           placeholder="Raza (opcional)"
+          aria-label="Raza"
           value={raza}
           onChange={(e) => setRaza(e.target.value)}
         />
 
-        <select className="entrada" value={tamano} onChange={(e) => setTamano(e.target.value)}>
+        <select
+          className="entrada"
+          aria-label="Tamaño"
+          value={tamano}
+          onChange={(e) => setTamano(e.target.value)}
+        >
           <option value="pequeno">Pequeño</option>
           <option value="mediano">Mediano</option>
           <option value="grande">Grande</option>
@@ -237,6 +254,7 @@ export default function AltaMascota() {
           className="entrada"
           type="text"
           placeholder="Color"
+          aria-label="Color"
           value={color}
           onChange={(e) => setColor(e.target.value)}
         />
@@ -244,12 +262,18 @@ export default function AltaMascota() {
         <textarea
           className="entrada"
           placeholder="Señas particulares (opcional)"
+          aria-label="Señas particulares"
           value={senas}
           onChange={(e) => setSenas(e.target.value)}
           rows={3}
         />
 
-        <select className="entrada" value={caracter} onChange={(e) => setCaracter(e.target.value)}>
+        <select
+          className="entrada"
+          aria-label="Carácter"
+          value={caracter}
+          onChange={(e) => setCaracter(e.target.value)}
+        >
           <option value="amigable">Amigable</option>
           <option value="temerosa">Temerosa</option>
           <option value="no_acercarse">Mejor no acercarse</option>
@@ -328,6 +352,7 @@ export default function AltaMascota() {
           <textarea
             className="entrada"
             placeholder="Información de salud"
+            aria-label="Información de salud"
             value={salud}
             onChange={(e) => setSalud(e.target.value)}
             rows={2}

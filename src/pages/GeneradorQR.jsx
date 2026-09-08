@@ -33,6 +33,7 @@ export default function GeneradorQR() {
         className="entrada"
         type="text"
         placeholder="Código de placa"
+        aria-label="Código de placa"
         value={codigo}
         onChange={(e) => setCodigo(e.target.value)}
         autoFocus={!esMascotaNueva}

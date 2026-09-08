@@ -11,8 +11,8 @@ const ERRORES_VINCULAR = {
 function CartelConfirmacion({ titulo, texto, onCancelar, onConfirmar, confirmando }) {
   return (
     <div className="superposicion">
-      <div className="tarjeta-confirmacion">
-        <h2>{titulo}</h2>
+      <div className="tarjeta-confirmacion" role="alertdialog" aria-modal="true" aria-labelledby="titulo-confirmacion">
+        <h2 id="titulo-confirmacion">{titulo}</h2>
         <p className="ayuda">{texto}</p>
         <div className="acciones-tarjeta">
           <button className="boton secundario" type="button" onClick={onCancelar}>
@@ -87,6 +87,7 @@ function FilaMascota({ mascota, onVinculada, onEliminada }) {
               className="entrada"
               type="text"
               placeholder="Código de la placa"
+              aria-label={`Código de la placa para ${mascota.nombre}`}
               value={codigo}
               onChange={(e) => setCodigo(e.target.value)}
               required

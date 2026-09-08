@@ -155,6 +155,7 @@ export default function FichaPublica() {
                 className="entrada"
                 type="text"
                 placeholder="Ej: esquina de San Martín y Belgrano"
+                aria-label="Referencia del lugar donde la viste"
                 value={referencia}
                 onChange={(e) => setReferencia(e.target.value)}
               />
@@ -187,6 +188,7 @@ export default function FichaPublica() {
           <textarea
             className="entrada"
             placeholder="Contanos más (opcional)"
+            aria-label="Contanos más"
             value={mensaje}
             onChange={(e) => setMensaje(e.target.value)}
             rows={3}
@@ -196,6 +198,7 @@ export default function FichaPublica() {
             className="entrada"
             type="text"
             placeholder="Tu teléfono o Instagram, para que te contacten (opcional)"
+            aria-label="Tu teléfono o Instagram"
             value={contacto}
             onChange={(e) => setContacto(e.target.value)}
           />
