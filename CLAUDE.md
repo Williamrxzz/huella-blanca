@@ -191,6 +191,9 @@ avisar. No mezclarlas.
 
 RLS está activo en las diez tablas. Las políticas hacen que cada dueño
 acceda únicamente a sus mascotas, casos, escaneos y avistamientos.
+Política agregada para el registro: `perfiles` permite `insert` a
+`authenticated` cuando `auth.uid() = id`, para que un dueño recién
+registrado pueda crear su propia fila.
 
 ### Funciones (todas `security definer`, ejecutables por `anon`)
 
@@ -286,12 +289,12 @@ Usuario", con siete listas, una por bloque.
 - Esquema, políticas de seguridad y funciones ejecutados en Supabase.
 - Datos de prueba cargados y verificados.
 - `src/lib/supabase.js` — cliente configurado.
-- `src/App.jsx` — rutas `/`, `/placas`, `/login`, `/panel`,
-  `/mascotas/nueva`, `/mascotas/:id/editar`, `/mascotas/:id/mapa`,
-  `/escanear`, `/m/:codigo`. El inicio (`Inicio`) revisa si hay sesión
-  de dueño activa y, si la hay, redirige directo a `/panel` en vez de
-  mostrar la pantalla de bienvenida — esa pantalla es solo para quien
-  todavía no inició sesión.
+- `src/App.jsx` — rutas `/`, `/placas`, `/login`, `/registro`,
+  `/panel`, `/mascotas/nueva`, `/mascotas/:id/editar`,
+  `/mascotas/:id/mapa`, `/escanear`, `/m/:codigo`. El inicio (`Inicio`)
+  revisa si hay sesión de dueño activa y, si la hay, redirige directo
+  a `/panel` en vez de mostrar la pantalla de bienvenida — esa
+  pantalla es solo para quien todavía no inició sesión.
 - `src/pages/Escanear.jsx` (`/escanear`) — lector de QR por cámara
   (`jsqr`) pensado solo para la demo en vivo: si el código leído
   apunta a esta misma app navega con el router, si no abre el link tal
@@ -299,21 +302,33 @@ Usuario", con siete listas, una por bloque.
 - `src/pages/FichaPublica.jsx` — muestra la ficha al escanear, con un
   saludo que usa el nombre de la mascota ("¡Hola! Soy {nombre}") para
   que quien la encuentra la llame así y se acerque con más confianza.
+  Si hay un caso abierto, muestra una alerta distinta según el estado:
+  roja y con un indicador que pulsa si el dueño ya confirmó la
+  pérdida, ámbar si es una sospecha automática todavía sin confirmar.
   Al cargar, llama a `registrar_escaneo` (TRA04) pero solo si el
   navegador **ya tenía** el permiso de ubicación concedido de antes —
   nunca se le pide permiso a quien solo está mirando la ficha, eso
   sería fricción innecesaria. Además muestra el botón "La vi acá"
-  (TRA11): ahí sí pide ubicación con `navigator.geolocation` (con
-  límite propio de 8 s, porque algunos navegadores no respetan el
-  timeout de la API si el permiso de Localización del sistema
-  operativo está desactivado) y si falla ofrece escribir una
-  referencia manual del lugar. Llama a `registrar_avistamiento`.
-  Probado con y sin permiso concedido.
+  (TRA11): pide ubicación con `navigator.geolocation` (con límite
+  propio de 8 s, porque algunos navegadores no respetan el timeout de
+  la API si el permiso de Localización del sistema operativo está
+  desactivado) y, la tenga o no, siempre muestra un mapa de Leaflet
+  para marcar o corregir el punto exacto tocándolo — si no hay
+  ubicación automática, el mapa arranca centrado en Caleta Olivia.
+  Llama a `registrar_avistamiento`. Probado con y sin permiso
+  concedido.
 - `src/pages/GeneradorQR.jsx` — genera y descarga el QR de una placa,
   apuntando siempre al dominio desde el que se sirve la app
   (`window.location.origin`).
-- `src/pages/Login.jsx` — login del dueño con email y contraseña
-  (Supabase Auth).
+- `src/pages/Login.jsx` — login del dueño con email y contraseña, con
+  enlace a `/registro`.
+- `src/pages/Registro.jsx` (`/registro`) — alta de cuenta de dueño
+  (nombre, email, contraseña) para el prototipo: `supabase.auth.signUp`
+  y, si Supabase entrega sesión al instante, inserta la fila en
+  `perfiles`; si el proyecto pide confirmar el email primero, avisa en
+  pantalla en vez de fallar. Necesita la política de RLS que permite a
+  cada dueño insertar su propia fila en `perfiles`
+  (`auth.uid() = id`), ya aplicada en Supabase.
 - `src/pages/Panel.jsx` — lista las mascotas del dueño logueado (foto,
   nombre, especie/raza y el código de placa si ya tiene una activa). Si
   una mascota no tiene placa, muestra un formulario para vincular una
