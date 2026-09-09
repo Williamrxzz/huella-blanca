@@ -342,7 +342,12 @@ Usuario", con siete listas, una por bloque.
   "Confirmar pérdida" si ya existe uno en `posible_perdida` por
   detección automática (lo actualiza a `perdida` en vez de crear otro,
   respetando el índice único de casos abiertos), o el texto "Perdida —
-  buscando" si ya está confirmada.
+  buscando" si ya está confirmada. Junto a "Confirmar pérdida", si el
+  caso `posible_perdida` es de `origen: 'automatico'`, aparece también
+  (**PER03**) el botón "No, está conmigo": pone el caso en
+  `estado: 'descartada'` con `cerrado_en: now()`. Hacía falta porque el
+  índice único impide un caso nuevo mientras uno viejo siga abierto —
+  sin esto, una falsa alarma automática quedaba trabada para siempre.
 - `src/pages/AltaMascota.jsx` — alta **y edición** de mascota (mismo
   formulario; `/mascotas/nueva` crea, `/mascotas/:id/editar` corrige):
   nombre, especie, sexo (obligatorio), raza, tamaño, color, señas,
@@ -377,23 +382,14 @@ Usuario", con siete listas, una por bloque.
   cargadas en Vercel. Incluye `vercel.json` con reescritura SPA para que
   `/m/:codigo` y `/placas` no den 404.
 
-### Pendiente, en este orden
+### MVP: 13 de 14 historias terminadas
 
-1. **PER04 — notificación inmediata al dueño** cuando escanean la placa
-   de una mascota perdida. Todavía no está construida: requiere un
-   servicio de correo o push (por ejemplo un proveedor de email desde
-   una Edge Function) que hoy no está integrado en el proyecto. Hasta
-   que exista, el dueño solo se entera revisando el panel o el mapa de
-   avistamientos a mano.
-2. **Panel de administración**: placas, comercios, agradecimientos.
-3. **Funciones de IA**: sugerir la ficha desde la foto (IA01), verificar
-   la imagen (IA02) y redactar el texto de búsqueda (IA03), siempre
-   desde una Edge Function para no exponer la clave de la API.
-4. **Módulo de analítica** con Recharts (DAT, pendiente más allá del
-   DAT01 ya cubierto).
-5. Optimizar el bundle: Vite avisa que el JS de producción pasa los
-   500 KB (sobre todo por Leaflet). No es urgente, pero si se nota lento
-   en el celular, dividir en chunks con `import()` dinámico.
+La única pendiente es **PER04 — notificación inmediata al dueño**
+cuando escanean la placa de una mascota perdida. Queda fuera del
+alcance de esta versión porque requiere un servicio de correo o push
+(por ejemplo un proveedor de email desde una Edge Function) que hoy no
+está integrado en el proyecto. Hasta que exista, el dueño solo se
+entera revisando el panel o el mapa de avistamientos a mano.
 
 ### Verificado contra el código (no solo contra los commits)
 
@@ -403,17 +399,34 @@ commit) de las historias del MVP con texto dudoso. Resultado:
 - **DUE04** (carácter de la mascota, para orientar a quien la
   encuentra): completa de punta a punta. `ficha_publica()` sí devuelve
   el campo `caracter` — confirmado leyendo la función en Supabase.
-- **PER01** y **PER08**: no tenían ningún código construido pese a
+- **PER01, PER03 y PER08**: no tenían ningún código construido pese a
   figurar como terminadas; se implementaron y probaron recién ahora
-  (ver más arriba, en Panel.jsx y MapaAvistamientos.jsx).
-- **PER04**: sigue sin construir (ver Pendiente #1).
+  (ver más arriba, en Panel.jsx y MapaAvistamientos.jsx). PER03 salió
+  a la luz al construir PER01: sin ella, una sospecha automática de
+  pérdida que resultaba ser falsa alarma quedaba trabada para siempre,
+  porque el índice único no deja abrir un caso nuevo mientras uno
+  viejo siga abierto.
+- **PER04**: sigue sin construir (ver arriba).
 
 Ojo: en el historial de commits hay códigos de historia mal aplicados
 de sesiones anteriores (por ejemplo, `DUE04` se usó una vez para
 "editar y eliminar mascota", que no es lo que dice esa historia; y
 `PER08` se usó para "mapa de avistamientos" antes de construir la
-función real que le corresponde). Para saber qué hace falta, conviene
+función real que le corresponde). El detalle completo, commit por
+commit, está en `TRAZABILIDAD.md`. Para saber qué hace falta, conviene
 mirar el código, no el texto de los commits viejos.
+
+### Pendiente, en este orden
+
+1. **Panel de administración**: placas, comercios, agradecimientos.
+2. **Funciones de IA**: sugerir la ficha desde la foto (IA01), verificar
+   la imagen (IA02) y redactar el texto de búsqueda (IA03), siempre
+   desde una Edge Function para no exponer la clave de la API.
+3. **Módulo de analítica** con Recharts (DAT, pendiente más allá del
+   DAT01 ya cubierto).
+4. Optimizar el bundle: Vite avisa que el JS de producción pasa los
+   500 KB (sobre todo por Leaflet). No es urgente, pero si se nota lento
+   en el celular, dividir en chunks con `import()` dinámico.
 
 ---
 
