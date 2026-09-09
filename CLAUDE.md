@@ -72,6 +72,9 @@ Ya instalado y funcionando:
   Después de cambiar algo en `public/` (íconos, favicon) hay que
   reconstruir para verlo: `dist/` copia esos archivos al momento del
   build, no los sirve en vivo desde `public/`.
+- jsqr — lectura de códigos QR desde la cámara dentro de la propia app
+  (`/escanear`), pensado para hacer la demo sin depender del lector de
+  QR nativo del celular.
 
 Pendiente de incorporar:
 - Recharts (gráficos del panel de analítica)
@@ -215,7 +218,7 @@ Desde el frontend se llaman con `supabase.rpc('nombre', { parametros })`.
 
 - Usuario en Authentication con UID
   `8fbf2316-eb8a-4c28-abb0-c5073c3e0d98`, con su perfil creado.
-- Mascota "Huella Blanca": perro, mestiza, mediano, negra con pecho
+- Mascota "Blanca": perro, mestiza, mediano, negra con pecho
   blanco, amigable, domicilio en Caleta Olivia (-46.4380, -67.5280),
   radio de 1000 metros.
 - Placa `C30A45A9` vinculada a esa mascota y en estado activa.
@@ -284,17 +287,28 @@ Usuario", con siete listas, una por bloque.
 - Datos de prueba cargados y verificados.
 - `src/lib/supabase.js` — cliente configurado.
 - `src/App.jsx` — rutas `/`, `/placas`, `/login`, `/panel`,
-  `/mascotas/nueva`, `/m/:codigo`.
-- `src/pages/FichaPublica.jsx` — muestra la ficha al escanear. Al
-  cargar, llama a `registrar_escaneo` (TRA04) pero solo si el navegador
-  **ya tenía** el permiso de ubicación concedido de antes — nunca se le
-  pide permiso a quien solo está mirando la ficha, eso sería fricción
-  innecesaria. Además muestra el botón "La vi acá" (TRA11): ahí sí pide
-  ubicación con `navigator.geolocation` (con límite propio de 8 s,
-  porque algunos navegadores no respetan el timeout de la API si el
-  permiso de Localización del sistema operativo está desactivado) y si
-  falla ofrece escribir una referencia manual del lugar. Llama a
-  `registrar_avistamiento`. Probado con y sin permiso concedido.
+  `/mascotas/nueva`, `/mascotas/:id/editar`, `/mascotas/:id/mapa`,
+  `/escanear`, `/m/:codigo`. El inicio (`Inicio`) revisa si hay sesión
+  de dueño activa y, si la hay, redirige directo a `/panel` en vez de
+  mostrar la pantalla de bienvenida — esa pantalla es solo para quien
+  todavía no inició sesión.
+- `src/pages/Escanear.jsx` (`/escanear`) — lector de QR por cámara
+  (`jsqr`) pensado solo para la demo en vivo: si el código leído
+  apunta a esta misma app navega con el router, si no abre el link tal
+  cual con `window.location.href`.
+- `src/pages/FichaPublica.jsx` — muestra la ficha al escanear, con un
+  saludo que usa el nombre de la mascota ("¡Hola! Soy {nombre}") para
+  que quien la encuentra la llame así y se acerque con más confianza.
+  Al cargar, llama a `registrar_escaneo` (TRA04) pero solo si el
+  navegador **ya tenía** el permiso de ubicación concedido de antes —
+  nunca se le pide permiso a quien solo está mirando la ficha, eso
+  sería fricción innecesaria. Además muestra el botón "La vi acá"
+  (TRA11): ahí sí pide ubicación con `navigator.geolocation` (con
+  límite propio de 8 s, porque algunos navegadores no respetan el
+  timeout de la API si el permiso de Localización del sistema
+  operativo está desactivado) y si falla ofrece escribir una
+  referencia manual del lugar. Llama a `registrar_avistamiento`.
+  Probado con y sin permiso concedido.
 - `src/pages/GeneradorQR.jsx` — genera y descarga el QR de una placa,
   apuntando siempre al dominio desde el que se sirve la app
   (`window.location.origin`).
