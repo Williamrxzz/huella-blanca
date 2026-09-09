@@ -33,6 +33,7 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
   const [eliminando, setEliminando] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
   const [marcando, setMarcando] = useState(false)
+  const [descartando, setDescartando] = useState(false)
   const [error, setError] = useState(null)
   const [errorCaso, setErrorCaso] = useState(null)
 
@@ -48,6 +49,20 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
 
     setMarcando(false)
     if (errorRpc) setErrorCaso('No pudimos marcarla: ' + errorRpc.message)
+    else onCasoActualizado()
+  }
+
+  async function descartarSospecha() {
+    setDescartando(true)
+    setErrorCaso(null)
+
+    const { error: errorRpc } = await supabase
+      .from('casos_perdida')
+      .update({ estado: 'descartada', cerrado_en: new Date().toISOString() })
+      .eq('id', caso.id)
+
+    setDescartando(false)
+    if (errorRpc) setErrorCaso('No pudimos descartarla: ' + errorRpc.message)
     else onCasoActualizado()
   }
 
@@ -127,6 +142,11 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
               {marcando ? 'Confirmando…' : 'Confirmar pérdida'}
             </button>
           )}
+          {caso?.estado === 'posible_perdida' && caso?.origen === 'automatico' && (
+            <button className="boton-accion" type="button" onClick={descartarSospecha} disabled={descartando}>
+              {descartando ? 'Descartando…' : 'No, está conmigo'}
+            </button>
+          )}
           {caso?.estado === 'perdida' && (
             <span className="ayuda">Perdida — buscando</span>
           )}
@@ -174,7 +194,7 @@ export default function Panel() {
 
     const { data: casosAbiertos } = await supabase
       .from('casos_perdida')
-      .select('id, mascota_id, estado')
+      .select('id, mascota_id, estado, origen')
       .in('estado', ['perdida', 'posible_perdida'])
 
     const casosPorMascota = {}
