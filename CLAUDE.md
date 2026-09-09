@@ -193,7 +193,9 @@ RLS está activo en las diez tablas. Las políticas hacen que cada dueño
 acceda únicamente a sus mascotas, casos, escaneos y avistamientos.
 Política agregada para el registro: `perfiles` permite `insert` a
 `authenticated` cuando `auth.uid() = id`, para que un dueño recién
-registrado pueda crear su propia fila.
+registrado pueda crear su propia fila. Políticas agregadas para PER01
+y PER08: `casos_perdida` permite `insert` y `update` a `authenticated`
+cuando la mascota del caso pertenece al dueño autenticado.
 
 ### Funciones (todas `security definer`, ejecutables por `anon`)
 
@@ -333,7 +335,14 @@ Usuario", con siete listas, una por bloque.
   nombre, especie/raza y el código de placa si ya tiene una activa). Si
   una mascota no tiene placa, muestra un formulario para vincular una
   existente (`vincular_placa`). Cada mascota tiene enlaces para editar,
-  ver el mapa de avistamientos, y eliminar (borrado lógico).
+  ver el mapa de avistamientos, y eliminar (borrado lógico). Además
+  (**PER01**) un botón que cambia según el caso abierto que tenga esa
+  mascota: "Marcar como perdida" si no hay ninguno (crea un caso en
+  `casos_perdida` con `estado: 'perdida'`, `origen: 'manual'`),
+  "Confirmar pérdida" si ya existe uno en `posible_perdida` por
+  detección automática (lo actualiza a `perdida` en vez de crear otro,
+  respetando el índice único de casos abiertos), o el texto "Perdida —
+  buscando" si ya está confirmada.
 - `src/pages/AltaMascota.jsx` — alta **y edición** de mascota (mismo
   formulario; `/mascotas/nueva` crea, `/mascotas/:id/editar` corrige):
   nombre, especie, sexo (obligatorio), raza, tamaño, color, señas,
@@ -347,7 +356,12 @@ Usuario", con siete listas, una por bloque.
 - `src/pages/MapaAvistamientos.jsx` (`/mascotas/:id/mapa`) — mapa de
   Leaflet con el domicilio, el círculo de radio (con leyenda explicando
   qué es, para no confundir) y un marcador por cada avistamiento con
-  ubicación; los avisos sin ubicación exacta se listan aparte.
+  ubicación; los avisos sin ubicación exacta se listan aparte. Si la
+  mascota tiene un caso abierto, muestra la alerta correspondiente y
+  (**PER08**) el botón "{nombre} volvió a casa": cierra el caso
+  (`estado: 'cerrada'`, `cerrado_en: now()`) y, si algún avistamiento
+  de ese caso tiene `reportado_por` (alguien logueado que avisó),
+  guarda ese id como `rescatista_id`.
 - `src/index.css` — estilos propios.
 - Columnas `lat`/`lng` de `avistamientos` pasadas a nullable (se
   necesita para el aviso sin ubicación de TRA11). Columna `sexo`
@@ -365,15 +379,41 @@ Usuario", con siete listas, una por bloque.
 
 ### Pendiente, en este orden
 
-1. **Panel de administración**: placas, comercios, agradecimientos.
-2. **Funciones de IA**: sugerir la ficha desde la foto (IA01), verificar
+1. **PER04 — notificación inmediata al dueño** cuando escanean la placa
+   de una mascota perdida. Todavía no está construida: requiere un
+   servicio de correo o push (por ejemplo un proveedor de email desde
+   una Edge Function) que hoy no está integrado en el proyecto. Hasta
+   que exista, el dueño solo se entera revisando el panel o el mapa de
+   avistamientos a mano.
+2. **Panel de administración**: placas, comercios, agradecimientos.
+3. **Funciones de IA**: sugerir la ficha desde la foto (IA01), verificar
    la imagen (IA02) y redactar el texto de búsqueda (IA03), siempre
    desde una Edge Function para no exponer la clave de la API.
-3. **Módulo de analítica** con Recharts (DAT, pendiente más allá del
+4. **Módulo de analítica** con Recharts (DAT, pendiente más allá del
    DAT01 ya cubierto).
-4. Optimizar el bundle: Vite avisa que el JS de producción pasa los
+5. Optimizar el bundle: Vite avisa que el JS de producción pasa los
    500 KB (sobre todo por Leaflet). No es urgente, pero si se nota lento
    en el celular, dividir en chunks con `import()` dinámico.
+
+### Verificado contra el código (no solo contra los commits)
+
+Antes de la entrega se revisó el código real (no los mensajes de
+commit) de las historias del MVP con texto dudoso. Resultado:
+
+- **DUE04** (carácter de la mascota, para orientar a quien la
+  encuentra): completa de punta a punta. `ficha_publica()` sí devuelve
+  el campo `caracter` — confirmado leyendo la función en Supabase.
+- **PER01** y **PER08**: no tenían ningún código construido pese a
+  figurar como terminadas; se implementaron y probaron recién ahora
+  (ver más arriba, en Panel.jsx y MapaAvistamientos.jsx).
+- **PER04**: sigue sin construir (ver Pendiente #1).
+
+Ojo: en el historial de commits hay códigos de historia mal aplicados
+de sesiones anteriores (por ejemplo, `DUE04` se usó una vez para
+"editar y eliminar mascota", que no es lo que dice esa historia; y
+`PER08` se usó para "mapa de avistamientos" antes de construir la
+función real que le corresponde). Para saber qué hace falta, conviene
+mirar el código, no el texto de los commits viejos.
 
 ---
 
