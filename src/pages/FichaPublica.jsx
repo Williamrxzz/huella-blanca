@@ -114,7 +114,8 @@ export default function FichaPublica() {
         ? <img className="foto" src={ficha.foto_url} alt={ficha.nombre} />
         : <div className="foto vacia">Sin foto</div>}
 
-      <h1>{ficha.nombre}</h1>
+      <h1>¡Hola! Soy {ficha.nombre}</h1>
+      <p className="ayuda">Llamala por su nombre, para que se acerque con más confianza.</p>
 
       <ul className="datos">
         {ficha.especie && <li><span>Especie</span>{ficha.especie}</li>}
