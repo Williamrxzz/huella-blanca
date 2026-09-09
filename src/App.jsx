@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom'
 import FichaPublica from './pages/FichaPublica'
 import GeneradorQR from './pages/GeneradorQR'
 import Login from './pages/Login'
+import Registro from './pages/Registro'
 import Panel from './pages/Panel'
 import AltaMascota from './pages/AltaMascota'
 import MapaAvistamientos from './pages/MapaAvistamientos'
@@ -67,6 +68,7 @@ export default function App() {
         <Route path="/" element={<Inicio />} />
         <Route path="/placas" element={<GeneradorQR />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/registro" element={<Registro />} />
         <Route path="/panel" element={<Panel />} />
         <Route path="/mascotas/nueva" element={<AltaMascota />} />
         <Route path="/mascotas/:id/editar" element={<AltaMascota />} />
