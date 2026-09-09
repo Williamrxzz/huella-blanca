@@ -129,13 +129,61 @@ h1 { font-size: 28px; margin: 16px 0 8px; }
 }
 
 .alerta {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  margin-bottom: 18px;
+}
+
+.alerta .punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+.alerta strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+
+.alerta p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.4;
+  opacity: 0.85;
+}
+
+.alerta.posible {
+  background: #fdf3e2;
+  border: 1px solid #eccf9a;
+  color: #8a5a12;
+}
+
+.alerta.posible .punto { background: #c98a1f; }
+
+.alerta.confirmada {
   background: #fdecec;
   border: 1px solid #e6b4b4;
   color: #8c2f2f;
-  padding: 12px 14px;
-  border-radius: 10px;
-  margin-bottom: 16px;
-  font-weight: 500;
+}
+
+.alerta.confirmada .punto {
+  background: #c23a3a;
+  animation: pulso 1.6s ease-in-out infinite;
+}
+
+@keyframes pulso {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(194, 58, 58, 0.5); }
+  50% { box-shadow: 0 0 0 5px rgba(194, 58, 58, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alerta.confirmada .punto { animation: none; }
 }
 
 .datos { list-style: none; padding: 0; margin: 16px 0; }

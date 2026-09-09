@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
 import { pedirUbicacion, pedirUbicacionSiYaHayPermiso } from '../lib/ubicacion'
 
@@ -7,6 +8,17 @@ const ETIQUETA_CARACTER = {
   amigable: 'Es amigable',
   temerosa: 'Es temerosa, acercate despacio',
   no_acercarse: 'Mejor no acercarse, avisá al dueño',
+}
+
+const CENTRO_INICIAL = { lat: -46.4380, lng: -67.5280 } // Caleta Olivia
+
+function SelectorMapa({ onSeleccionar }) {
+  useMapEvents({
+    click(e) {
+      onSeleccionar({ lat: e.latlng.lat, lng: e.latlng.lng })
+    },
+  })
+  return null
 }
 
 export default function FichaPublica() {
@@ -18,8 +30,9 @@ export default function FichaPublica() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [buscandoUbicacion, setBuscandoUbicacion] = useState(false)
   const [ubicacion, setUbicacion] = useState(null)
+  const [centroMapa, setCentroMapa] = useState(CENTRO_INICIAL)
+  const [origenUbicacion, setOrigenUbicacion] = useState(null)
   const [situacion, setSituacion] = useState('la_vi_pasar')
-  const [referencia, setReferencia] = useState('')
   const [mensaje, setMensaje] = useState('')
   const [contacto, setContacto] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -52,27 +65,37 @@ export default function FichaPublica() {
     setMostrarFormulario(true)
     setBuscandoUbicacion(true)
     const resultado = await pedirUbicacion()
-    setUbicacion(resultado)
+    if (resultado) {
+      setUbicacion(resultado)
+      setCentroMapa(resultado)
+      setOrigenUbicacion('gps')
+    }
     setBuscandoUbicacion(false)
+  }
+
+  function elegirEnMapa(coords) {
+    setUbicacion(coords)
+    setOrigenUbicacion('manual')
   }
 
   async function enviarAviso(e) {
     e.preventDefault()
-    setEnviando(true)
     setErrorEnvio(null)
 
-    const origen = ubicacion ? 'gps' : 'manual'
-    const mensajeFinal = origen === 'manual' && referencia.trim()
-      ? `Lugar: ${referencia.trim()}${mensaje.trim() ? ' — ' + mensaje.trim() : ''}`
-      : mensaje.trim() || null
+    if (!ubicacion) {
+      setErrorEnvio('Marcá en el mapa dónde la viste.')
+      return
+    }
+
+    setEnviando(true)
 
     const { error } = await supabase.rpc('registrar_avistamiento', {
       p_codigo: codigo,
-      p_lat: ubicacion?.lat ?? null,
-      p_lng: ubicacion?.lng ?? null,
-      p_origen: origen,
+      p_lat: ubicacion.lat,
+      p_lng: ubicacion.lng,
+      p_origen: origenUbicacion || 'manual',
       p_situacion: situacion,
-      p_mensaje: mensajeFinal,
+      p_mensaje: mensaje.trim() || null,
       p_contacto: contacto.trim() || null,
     })
 
@@ -103,10 +126,18 @@ export default function FichaPublica() {
   return (
     <main className="pagina">
       {perdida && (
-        <div className="alerta">
-          {ficha.estado === 'perdida'
-            ? 'Esta mascota está reportada como perdida'
-            : 'Esta mascota podría estar perdida'}
+        <div className={`alerta ${ficha.estado === 'perdida' ? 'confirmada' : 'posible'}`}>
+          <span className="punto" aria-hidden="true" />
+          <div>
+            <strong>
+              {ficha.estado === 'perdida' ? 'Reportada como perdida' : 'Podría estar perdida'}
+            </strong>
+            <p>
+              {ficha.estado === 'perdida'
+                ? 'El dueño confirmó que no está en su casa. Si la ves, avisale.'
+                : 'Se detectó un escaneo lejos de su domicilio y el dueño todavía no lo confirmó.'}
+            </p>
+          </div>
         </div>
       )}
 
@@ -139,27 +170,28 @@ export default function FichaPublica() {
         <button className="boton" onClick={abrirFormulario}>La vi acá</button>
       ) : (
         <form className="formulario-aviso" onSubmit={enviarAviso}>
-          {buscandoUbicacion && (
+          {buscandoUbicacion ? (
             <p className="ayuda">Obteniendo tu ubicación…</p>
-          )}
-
-          {!buscandoUbicacion && ubicacion && (
-            <p className="ayuda">Ubicación obtenida ✓</p>
-          )}
-
-          {!buscandoUbicacion && !ubicacion && (
+          ) : (
             <>
               <p className="ayuda">
-                No pudimos obtener tu ubicación automáticamente. Contanos dónde fue.
+                {ubicacion
+                  ? 'Ubicación obtenida. Tocá el mapa si querés corregir el punto exacto.'
+                  : 'No pudimos obtener tu ubicación automáticamente. Tocá el mapa para marcar dónde la viste.'}
               </p>
-              <input
-                className="entrada"
-                type="text"
-                placeholder="Ej: esquina de San Martín y Belgrano"
-                aria-label="Referencia del lugar donde la viste"
-                value={referencia}
-                onChange={(e) => setReferencia(e.target.value)}
-              />
+              <MapContainer
+                key={`${centroMapa.lat}-${centroMapa.lng}`}
+                center={[centroMapa.lat, centroMapa.lng]}
+                zoom={ubicacion ? 16 : 13}
+                className="mapa-domicilio"
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <SelectorMapa onSeleccionar={elegirEnMapa} />
+                {ubicacion && <Marker position={[ubicacion.lat, ubicacion.lng]} />}
+              </MapContainer>
             </>
           )}
 
