@@ -1,20 +1,40 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom'
 import FichaPublica from './pages/FichaPublica'
 import GeneradorQR from './pages/GeneradorQR'
 import Login from './pages/Login'
 import Panel from './pages/Panel'
 import AltaMascota from './pages/AltaMascota'
 import MapaAvistamientos from './pages/MapaAvistamientos'
+import Escanear from './pages/Escanear'
+import { supabase } from './lib/supabase'
 
 function Inicio() {
+  const [verificando, setVerificando] = useState(true)
+  const [haySesion, setHaySesion] = useState(false)
+
+  useEffect(() => {
+    async function verificar() {
+      const { data: { session } } = await supabase.auth.getSession()
+      setHaySesion(Boolean(session))
+      setVerificando(false)
+    }
+    verificar()
+  }, [])
+
+  if (verificando) return null
+  if (haySesion) return <Navigate to="/panel" replace />
+
   return (
     <main className="pagina inicio">
-      <img className="logo" src="/pwa-512.png" alt="Huella Blanca" />
-      <h1>Huella Blanca</h1>
-      <p className="subtitulo">
-        Identificación y recuperación de mascotas perdidas mediante un
-        código QR en el collar.
-      </p>
+      <div className="hero">
+        <img className="logo" src="/pwa-512.png" alt="Huella Blanca" />
+        <h1>Huella Blanca</h1>
+        <p className="subtitulo">
+          Identificación y recuperación de mascotas perdidas mediante un
+          código QR en el collar.
+        </p>
+      </div>
 
       <ol className="pasos">
         <li>
@@ -32,8 +52,9 @@ function Inicio() {
         </li>
       </ol>
 
-      <Link className="boton" to="/login">Ingresar como dueño</Link>
-      <Link className="boton secundario" to="/m/C30A45A9">Ver un ejemplo de ficha</Link>
+      <Link className="boton" to="/login">Iniciar sesión</Link>
+      <Link className="boton secundario" to="/escanear">Escanear un QR</Link>
+      <Link className="enlace-discreto" to="/m/C30A45A9">Ver un ejemplo de ficha</Link>
       <Link className="enlace-discreto" to="/placas">Generar QR de una placa</Link>
     </main>
   )
@@ -50,6 +71,7 @@ export default function App() {
         <Route path="/mascotas/nueva" element={<AltaMascota />} />
         <Route path="/mascotas/:id/editar" element={<AltaMascota />} />
         <Route path="/mascotas/:id/mapa" element={<MapaAvistamientos />} />
+        <Route path="/escanear" element={<Escanear />} />
         <Route path="/m/:codigo" element={<FichaPublica />} />
       </Routes>
     </BrowserRouter>
