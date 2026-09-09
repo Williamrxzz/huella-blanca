@@ -23,40 +23,79 @@ export default function MapaAvistamientos() {
   const [cargando, setCargando] = useState(true)
   const [mascota, setMascota] = useState(null)
   const [avistamientos, setAvistamientos] = useState([])
+  const [caso, setCaso] = useState(null)
+  const [cerrando, setCerrando] = useState(false)
+  const [errorCierre, setErrorCierre] = useState(null)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    async function cargar() {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        navigate('/login')
-        return
-      }
-
-      const { data: datosMascota, error: errorMascota } = await supabase
-        .from('mascotas')
-        .select('*')
-        .eq('id', id)
-        .single()
-
-      if (errorMascota || !datosMascota) {
-        setError('No pudimos encontrar esa mascota.')
-        setCargando(false)
-        return
-      }
-
-      const { data: datosAvistamientos } = await supabase
-        .from('avistamientos')
-        .select('*')
-        .eq('mascota_id', id)
-        .order('creado_en', { ascending: false })
-
-      setMascota(datosMascota)
-      setAvistamientos(datosAvistamientos || [])
-      setCargando(false)
+  async function cargar() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      navigate('/login')
+      return
     }
+
+    const { data: datosMascota, error: errorMascota } = await supabase
+      .from('mascotas')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (errorMascota || !datosMascota) {
+      setError('No pudimos encontrar esa mascota.')
+      setCargando(false)
+      return
+    }
+
+    const { data: datosAvistamientos } = await supabase
+      .from('avistamientos')
+      .select('*')
+      .eq('mascota_id', id)
+      .order('creado_en', { ascending: false })
+
+    const { data: casoAbierto } = await supabase
+      .from('casos_perdida')
+      .select('id, estado')
+      .eq('mascota_id', id)
+      .in('estado', ['perdida', 'posible_perdida'])
+      .maybeSingle()
+
+    setMascota(datosMascota)
+    setAvistamientos(datosAvistamientos || [])
+    setCaso(casoAbierto || null)
+    setCargando(false)
+  }
+
+  useEffect(() => {
     cargar()
   }, [id, navigate])
+
+  async function volvioACasa() {
+    setCerrando(true)
+    setErrorCierre(null)
+
+    const { data: avistamientoConRescatista } = await supabase
+      .from('avistamientos')
+      .select('reportado_por')
+      .eq('caso_id', caso.id)
+      .not('reportado_por', 'is', null)
+      .order('creado_en', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const { error: errorCierreCaso } = await supabase
+      .from('casos_perdida')
+      .update({
+        estado: 'cerrada',
+        cerrado_en: new Date().toISOString(),
+        rescatista_id: avistamientoConRescatista?.reportado_por ?? null,
+      })
+      .eq('id', caso.id)
+
+    setCerrando(false)
+    if (errorCierreCaso) setErrorCierre('No pudimos cerrar el caso: ' + errorCierreCaso.message)
+    else cargar()
+  }
 
   if (cargando) return <main className="pagina"><p>Cargando…</p></main>
 
@@ -74,6 +113,26 @@ export default function MapaAvistamientos() {
   return (
     <main className="pagina">
       <h1>Avistamientos de {mascota.nombre}</h1>
+
+      {caso && (
+        <div className={`alerta ${caso.estado === 'perdida' ? 'confirmada' : 'posible'}`}>
+          <span className="punto" aria-hidden="true" />
+          <div>
+            <strong>
+              {caso.estado === 'perdida' ? 'Perdida — buscando' : 'Podría estar perdida'}
+            </strong>
+            <p>Cuando {mascota.nombre} vuelva a casa, cerrá el caso acá.</p>
+          </div>
+        </div>
+      )}
+
+      {caso && (
+        <button className="boton" type="button" onClick={volvioACasa} disabled={cerrando}>
+          {cerrando ? 'Cerrando…' : `${mascota.nombre} volvió a casa`}
+        </button>
+      )}
+
+      {errorCierre && <p className="ayuda error">{errorCierre}</p>}
 
       {avistamientos.length === 0 && (
         <p className="ayuda">Todavía no reportaron haber visto a {mascota.nombre}.</p>
