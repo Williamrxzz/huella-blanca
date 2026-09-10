@@ -406,7 +406,19 @@ commit) de las historias del MVP con texto dudoso. Resultado:
   pérdida que resultaba ser falsa alarma quedaba trabada para siempre,
   porque el índice único no deja abrir un caso nuevo mientras uno
   viejo siga abierto.
+- **PER05** ("ver en un mapa la ubicación y la hora de cada
+  avistamiento"): confirmada. El popup de cada marcador en
+  `MapaAvistamientos.jsx` ya mostraba la fecha y hora
+  (`formatearFecha(a.creado_en)`) junto a la ubicación — no hizo falta
+  agregar nada.
 - **PER04**: sigue sin construir (ver arriba).
+- Todas las funciones de Supabase del núcleo (`generar_placa`,
+  `ficha_publica`, `registrar_escaneo`, `registrar_avistamiento`) se
+  probaron en vivo contra una mascota descartable, no solo leyendo su
+  definición: la detección automática de pérdida abre el caso
+  correctamente cuando el escaneo cae fuera del radio y no lo abre
+  cuando cae dentro, `ficha_publica` nunca devuelve el domicilio, y el
+  aviso funciona sin sesión.
 
 Ojo: en el historial de commits hay códigos de historia mal aplicados
 de sesiones anteriores (por ejemplo, `DUE04` se usó una vez para
