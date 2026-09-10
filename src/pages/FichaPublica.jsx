@@ -178,6 +178,21 @@ export default function FichaPublica() {
         </div>
       )}
 
+      {perdida && (ficha.contacto_tel || ficha.contacto_whatsapp) && (
+        <div className="contacto-dueno">
+          {ficha.contacto_whatsapp && (
+            <a className="boton" href={ficha.contacto_whatsapp} target="_blank" rel="noopener noreferrer">
+              Escribir por WhatsApp
+            </a>
+          )}
+          {ficha.contacto_tel && (
+            <a className="boton secundario" href={ficha.contacto_tel}>
+              Llamar al dueño
+            </a>
+          )}
+        </div>
+      )}
+
       {avisoEnviado ? (
         <div className="confirmacion">
           ¡Gracias! Avisamos al dueño de {ficha.nombre}.

@@ -229,6 +229,17 @@ h1 { font-size: 28px; margin: 16px 0 8px; }
   line-height: 1.4;
 }
 
+.contacto-dueno {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.contacto-dueno .boton {
+  margin: 0;
+}
+
 .boton {
   display: block;
   width: 100%;
