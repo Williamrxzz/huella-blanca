@@ -5,10 +5,19 @@ import { supabase } from '../lib/supabase'
 import { pedirUbicacion, pedirUbicacionSiYaHayPermiso } from '../lib/ubicacion'
 import Encabezado from '../components/Encabezado'
 
-const ETIQUETA_CARACTER = {
-  amigable: 'Es amigable',
-  temerosa: 'Es temerosa, acercate despacio',
-  no_acercarse: 'Mejor no acercarse, avisá al dueño',
+const INFO_CARACTER = {
+  amigable: {
+    etiqueta: 'Es amigable',
+    recomendacion: 'Podés acercarte con calma. Hablale suave y dejá que te huela la mano antes de tocarla.',
+  },
+  temerosa: {
+    etiqueta: 'Es temerosa, acercate despacio',
+    recomendacion: 'No la persigas ni le grites. Agachate, hablale bajito y dejá que sea ella quien se acerque.',
+  },
+  no_acercarse: {
+    etiqueta: 'Mejor no acercarse, avisá al dueño',
+    recomendacion: 'No intentes tocarla ni agarrarla. Quedate a distancia, avisá al dueño con tu ubicación y esperá indicaciones.',
+  },
 }
 
 const CENTRO_INICIAL = { lat: -46.4380, lng: -67.5280 } // Caleta Olivia
@@ -162,8 +171,11 @@ export default function FichaPublica() {
         {ficha.salud && <li><span>Salud</span>{ficha.salud}</li>}
       </ul>
 
-      {ficha.caracter && (
-        <p className="caracter">{ETIQUETA_CARACTER[ficha.caracter]}</p>
+      {ficha.caracter && INFO_CARACTER[ficha.caracter] && (
+        <div className="caracter">
+          <strong>{INFO_CARACTER[ficha.caracter].etiqueta}</strong>
+          <p>{INFO_CARACTER[ficha.caracter].recomendacion}</p>
+        </div>
       )}
 
       {avisoEnviado ? (
