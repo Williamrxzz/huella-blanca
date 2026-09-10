@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Circle, Popup } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
+import Encabezado from '../components/Encabezado'
 
 const ETIQUETA_SITUACION = {
   conmigo: 'Está con esta persona',
@@ -112,6 +113,7 @@ export default function MapaAvistamientos() {
 
   return (
     <main className="pagina">
+      <Encabezado />
       <h1>Avistamientos de {mascota.nombre}</h1>
 
       {caso && (

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { QRCodeCanvas } from 'qrcode.react'
+import Encabezado from '../components/Encabezado'
 
 export default function GeneradorQR() {
   const [searchParams] = useSearchParams()
@@ -22,6 +23,7 @@ export default function GeneradorQR() {
 
   return (
     <main className="pagina">
+      <Encabezado />
       <h1>{esMascotaNueva ? '¡Mascota cargada!' : 'Generador de QR'}</h1>
       <p className="ayuda">
         {esMascotaNueva

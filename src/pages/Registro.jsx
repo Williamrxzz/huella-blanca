@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import Encabezado from '../components/Encabezado'
 
 export default function Registro() {
   const navigate = useNavigate()
@@ -55,6 +56,7 @@ export default function Registro() {
 
   if (revisarEmail) return (
     <main className="pagina">
+      <Encabezado />
       <h1>Revisá tu email</h1>
       <p className="ayuda">
         Te enviamos un link para confirmar tu cuenta. Después de confirmarla, iniciá sesión.
@@ -65,6 +67,7 @@ export default function Registro() {
 
   return (
     <main className="pagina">
+      <Encabezado />
       <h1>Crear cuenta</h1>
       <p className="ayuda">Para cargar a tu mascota y recibir los avisos.</p>
 

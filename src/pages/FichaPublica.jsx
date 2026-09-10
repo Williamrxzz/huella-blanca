@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
 import { pedirUbicacion, pedirUbicacionSiYaHayPermiso } from '../lib/ubicacion'
+import Encabezado from '../components/Encabezado'
 
 const ETIQUETA_CARACTER = {
   amigable: 'Es amigable',
@@ -108,6 +109,7 @@ export default function FichaPublica() {
 
   if (error) return (
     <main className="pagina">
+      <Encabezado />
       <h1>Ocurrió un problema</h1>
       <p className="ayuda">{error}</p>
     </main>
@@ -115,6 +117,7 @@ export default function FichaPublica() {
 
   if (!ficha?.encontrada) return (
     <main className="pagina">
+      <Encabezado />
       <h1>Placa no reconocida</h1>
       <p>Esta placa no está registrada o todavía no fue asignada a una mascota.</p>
       <p className="ayuda">Código leído: {codigo}</p>
@@ -125,6 +128,7 @@ export default function FichaPublica() {
 
   return (
     <main className="pagina">
+      <Encabezado />
       {perdida && (
         <div className={`alerta ${ficha.estado === 'perdida' ? 'confirmada' : 'posible'}`}>
           <span className="punto" aria-hidden="true" />

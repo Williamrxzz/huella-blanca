@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
 import { pedirUbicacion } from '../lib/ubicacion'
+import Encabezado from '../components/Encabezado'
 
 const CENTRO_INICIAL = { lat: -46.4380, lng: -67.5280 } // Caleta Olivia
 
@@ -196,6 +197,7 @@ export default function AltaMascota() {
 
   return (
     <main className="pagina">
+      <Encabezado />
       <h1>{editando ? 'Editar mascota' : 'Cargar mascota'}</h1>
 
       <form className="formulario-aviso" onSubmit={guardar}>

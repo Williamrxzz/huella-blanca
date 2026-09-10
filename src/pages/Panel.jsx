@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import Encabezado from '../components/Encabezado'
 
 const ERRORES_VINCULAR = {
   placa_no_encontrada: 'No existe una placa con ese código',
@@ -148,7 +149,7 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
             </button>
           )}
           {caso?.estado === 'perdida' && (
-            <span className="ayuda">Perdida — buscando</span>
+            <span className="estado-caso">Perdida — buscando</span>
           )}
 
           <button className="boton-accion peligro" type="button" onClick={() => setConfirmando(true)}>
@@ -220,6 +221,7 @@ export default function Panel() {
 
   return (
     <main className="pagina">
+      <Encabezado />
       <h1>Mis mascotas</h1>
 
       {mascotas.length === 0 ? (

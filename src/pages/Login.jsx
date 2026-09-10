@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import Encabezado from '../components/Encabezado'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -26,6 +27,7 @@ export default function Login() {
 
   return (
     <main className="pagina">
+      <Encabezado />
       <h1>Ingresar</h1>
       <p className="ayuda">Accedé para gestionar la búsqueda de tu mascota.</p>
 

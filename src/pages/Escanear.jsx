@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import jsQR from 'jsqr'
+import Encabezado from '../components/Encabezado'
 
 export default function Escanear() {
   const navigate = useNavigate()
@@ -81,6 +82,7 @@ export default function Escanear() {
 
   return (
     <main className="pagina">
+      <Encabezado />
       <h1>Escanear QR</h1>
       <p className="ayuda">Apuntá la cámara al código QR de la placa.</p>
 
