@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
 
@@ -7,6 +8,71 @@ const ERRORES_VINCULAR = {
   placa_no_encontrada: 'No existe una placa con ese código',
   placa_ya_asignada: 'Esa placa ya está asignada a otra mascota',
   mascota_no_encontrada: 'No pudimos identificar la mascota',
+}
+
+function SelectorMapa({ onSeleccionar }) {
+  useMapEvents({
+    click(e) {
+      onSeleccionar({ lat: e.latlng.lat, lng: e.latlng.lng })
+    },
+  })
+  return null
+}
+
+function FormularioPerdida({ mascota, onCancelar, onConfirmar, enviando }) {
+  const [ubicacion, setUbicacion] = useState(null)
+  const [mensaje, setMensaje] = useState('')
+
+  function confirmar() {
+    onConfirmar({ ubicacion, mensaje: mensaje.trim() || null })
+  }
+
+  return (
+    <div className="superposicion">
+      <div className="tarjeta-confirmacion">
+        <h2>Reportar a {mascota.nombre} como perdida</h2>
+        <p className="ayuda">
+          Opcional: marcá dónde la viste por última vez y dejá un mensaje para quien la encuentre.
+        </p>
+
+        <MapContainer
+          center={[mascota.domicilio_lat, mascota.domicilio_lng]}
+          zoom={14}
+          className="mapa-domicilio"
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <SelectorMapa onSeleccionar={setUbicacion} />
+          {ubicacion && <Marker position={[ubicacion.lat, ubicacion.lng]} />}
+        </MapContainer>
+        <p className="ayuda">
+          {ubicacion
+            ? `Última ubicación marcada (${ubicacion.lat.toFixed(5)}, ${ubicacion.lng.toFixed(5)}).`
+            : 'Tocá el mapa para marcar dónde la viste por última vez (opcional).'}
+        </p>
+
+        <textarea
+          className="entrada"
+          placeholder="Mensaje para quien la encuentre (opcional)"
+          aria-label="Mensaje para quien la encuentre"
+          value={mensaje}
+          onChange={(e) => setMensaje(e.target.value)}
+          rows={3}
+        />
+
+        <div className="acciones-tarjeta">
+          <button className="boton secundario" type="button" onClick={onCancelar}>
+            Cancelar
+          </button>
+          <button className="boton" type="button" onClick={confirmar} disabled={enviando}>
+            {enviando ? 'Reportando…' : 'Reportar como perdida'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function CartelConfirmacion({ titulo, texto, onCancelar, onConfirmar, confirmando }) {
@@ -33,6 +99,7 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
   const [vinculando, setVinculando] = useState(false)
   const [eliminando, setEliminando] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
+  const [mostrandoFormularioPerdida, setMostrandoFormularioPerdida] = useState(false)
   const [marcando, setMarcando] = useState(false)
   const [descartando, setDescartando] = useState(false)
   const [error, setError] = useState(null)
@@ -40,15 +107,23 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
 
   const placaActiva = mascota.placas?.find((p) => p.estado === 'activa')
 
-  async function marcarPerdida() {
+  async function marcarPerdida({ ubicacion, mensaje }) {
     setMarcando(true)
     setErrorCaso(null)
 
+    const datosCaso = {
+      estado: 'perdida',
+      mensaje,
+      ultima_lat: ubicacion?.lat ?? null,
+      ultima_lng: ubicacion?.lng ?? null,
+    }
+
     const { error: errorRpc } = caso
-      ? await supabase.from('casos_perdida').update({ estado: 'perdida' }).eq('id', caso.id)
-      : await supabase.from('casos_perdida').insert({ mascota_id: mascota.id, estado: 'perdida', origen: 'manual' })
+      ? await supabase.from('casos_perdida').update(datosCaso).eq('id', caso.id)
+      : await supabase.from('casos_perdida').insert({ ...datosCaso, mascota_id: mascota.id, origen: 'manual' })
 
     setMarcando(false)
+    setMostrandoFormularioPerdida(false)
     if (errorRpc) setErrorCaso('No pudimos marcarla: ' + errorRpc.message)
     else onCasoActualizado()
   }
@@ -134,13 +209,13 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
           <Link className="boton-accion" to={`/mascotas/${mascota.id}/mapa`}>Mapa</Link>
 
           {!caso && (
-            <button className="boton-accion alerta" type="button" onClick={marcarPerdida} disabled={marcando}>
-              {marcando ? 'Marcando…' : 'Marcar como perdida'}
+            <button className="boton-accion alerta" type="button" onClick={() => setMostrandoFormularioPerdida(true)}>
+              Marcar como perdida
             </button>
           )}
           {caso?.estado === 'posible_perdida' && (
-            <button className="boton-accion alerta" type="button" onClick={marcarPerdida} disabled={marcando}>
-              {marcando ? 'Confirmando…' : 'Confirmar pérdida'}
+            <button className="boton-accion alerta" type="button" onClick={() => setMostrandoFormularioPerdida(true)}>
+              Confirmar pérdida
             </button>
           )}
           {caso?.estado === 'posible_perdida' && caso?.origen === 'automatico' && (
@@ -168,6 +243,15 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
           onCancelar={() => setConfirmando(false)}
           onConfirmar={eliminar}
           confirmando={eliminando}
+        />
+      )}
+
+      {mostrandoFormularioPerdida && (
+        <FormularioPerdida
+          mascota={mascota}
+          onCancelar={() => setMostrandoFormularioPerdida(false)}
+          onConfirmar={marcarPerdida}
+          enviando={marcando}
         />
       )}
     </li>

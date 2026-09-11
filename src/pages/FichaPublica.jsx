@@ -150,8 +150,28 @@ export default function FichaPublica() {
                 ? 'El dueño confirmó que no está en su casa. Si la ves, avisale.'
                 : 'Se detectó un escaneo lejos de su domicilio y el dueño todavía no lo confirmó.'}
             </p>
+            {ficha.mensaje_perdida && (
+              <p className="mensaje-dueno">"{ficha.mensaje_perdida}"</p>
+            )}
           </div>
         </div>
+      )}
+
+      {perdida && ficha.ultima_lat != null && ficha.ultima_lng != null && (
+        <>
+          <p className="ayuda">Última ubicación conocida:</p>
+          <MapContainer
+            center={[ficha.ultima_lat, ficha.ultima_lng]}
+            zoom={15}
+            className="mapa-domicilio"
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <Marker position={[ficha.ultima_lat, ficha.ultima_lng]} />
+          </MapContainer>
+        </>
       )}
 
       {ficha.foto_url

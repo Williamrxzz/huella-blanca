@@ -170,6 +170,12 @@ h1 { font-size: 28px; margin: 16px 0 8px; }
   opacity: 0.85;
 }
 
+.alerta .mensaje-dueno {
+  margin-top: 8px;
+  font-style: italic;
+  opacity: 1;
+}
+
 .alerta.posible {
   background: #fdf3e2;
   border: 1px solid #eccf9a;
