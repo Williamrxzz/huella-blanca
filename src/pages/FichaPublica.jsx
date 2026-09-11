@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
 import { pedirUbicacion, pedirUbicacionSiYaHayPermiso } from '../lib/ubicacion'
 import Encabezado from '../components/Encabezado'
@@ -150,28 +150,8 @@ export default function FichaPublica() {
                 ? 'El dueño confirmó que no está en su casa. Si la ves, avisale.'
                 : 'Se detectó un escaneo lejos de su domicilio y el dueño todavía no lo confirmó.'}
             </p>
-            {ficha.mensaje_perdida && (
-              <p className="mensaje-dueno">"{ficha.mensaje_perdida}"</p>
-            )}
           </div>
         </div>
-      )}
-
-      {perdida && ficha.ultima_lat != null && ficha.ultima_lng != null && (
-        <>
-          <p className="ayuda">Última ubicación conocida:</p>
-          <MapContainer
-            center={[ficha.ultima_lat, ficha.ultima_lng]}
-            zoom={15}
-            className="mapa-domicilio"
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <Marker position={[ficha.ultima_lat, ficha.ultima_lng]} />
-          </MapContainer>
-        </>
       )}
 
       {ficha.foto_url
@@ -196,6 +176,27 @@ export default function FichaPublica() {
           <strong>{INFO_CARACTER[ficha.caracter].etiqueta}</strong>
           <p>{INFO_CARACTER[ficha.caracter].recomendacion}</p>
         </div>
+      )}
+
+      {perdida && ficha.ultima_lat != null && ficha.ultima_lng != null && (
+        <>
+          <p className="subtitulo-mapa">Última ubicación donde se encontraba {ficha.nombre}</p>
+          <MapContainer
+            center={[ficha.ultima_lat, ficha.ultima_lng]}
+            zoom={15}
+            className="mapa-domicilio"
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <Circle
+              center={[ficha.ultima_lat, ficha.ultima_lng]}
+              radius={100}
+              pathOptions={{ color: '#2e5c8a', weight: 1, fillOpacity: 0.12 }}
+            />
+          </MapContainer>
+        </>
       )}
 
       {perdida && (ficha.contacto_tel || ficha.contacto_whatsapp) && (
