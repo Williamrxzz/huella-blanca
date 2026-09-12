@@ -20,6 +20,7 @@ export default function AdminComercios() {
   const [telefono, setTelefono] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState(null)
+  const [cambiandoEstado, setCambiandoEstado] = useState(null)
 
   async function cargar() {
     const { data: comerciosData, error: errorComercios } = await supabase
@@ -66,6 +67,7 @@ export default function AdminComercios() {
       rubro,
       direccion: direccion.trim() || null,
       telefono: telefono.trim() || null,
+      activo: true,
     })
 
     setEnviando(false)
@@ -79,6 +81,24 @@ export default function AdminComercios() {
     setRubro('veterinaria')
     setDireccion('')
     setTelefono('')
+    await cargar()
+  }
+
+  async function alternarActivo(comercio) {
+    setCambiandoEstado(comercio.id)
+
+    const { error: errorUpdate } = await supabase
+      .from('comercios')
+      .update({ activo: !comercio.activo })
+      .eq('id', comercio.id)
+
+    setCambiandoEstado(null)
+
+    if (errorUpdate) {
+      setError('No pudimos cambiar el estado: ' + errorUpdate.message)
+      return
+    }
+
     await cargar()
   }
 
@@ -144,12 +164,24 @@ export default function AdminComercios() {
           {comercios.map((c) => (
             <li key={c.id}>
               <div>
-                <span className="nombre">{c.nombre}</span>
+                <span className="nombre">
+                  {c.nombre} {!c.activo && <span className="ayuda">(inactivo)</span>}
+                </span>
                 <span className="ayuda">
                   {RUBROS[c.rubro] || c.rubro}
                   {c.direccion ? ` · ${c.direccion}` : ''}
                 </span>
                 {c.telefono && <span className="ayuda">{c.telefono}</span>}
+                <div className="acciones-mascota">
+                  <button
+                    className="boton-accion"
+                    type="button"
+                    onClick={() => alternarActivo(c)}
+                    disabled={cambiandoEstado === c.id}
+                  >
+                    {c.activo ? 'Desactivar' : 'Activar'}
+                  </button>
+                </div>
               </div>
             </li>
           ))}
