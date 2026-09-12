@@ -304,21 +304,40 @@ Usuario", con siete listas, una por bloque.
 - `src/pages/FichaPublica.jsx` — muestra la ficha al escanear, con un
   saludo que usa el nombre de la mascota ("¡Hola! Soy {nombre}") para
   que quien la encuentra la llame así y se acerque con más confianza.
-  Si hay un caso abierto, muestra una alerta distinta según el estado:
-  roja y con un indicador que pulsa si el dueño ya confirmó la
-  pérdida, ámbar si es una sospecha automática todavía sin confirmar.
-  Al cargar, llama a `registrar_escaneo` (TRA04) pero solo si el
-  navegador **ya tenía** el permiso de ubicación concedido de antes —
-  nunca se le pide permiso a quien solo está mirando la ficha, eso
-  sería fricción innecesaria. Además muestra el botón "La vi acá"
-  (TRA11): pide ubicación con `navigator.geolocation` (con límite
-  propio de 8 s, porque algunos navegadores no respetan el timeout de
-  la API si el permiso de Localización del sistema operativo está
-  desactivado) y, la tenga o no, siempre muestra un mapa de Leaflet
-  para marcar o corregir el punto exacto tocándolo — si no hay
-  ubicación automática, el mapa arranca centrado en Caleta Olivia.
-  Llama a `registrar_avistamiento`. Probado con y sin permiso
-  concedido.
+  Si hay un caso abierto, muestra una alerta corta distinta según el
+  estado: roja y con un indicador que pulsa si el dueño ya confirmó la
+  pérdida, ámbar si es una sospecha automática todavía sin confirmar
+  (el título de esa alerta se mantiene deliberadamente breve para no
+  restarle atención al resto de la ficha). Al cargar, llama a
+  `registrar_escaneo` (TRA04) pero solo si el navegador **ya tenía** el
+  permiso de ubicación concedido de antes — nunca se le pide permiso a
+  quien solo está mirando la ficha, eso sería fricción innecesaria.
+  Muestra también (**TRA08**) una recomendación de trato según el
+  campo `caracter` (amigable / temerosa / no acercarse), y (**TRA05**)
+  un botón de contacto al dueño (llamada o WhatsApp armados con
+  `tel:`/`wa.me:`) que **nunca muestra el número en pantalla** y que
+  solo aparece si la mascota está efectivamente perdida o con sospecha
+  de pérdida — no en cada escaneo normal, por privacidad. Si hay
+  `ultima_lat`/`ultima_lng` cargados (**PER07**), muestra un subtítulo
+  ("Última ubicación donde se encontraba {nombre}") y un mapa con una
+  zona aproximada de 100 m en lugar de un punto exacto, para no revelar
+  el domicilio del dueño. Además muestra el botón "La vi acá" (TRA11):
+  pide ubicación con `navigator.geolocation` (con límite propio de 8 s,
+  porque algunos navegadores no respetan el timeout de la API si el
+  permiso de Localización del sistema operativo está desactivado) y,
+  la tenga o no, siempre muestra un mapa de Leaflet para marcar o
+  corregir el punto exacto tocándolo — si no hay ubicación automática,
+  el mapa arranca centrado en Caleta Olivia. Llama a
+  `registrar_avistamiento`, que ya venía con los dos radio buttons de
+  situación, "La vi pasar" / "Está conmigo" (**TRA06**, ya estaba
+  hecho). Probado con y sin permiso concedido.
+  Después de enviar el aviso (**TRA09** / **REC09**), ofrece — sin
+  obligar — crear una cuenta para que la ayuda quede registrada; el
+  aviso ya quedó guardado antes de mostrar esta oferta. Si Supabase
+  exige confirmar el email, todavía no hay sesión en ese momento: el
+  `avistamiento_id` se guarda en `localStorage` (`avisoPendienteId`) y
+  se reclama con `reclamar_avistamiento` (ventana de 1 hora) apenas la
+  persona entra logueada al panel.
 - `src/pages/GeneradorQR.jsx` — genera y descarga el QR de una placa,
   apuntando siempre al dominio desde el que se sirve la app
   (`window.location.origin`).
@@ -331,23 +350,39 @@ Usuario", con siete listas, una por bloque.
   pantalla en vez de fallar. Necesita la política de RLS que permite a
   cada dueño insertar su propia fila en `perfiles`
   (`auth.uid() = id`), ya aplicada en Supabase.
-- `src/pages/Panel.jsx` — lista las mascotas del dueño logueado (foto,
-  nombre, especie/raza y el código de placa si ya tiene una activa). Si
-  una mascota no tiene placa, muestra un formulario para vincular una
-  existente (`vincular_placa`). Cada mascota tiene enlaces para editar,
-  ver el mapa de avistamientos, y eliminar (borrado lógico). Además
-  (**PER01**) un botón que cambia según el caso abierto que tenga esa
-  mascota: "Marcar como perdida" si no hay ninguno (crea un caso en
-  `casos_perdida` con `estado: 'perdida'`, `origen: 'manual'`),
-  "Confirmar pérdida" si ya existe uno en `posible_perdida` por
-  detección automática (lo actualiza a `perdida` en vez de crear otro,
-  respetando el índice único de casos abiertos), o el texto "Perdida —
-  buscando" si ya está confirmada. Junto a "Confirmar pérdida", si el
-  caso `posible_perdida` es de `origen: 'automatico'`, aparece también
+  **Ojo:** en ese segundo caso (confirmación pendiente) la fila de
+  `perfiles` queda sin crear en el momento del `signUp`, porque
+  todavía no hay sesión para cumplir esa política — se detectó al
+  probar TRA09 en vivo (`mascotas.dueno_id` u otra FK a `perfiles`
+  fallaría igual si se usara antes de pasar por el panel una vez). El
+  parche está en `Panel.jsx`, que crea el perfil faltante al detectar
+  la primera sesión activa, usando el nombre guardado en
+  `user_metadata` desde el `signUp`.
+- `src/pages/Panel.jsx` — lista **todas** las mascotas activas del
+  dueño logueado sin límite (**DUE06**, ya estaba hecho: no hay
+  `.limit()` en la consulta) — foto, nombre, especie/raza y el código
+  de placa si ya tiene una activa. Si una mascota no tiene placa,
+  muestra un formulario para vincular una existente (`vincular_placa`).
+  Cada mascota tiene enlaces para editar, ver el mapa de avistamientos,
+  y eliminar (borrado lógico). Además (**PER01**) un botón que cambia
+  según el caso abierto que tenga esa mascota: "Marcar como perdida" si
+  no hay ninguno, o "Confirmar pérdida" si ya existe uno en
+  `posible_perdida` por detección automática (lo actualiza a `perdida`
+  en vez de crear otro, respetando el índice único de casos abiertos).
+  Ambos abren (**PER07**) un formulario modal con un mapa para marcar
+  opcionalmente dónde se la vio por última vez y un mensaje opcional
+  para quien la encuentre, antes de guardar el caso con
+  `estado: 'perdida'`. El texto "Perdida — buscando" se muestra si ya
+  está confirmada. Junto a "Confirmar pérdida", si el caso
+  `posible_perdida` es de `origen: 'automatico'`, aparece también
   (**PER03**) el botón "No, está conmigo": pone el caso en
   `estado: 'descartada'` con `cerrado_en: now()`. Hacía falta porque el
   índice único impide un caso nuevo mientras uno viejo siga abierto —
   sin esto, una falsa alarma automática quedaba trabada para siempre.
+  Al detectar sesión activa, si todavía no existe la fila en `perfiles`
+  del usuario (registro hecho con confirmación de email pendiente, ver
+  más abajo) la crea antes de seguir, y reclama cualquier aviso
+  pendiente guardado en `localStorage` por TRA09.
 - `src/pages/AltaMascota.jsx` — alta **y edición** de mascota (mismo
   formulario; `/mascotas/nueva` crea, `/mascotas/:id/editar` corrige):
   nombre, especie, sexo (obligatorio), raza, tamaño, color, señas,
@@ -361,7 +396,9 @@ Usuario", con siete listas, una por bloque.
 - `src/pages/MapaAvistamientos.jsx` (`/mascotas/:id/mapa`) — mapa de
   Leaflet con el domicilio, el círculo de radio (con leyenda explicando
   qué es, para no confundir) y un marcador por cada avistamiento con
-  ubicación; los avisos sin ubicación exacta se listan aparte. Si la
+  ubicación, mostrando también el contacto que dejó quien avisó
+  (**PER06**, ya estaba hecho: `{a.contacto}` en el popup y en la
+  lista); los avisos sin ubicación exacta se listan aparte. Si la
   mascota tiene un caso abierto, muestra la alerta correspondiente y
   (**PER08**) el botón "{nombre} volvió a casa": cierra el caso
   (`estado: 'cerrada'`, `cerrado_en: now()`) y, si algún avistamiento
@@ -427,6 +464,44 @@ de sesiones anteriores (por ejemplo, `DUE04` se usó una vez para
 función real que le corresponde). El detalle completo, commit por
 commit, está en `TRAZABILIDAD.md`. Para saber qué hace falta, conviene
 mirar el código, no el texto de los commits viejos.
+
+### Sprint 3: terminado
+
+Detección automática y contacto — las siete historias que quedaban del
+sprint:
+
+- **TRA06** (elegir entre "la vi pasar" y "está conmigo" al avisar):
+  ya estaba hecho, sin cambios.
+- **TRA08** (recomendación de trato según el carácter): construida y
+  probada.
+- **TRA05** (contacto al dueño sin exponer el teléfono): construida y
+  probada; se agregó además una restricción de privacidad no pedida
+  originalmente en la historia pero sí explícitamente por el criterio
+  del proyecto: el botón de contacto solo se muestra si la mascota está
+  perdida o con sospecha de pérdida, nunca en un escaneo común.
+- **PER07** (marcar última ubicación y dejar un mensaje al reportar
+  la pérdida): construida y probada, con varias vueltas de ajuste de
+  diseño (zona aproximada de 100 m en vez de punto exacto, alerta
+  corta, mensaje reubicado y finalmente reemplazado por un subtítulo
+  en el mapa) para no comprometer la privacidad del domicilio ni
+  saturar la ficha.
+- **PER06** (ver el contacto de quien avisó): ya estaba hecho, sin
+  cambios.
+- **DUE06** (ver todas las mascotas propias, no solo una): ya estaba
+  hecho, sin cambios.
+- **TRA09** (crear cuenta después de avisar, sin obligar): construida
+  y probada en vivo de punta a punta — incluyendo el caso real de este
+  proyecto, que exige confirmar el email antes de dar sesión. De paso
+  cierra **REC09** (sprint 4: que un aviso hecho sin cuenta quede
+  asociado al perfil si esa persona se registra después), con la misma
+  función `reclamar_avistamiento`.
+
+Al probar TRA09 en vivo apareció un bug real y previo a esta sesión
+(no introducido ahora): con confirmación de email pendiente, el alta
+de cuenta nunca llegaba a crear la fila en `perfiles` (ver el aviso en
+`Registro.jsx` más arriba). Sin el parche en `Panel.jsx`, cualquier
+dueño real que se registrara así habría quedado con una cuenta
+incapaz de cargar mascotas.
 
 ### Pendiente, en este orden
 
