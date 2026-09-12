@@ -271,6 +271,22 @@ export default function Panel() {
       return
     }
 
+    const { data: perfilExistente } = await supabase
+      .from('perfiles')
+      .select('id')
+      .eq('id', session.user.id)
+      .maybeSingle()
+
+    if (!perfilExistente) {
+      // Si el registro pidió confirmar el email, la fila en "perfiles" queda
+      // pendiente hasta este primer ingreso ya logueado.
+      await supabase.from('perfiles').insert({
+        id: session.user.id,
+        nombre: session.user.user_metadata?.nombre || '',
+        rol: 'usuario',
+      })
+    }
+
     const avisoPendienteId = localStorage.getItem('avisoPendienteId')
     if (avisoPendienteId) {
       await supabase.rpc('reclamar_avistamiento', { p_avistamiento_id: avisoPendienteId })
