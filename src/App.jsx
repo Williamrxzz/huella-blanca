@@ -8,6 +8,7 @@ import Panel from './pages/Panel'
 import AltaMascota from './pages/AltaMascota'
 import MapaAvistamientos from './pages/MapaAvistamientos'
 import Escanear from './pages/Escanear'
+import AdminComercios from './pages/AdminComercios'
 import { supabase } from './lib/supabase'
 
 function Inicio() {
@@ -74,6 +75,7 @@ export default function App() {
         <Route path="/mascotas/:id/editar" element={<AltaMascota />} />
         <Route path="/mascotas/:id/mapa" element={<MapaAvistamientos />} />
         <Route path="/escanear" element={<Escanear />} />
+        <Route path="/admin/comercios" element={<AdminComercios />} />
         <Route path="/m/:codigo" element={<FichaPublica />} />
       </Routes>
     </BrowserRouter>
