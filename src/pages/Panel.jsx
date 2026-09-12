@@ -271,6 +271,12 @@ export default function Panel() {
       return
     }
 
+    const avisoPendienteId = localStorage.getItem('avisoPendienteId')
+    if (avisoPendienteId) {
+      await supabase.rpc('reclamar_avistamiento', { p_avistamiento_id: avisoPendienteId })
+      localStorage.removeItem('avisoPendienteId')
+    }
+
     const { data } = await supabase
       .from('mascotas')
       .select('*, placas(codigo, estado)')

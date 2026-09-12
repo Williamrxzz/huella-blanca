@@ -48,6 +48,14 @@ export default function FichaPublica() {
   const [enviando, setEnviando] = useState(false)
   const [errorEnvio, setErrorEnvio] = useState(null)
   const [avisoEnviado, setAvisoEnviado] = useState(false)
+  const [avistamientoId, setAvistamientoId] = useState(null)
+  const [mostrarCuenta, setMostrarCuenta] = useState(false)
+  const [nombreCuenta, setNombreCuenta] = useState('')
+  const [emailCuenta, setEmailCuenta] = useState('')
+  const [contrasenaCuenta, setContrasenaCuenta] = useState('')
+  const [creandoCuenta, setCreandoCuenta] = useState(false)
+  const [errorCuenta, setErrorCuenta] = useState(null)
+  const [cuentaCreada, setCuentaCreada] = useState(false)
 
   useEffect(() => {
     async function cargar() {
@@ -99,7 +107,7 @@ export default function FichaPublica() {
 
     setEnviando(true)
 
-    const { error } = await supabase.rpc('registrar_avistamiento', {
+    const { data, error } = await supabase.rpc('registrar_avistamiento', {
       p_codigo: codigo,
       p_lat: ubicacion.lat,
       p_lng: ubicacion.lng,
@@ -110,8 +118,52 @@ export default function FichaPublica() {
     })
 
     setEnviando(false)
-    if (error) setErrorEnvio(error.message)
-    else setAvisoEnviado(true)
+    if (error) {
+      setErrorEnvio(error.message)
+      return
+    }
+    setAvistamientoId(data?.avistamiento_id || null)
+    setAvisoEnviado(true)
+  }
+
+  async function crearCuentaYReclamar(e) {
+    e.preventDefault()
+    setCreandoCuenta(true)
+    setErrorCuenta(null)
+
+    const { data, error: errorRegistro } = await supabase.auth.signUp({
+      email: emailCuenta,
+      password: contrasenaCuenta,
+      options: { data: { nombre: nombreCuenta } },
+    })
+
+    if (errorRegistro) {
+      setCreandoCuenta(false)
+      setErrorCuenta(
+        errorRegistro.message.includes('already registered')
+          ? 'Ese email ya tiene una cuenta. Iniciá sesión desde el panel para vincular tu ayuda.'
+          : errorRegistro.message
+      )
+      return
+    }
+
+    if (!data.session) {
+      // Falta confirmar el email: todavía no hay sesión para reclamar el aviso.
+      // Se guarda el id para reclamarlo cuando la persona vuelva ya logueada.
+      if (avistamientoId) localStorage.setItem('avisoPendienteId', avistamientoId)
+      setCreandoCuenta(false)
+      setCuentaCreada(true)
+      return
+    }
+
+    await supabase.from('perfiles').insert({ id: data.user.id, nombre: nombreCuenta, rol: 'usuario' })
+
+    if (avistamientoId) {
+      await supabase.rpc('reclamar_avistamiento', { p_avistamiento_id: avistamientoId })
+    }
+
+    setCreandoCuenta(false)
+    setCuentaCreada(true)
   }
 
   if (cargando) return <main className="pagina"><p>Buscando la mascota…</p></main>
@@ -215,9 +267,68 @@ export default function FichaPublica() {
       )}
 
       {avisoEnviado ? (
-        <div className="confirmacion">
-          ¡Gracias! Avisamos al dueño de {ficha.nombre}.
-        </div>
+        <>
+          <div className="confirmacion">
+            ¡Gracias! Avisamos al dueño de {ficha.nombre}.
+          </div>
+
+          {cuentaCreada ? (
+            <p className="ayuda">
+              Tu ayuda quedó registrada. Revisá tu email si hace falta confirmar la cuenta.
+            </p>
+          ) : mostrarCuenta ? (
+            <form className="formulario-aviso" onSubmit={crearCuentaYReclamar}>
+              <p className="ayuda">Creá una cuenta para que tu ayuda quede registrada.</p>
+              <input
+                className="entrada"
+                type="text"
+                placeholder="Tu nombre"
+                aria-label="Tu nombre"
+                value={nombreCuenta}
+                onChange={(e) => setNombreCuenta(e.target.value)}
+                autoComplete="name"
+                required
+              />
+              <input
+                className="entrada"
+                type="email"
+                placeholder="Email"
+                aria-label="Email"
+                value={emailCuenta}
+                onChange={(e) => setEmailCuenta(e.target.value)}
+                autoComplete="email"
+                required
+              />
+              <input
+                className="entrada"
+                type="password"
+                placeholder="Contraseña"
+                aria-label="Contraseña"
+                value={contrasenaCuenta}
+                onChange={(e) => setContrasenaCuenta(e.target.value)}
+                autoComplete="new-password"
+                minLength={6}
+                required
+              />
+              {errorCuenta && <p className="ayuda error">{errorCuenta}</p>}
+              <button className="boton" type="submit" disabled={creandoCuenta}>
+                {creandoCuenta ? 'Creando cuenta…' : 'Crear cuenta'}
+              </button>
+              <button
+                className="boton secundario"
+                type="button"
+                onClick={() => setMostrarCuenta(false)}
+                disabled={creandoCuenta}
+              >
+                No, gracias
+              </button>
+            </form>
+          ) : (
+            <button className="boton secundario" onClick={() => setMostrarCuenta(true)}>
+              Crear cuenta para que quede registrada mi ayuda
+            </button>
+          )}
+        </>
       ) : !mostrarFormulario ? (
         <button className="boton" onClick={abrirFormulario}>La vi acá</button>
       ) : (
