@@ -10,6 +10,7 @@ import MapaAvistamientos from './pages/MapaAvistamientos'
 import Escanear from './pages/Escanear'
 import AdminComercios from './pages/AdminComercios'
 import AdminAgradecimientos from './pages/AdminAgradecimientos'
+import AdminPlacas from './pages/AdminPlacas'
 import { supabase } from './lib/supabase'
 
 function Inicio() {
@@ -78,6 +79,7 @@ export default function App() {
         <Route path="/escanear" element={<Escanear />} />
         <Route path="/admin/comercios" element={<AdminComercios />} />
         <Route path="/admin/agradecimientos" element={<AdminAgradecimientos />} />
+        <Route path="/admin/placas" element={<AdminPlacas />} />
         <Route path="/m/:codigo" element={<FichaPublica />} />
       </Routes>
     </BrowserRouter>

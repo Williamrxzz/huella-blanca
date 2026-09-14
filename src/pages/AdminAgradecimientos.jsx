@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
+import NavAdmin from '../components/NavAdmin'
 
 const TIPOS = {
   descuento: 'Descuento',
@@ -108,6 +109,7 @@ export default function AdminAgradecimientos() {
   return (
     <main className="pagina">
       <Encabezado />
+      <NavAdmin />
       <h1>Agradecimientos</h1>
       <p className="ayuda">
         Lo que cada comercio ofrece a quien ayuda a reencontrar una mascota — nunca dinero.
@@ -207,8 +209,6 @@ export default function AdminAgradecimientos() {
           ))}
         </ul>
       )}
-
-      <Link className="enlace-discreto" to="/admin/comercios">Ver comercios</Link>
     </main>
   )
 }

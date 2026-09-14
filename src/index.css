@@ -235,6 +235,58 @@ h1 { font-size: 28px; margin: 16px 0 8px; }
   margin: 0 0 8px;
 }
 
+.etiqueta-estado-placa {
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.etiqueta-estado-placa-sin_asignar {
+  background: #ececea;
+  color: #6f6e6a;
+}
+
+.etiqueta-estado-placa-activa {
+  background: #eaf4ec;
+  color: #2f6b3c;
+}
+
+.etiqueta-estado-placa-perdida {
+  background: #fdecec;
+  color: #8c2f2f;
+}
+
+.etiqueta-estado-placa-baja {
+  background: #f3ece0;
+  color: #8a5a12;
+}
+
+.nav-admin {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.nav-admin-enlace {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #d8d6d1;
+  color: #6f6e6a;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.nav-admin-enlace.activo {
+  background: #2e5c8a;
+  border-color: #2e5c8a;
+  color: #fff;
+}
+
 .contacto-dueno {
   display: flex;
   flex-direction: column;

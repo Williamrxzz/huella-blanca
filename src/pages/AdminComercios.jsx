@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
+import NavAdmin from '../components/NavAdmin'
 
 const RUBROS = {
   veterinaria: 'Veterinaria',
@@ -107,6 +108,7 @@ export default function AdminComercios() {
   return (
     <main className="pagina">
       <Encabezado />
+      <NavAdmin />
       <h1>Comercios adheridos</h1>
       <p className="ayuda">Alta de veterinarias, forrajerías y otros comercios que ofrecen agradecimientos.</p>
 
@@ -187,8 +189,6 @@ export default function AdminComercios() {
           ))}
         </ul>
       )}
-
-      <Link className="enlace-discreto" to="/admin/agradecimientos">Ver agradecimientos</Link>
     </main>
   )
 }
