@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
 
@@ -187,6 +187,8 @@ export default function AdminComercios() {
           ))}
         </ul>
       )}
+
+      <Link className="enlace-discreto" to="/admin/agradecimientos">Ver agradecimientos</Link>
     </main>
   )
 }

@@ -9,6 +9,7 @@ import AltaMascota from './pages/AltaMascota'
 import MapaAvistamientos from './pages/MapaAvistamientos'
 import Escanear from './pages/Escanear'
 import AdminComercios from './pages/AdminComercios'
+import AdminAgradecimientos from './pages/AdminAgradecimientos'
 import { supabase } from './lib/supabase'
 
 function Inicio() {
@@ -76,6 +77,7 @@ export default function App() {
         <Route path="/mascotas/:id/mapa" element={<MapaAvistamientos />} />
         <Route path="/escanear" element={<Escanear />} />
         <Route path="/admin/comercios" element={<AdminComercios />} />
+        <Route path="/admin/agradecimientos" element={<AdminAgradecimientos />} />
         <Route path="/m/:codigo" element={<FichaPublica />} />
       </Routes>
     </BrowserRouter>
