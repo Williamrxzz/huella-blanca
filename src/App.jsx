@@ -11,6 +11,7 @@ import Escanear from './pages/Escanear'
 import AdminComercios from './pages/AdminComercios'
 import AdminAgradecimientos from './pages/AdminAgradecimientos'
 import AdminPlacas from './pages/AdminPlacas'
+import AdminRefugios from './pages/AdminRefugios'
 import { supabase } from './lib/supabase'
 
 function Inicio() {
@@ -80,6 +81,7 @@ export default function App() {
         <Route path="/admin/comercios" element={<AdminComercios />} />
         <Route path="/admin/agradecimientos" element={<AdminAgradecimientos />} />
         <Route path="/admin/placas" element={<AdminPlacas />} />
+        <Route path="/admin/refugios" element={<AdminRefugios />} />
         <Route path="/m/:codigo" element={<FichaPublica />} />
       </Routes>
     </BrowserRouter>

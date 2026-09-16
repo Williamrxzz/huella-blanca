@@ -4,6 +4,7 @@ const SECCIONES = [
   { to: '/admin/comercios', etiqueta: 'Comercios' },
   { to: '/admin/agradecimientos', etiqueta: 'Agradecimientos' },
   { to: '/admin/placas', etiqueta: 'Placas' },
+  { to: '/admin/refugios', etiqueta: 'Refugios' },
 ]
 
 export default function NavAdmin() {
