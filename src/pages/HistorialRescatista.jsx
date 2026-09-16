@@ -23,6 +23,7 @@ export default function HistorialRescatista() {
   const [cargando, setCargando] = useState(true)
   const [avistamientos, setAvistamientos] = useState([])
   const [reencuentros, setReencuentros] = useState([])
+  const [comerciosConPlaca, setComerciosConPlaca] = useState([])
   const [error, setError] = useState(null)
 
   useEffect(() => {
@@ -36,8 +37,21 @@ export default function HistorialRescatista() {
       const { data, error: errorHistorial } = await supabase.rpc('historial_rescatista')
 
       if (errorHistorial) setError('No pudimos cargar tu historial: ' + errorHistorial.message)
+      const reencuentrosData = data?.reencuentros || []
       setAvistamientos(data?.avistamientos || [])
-      setReencuentros(data?.reencuentros || [])
+      setReencuentros(reencuentrosData)
+
+      if (reencuentrosData.length > 0) {
+        // Nunca se pide ni se muestra quién financia la placa (completa o mitad):
+        // eso es información administrativa, acá solo interesa dónde retirarla.
+        const { data: agradecimientosData } = await supabase
+          .from('agradecimientos')
+          .select('id, comercios(nombre, telefono)')
+          .eq('activo', true)
+
+        setComerciosConPlaca(agradecimientosData || [])
+      }
+
       setCargando(false)
     }
     cargar()
@@ -70,6 +84,23 @@ export default function HistorialRescatista() {
             </li>
           ))}
         </ul>
+      )}
+
+      {comerciosConPlaca.length > 0 && (
+        <div className="caracter">
+          <strong>Tenés una placa grabada de regalo esperándote</strong>
+          <p>Podés retirarla en cualquiera de estos comercios adheridos, o donarla a un refugio si preferís:</p>
+          <ul className="lista-mascotas">
+            {comerciosConPlaca.map((a) => (
+              <li key={a.id}>
+                <div>
+                  <span className="nombre">{a.comercios?.nombre}</span>
+                  {a.comercios?.telefono && <span className="ayuda">{a.comercios.telefono}</span>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       <h2>Avisos que diste</h2>
