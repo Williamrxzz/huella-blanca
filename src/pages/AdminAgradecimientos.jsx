@@ -4,15 +4,11 @@ import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
 import NavAdmin from '../components/NavAdmin'
 
-const TIPOS = {
-  descuento: 'Descuento',
-  producto: 'Producto',
-  servicio: 'Servicio',
-}
+const TITULO_FIJO = 'Placa grabada de regalo'
 
-function formatearFecha(fecha) {
-  if (!fecha) return null
-  return new Date(fecha + 'T00:00:00').toLocaleDateString('es-AR')
+const APORTES = {
+  completa: 'Aporta la placa completa',
+  mitad: 'Aporta la mitad (el proyecto cubre el resto)',
 }
 
 export default function AdminAgradecimientos() {
@@ -22,10 +18,7 @@ export default function AdminAgradecimientos() {
   const [agradecimientos, setAgradecimientos] = useState([])
 
   const [comercioId, setComercioId] = useState('')
-  const [titulo, setTitulo] = useState('')
-  const [descripcion, setDescripcion] = useState('')
-  const [tipo, setTipo] = useState('descuento')
-  const [vigencia, setVigencia] = useState('')
+  const [aporte, setAporte] = useState('completa')
   const [maxCanjes, setMaxCanjes] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState(null)
@@ -33,7 +26,7 @@ export default function AdminAgradecimientos() {
   async function cargar() {
     const { data: comerciosData } = await supabase
       .from('comercios')
-      .select('id, nombre')
+      .select('id, nombre, telefono')
       .eq('activo', true)
       .order('nombre')
 
@@ -42,7 +35,7 @@ export default function AdminAgradecimientos() {
 
     const { data: agradecimientosData, error: errorAgradecimientos } = await supabase
       .from('agradecimientos')
-      .select('*, comercios(nombre)')
+      .select('*, comercios(nombre, telefono)')
       .order('id', { ascending: false })
 
     if (errorAgradecimientos) setError('No pudimos cargar los agradecimientos: ' + errorAgradecimientos.message)
@@ -81,10 +74,9 @@ export default function AdminAgradecimientos() {
 
     const { error: errorInsert } = await supabase.from('agradecimientos').insert({
       comercio_id: comercioId,
-      titulo: titulo.trim(),
-      descripcion: descripcion.trim() || null,
-      tipo,
-      vigencia: vigencia || null,
+      titulo: TITULO_FIJO,
+      tipo: 'producto',
+      aporte,
       max_canjes: maxCanjes ? Number(maxCanjes) : null,
       activo: true,
     })
@@ -96,10 +88,7 @@ export default function AdminAgradecimientos() {
       return
     }
 
-    setTitulo('')
-    setDescripcion('')
-    setTipo('descuento')
-    setVigencia('')
+    setAporte('completa')
     setMaxCanjes('')
     await cargar()
   }
@@ -112,7 +101,8 @@ export default function AdminAgradecimientos() {
       <NavAdmin />
       <h1>Agradecimientos</h1>
       <p className="ayuda">
-        Lo que cada comercio ofrece a quien ayuda a reencontrar una mascota — nunca dinero.
+        El agradecimiento es siempre una placa grabada de regalo — nunca dinero. Acá solo se define
+        cómo la financia cada comercio adherido.
       </p>
 
       {comercios.length === 0 ? (
@@ -131,44 +121,16 @@ export default function AdminAgradecimientos() {
             ))}
           </select>
 
-          <input
-            className="entrada"
-            type="text"
-            placeholder="Título (por ejemplo: 20% en alimento balanceado)"
-            aria-label="Título del agradecimiento"
-            value={titulo}
-            onChange={(e) => setTitulo(e.target.value)}
-            required
-          />
-
-          <textarea
-            className="entrada"
-            placeholder="Descripción (opcional)"
-            aria-label="Descripción"
-            value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
-            rows={2}
-          />
-
           <select
             className="entrada"
-            aria-label="Tipo"
-            value={tipo}
-            onChange={(e) => setTipo(e.target.value)}
+            aria-label="Cómo aporta la placa"
+            value={aporte}
+            onChange={(e) => setAporte(e.target.value)}
           >
-            {Object.entries(TIPOS).map(([valor, etiqueta]) => (
+            {Object.entries(APORTES).map(([valor, etiqueta]) => (
               <option key={valor} value={valor}>{etiqueta}</option>
             ))}
           </select>
-
-          <label className="ayuda" htmlFor="vigencia-agradecimiento">Válido hasta (opcional)</label>
-          <input
-            id="vigencia-agradecimiento"
-            className="entrada"
-            type="date"
-            value={vigencia}
-            onChange={(e) => setVigencia(e.target.value)}
-          />
 
           <input
             className="entrada"
@@ -195,15 +157,10 @@ export default function AdminAgradecimientos() {
           {agradecimientos.map((a) => (
             <li key={a.id}>
               <div>
-                <span className="nombre">{a.titulo}</span>
-                <span className="ayuda">
-                  {a.comercios?.nombre} · {TIPOS[a.tipo] || a.tipo}
-                </span>
-                {a.descripcion && <span className="ayuda">{a.descripcion}</span>}
-                <span className="ayuda">
-                  {a.vigencia ? `Válido hasta ${formatearFecha(a.vigencia)}` : 'Sin fecha límite'}
-                  {a.max_canjes ? ` · Máx. ${a.max_canjes} canjes` : ''}
-                </span>
+                <span className="nombre">{a.comercios?.nombre}</span>
+                <span className="ayuda">{APORTES[a.aporte] || a.aporte}</span>
+                {a.comercios?.telefono && <span className="ayuda">{a.comercios.telefono}</span>}
+                {a.max_canjes && <span className="ayuda">Máx. {a.max_canjes} canjes</span>}
               </div>
             </li>
           ))}
