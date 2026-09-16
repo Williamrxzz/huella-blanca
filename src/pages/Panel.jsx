@@ -351,6 +351,7 @@ export default function Panel() {
       )}
 
       <Link className="boton" to="/mascotas/nueva">Cargar mascota</Link>
+      <Link className="enlace-discreto" to="/mi-historial">Tu colaboración</Link>
       {esAdmin && (
         <Link className="enlace-discreto" to="/admin/comercios">Panel de administración</Link>
       )}
