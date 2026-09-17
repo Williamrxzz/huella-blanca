@@ -168,6 +168,16 @@ export default function HistorialRescatista() {
                 <span className="nombre">{r.mascota_nombre}</span>
                 <span className="ayuda">Volvió a casa el {formatearFecha(r.cerrado_en)}</span>
 
+                {(r.mensaje_agradecimiento || r.foto_reencuentro_url) && (
+                  <div className="caracter">
+                    <strong>El dueño te dejó un agradecimiento</strong>
+                    {r.mensaje_agradecimiento && <p>{r.mensaje_agradecimiento}</p>}
+                    {r.foto_reencuentro_url && (
+                      <img className="foto" src={r.foto_reencuentro_url} alt="Foto del reencuentro" />
+                    )}
+                  </div>
+                )}
+
                 {r.canje_codigo ? (
                   <p className="confirmacion">
                     Código {r.canje_codigo} —{' '}

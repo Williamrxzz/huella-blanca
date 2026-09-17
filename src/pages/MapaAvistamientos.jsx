@@ -18,6 +18,51 @@ function formatearFecha(fechaIso) {
   })
 }
 
+function FormularioReencuentro({ mascota, onCancelar, onConfirmar, enviando }) {
+  const [mensaje, setMensaje] = useState('')
+  const [foto, setFoto] = useState(null)
+
+  return (
+    <div className="superposicion">
+      <div className="tarjeta-confirmacion">
+        <h2>{mascota.nombre} volvió a casa</h2>
+        <p className="ayuda">
+          Si querés, dejale un agradecimiento a quien ayudó (opcional): un mensaje, una foto del
+          reencuentro, o las dos cosas.
+        </p>
+
+        <textarea
+          className="entrada"
+          placeholder="Un mensaje para quien ayudó (opcional)"
+          aria-label="Mensaje de agradecimiento"
+          value={mensaje}
+          onChange={(e) => setMensaje(e.target.value)}
+          rows={3}
+        />
+
+        <label className="campo-archivo">
+          Foto del reencuentro (opcional)
+          <input type="file" accept="image/*" onChange={(e) => setFoto(e.target.files?.[0] || null)} />
+        </label>
+
+        <div className="acciones-tarjeta">
+          <button className="boton secundario" type="button" onClick={onCancelar} disabled={enviando}>
+            Cancelar
+          </button>
+          <button
+            className="boton"
+            type="button"
+            onClick={() => onConfirmar({ mensaje: mensaje.trim() || null, foto })}
+            disabled={enviando}
+          >
+            {enviando ? 'Guardando…' : 'Confirmar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function MapaAvistamientos() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -28,6 +73,7 @@ export default function MapaAvistamientos() {
   const [cerrando, setCerrando] = useState(false)
   const [errorCierre, setErrorCierre] = useState(null)
   const [error, setError] = useState(null)
+  const [mostrarFormularioVolvio, setMostrarFormularioVolvio] = useState(false)
 
   async function cargar() {
     const { data: { session } } = await supabase.auth.getSession()
@@ -71,9 +117,24 @@ export default function MapaAvistamientos() {
     cargar()
   }, [id, navigate])
 
-  async function volvioACasa() {
+  async function volvioACasa({ mensaje, foto }) {
     setCerrando(true)
     setErrorCierre(null)
+
+    let fotoUrl = null
+    if (foto) {
+      const ruta = `${mascota.dueno_id}/reencuentro-${Date.now()}-${foto.name}`
+      const { error: errorSubida } = await supabase.storage.from('fotos-mascotas').upload(ruta, foto)
+
+      if (errorSubida) {
+        setCerrando(false)
+        setErrorCierre('No pudimos subir la foto: ' + errorSubida.message)
+        return
+      }
+
+      const { data } = supabase.storage.from('fotos-mascotas').getPublicUrl(ruta)
+      fotoUrl = data.publicUrl
+    }
 
     const { data: avistamientoConRescatista } = await supabase
       .from('avistamientos')
@@ -90,10 +151,13 @@ export default function MapaAvistamientos() {
         estado: 'cerrada',
         cerrado_en: new Date().toISOString(),
         rescatista_id: avistamientoConRescatista?.reportado_por ?? null,
+        mensaje_agradecimiento: mensaje,
+        foto_reencuentro_url: fotoUrl,
       })
       .eq('id', caso.id)
 
     setCerrando(false)
+    setMostrarFormularioVolvio(false)
     if (errorCierreCaso) setErrorCierre('No pudimos cerrar el caso: ' + errorCierreCaso.message)
     else cargar()
   }
@@ -129,12 +193,21 @@ export default function MapaAvistamientos() {
       )}
 
       {caso && (
-        <button className="boton" type="button" onClick={volvioACasa} disabled={cerrando}>
+        <button className="boton" type="button" onClick={() => setMostrarFormularioVolvio(true)} disabled={cerrando}>
           {cerrando ? 'Cerrando…' : `${mascota.nombre} volvió a casa`}
         </button>
       )}
 
       {errorCierre && <p className="ayuda error">{errorCierre}</p>}
+
+      {mostrarFormularioVolvio && (
+        <FormularioReencuentro
+          mascota={mascota}
+          onCancelar={() => setMostrarFormularioVolvio(false)}
+          onConfirmar={volvioACasa}
+          enviando={cerrando}
+        />
+      )}
 
       {avistamientos.length === 0 && (
         <p className="ayuda">Todavía no reportaron haber visto a {mascota.nombre}.</p>
