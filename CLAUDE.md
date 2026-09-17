@@ -43,6 +43,16 @@ propuesta las contradice, hay que descartarla:
   las veterinarias y forrajerías adheridas ofrecen un agradecimiento
   (descuento, producto o servicio) que el rescatista puede usar o donar a
   un refugio. Nunca mostrar montos ni recompensas económicas en la ficha.
+- **Las bajas en este sistema son lógicas, nunca físicas.** Comercios,
+  agradecimientos, refugios y mascotas se desactivan (columna `activo` /
+  `activa`), no se borran. No agregar políticas de RLS que permitan
+  `delete` sobre estas tablas: `agradecimientos` tiene `on delete
+  cascade` sobre `comercios`, así que borrar un comercio se llevaría
+  puestos sus agradecimientos y los canjes asociados — exactamente el
+  historial que necesitan DAT04 y DAT05 para medir el impacto por
+  comercio. La limpieza de datos de prueba se hace desde el Table
+  Editor de Supabase (permisos de servicio, no pasa por RLS), nunca
+  agregando una política nueva para eso.
 - **Los códigos de placa son aleatorios, no correlativos**, para que las
   fichas no puedan enumerarse probando valores consecutivos.
 - **Si el GPS falla o el permiso es denegado, se puede marcar el lugar a
