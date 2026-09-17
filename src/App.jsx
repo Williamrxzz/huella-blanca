@@ -13,6 +13,7 @@ import AdminAgradecimientos from './pages/AdminAgradecimientos'
 import AdminPlacas from './pages/AdminPlacas'
 import AdminRefugios from './pages/AdminRefugios'
 import HistorialRescatista from './pages/HistorialRescatista'
+import ComercioValidarCanje from './pages/ComercioValidarCanje'
 import { supabase } from './lib/supabase'
 
 function Inicio() {
@@ -84,6 +85,7 @@ export default function App() {
         <Route path="/admin/placas" element={<AdminPlacas />} />
         <Route path="/admin/refugios" element={<AdminRefugios />} />
         <Route path="/mi-historial" element={<HistorialRescatista />} />
+        <Route path="/comercio/validar" element={<ComercioValidarCanje />} />
         <Route path="/m/:codigo" element={<FichaPublica />} />
       </Routes>
     </BrowserRouter>
