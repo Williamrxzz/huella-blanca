@@ -48,3 +48,18 @@ infraestructura) se listan como `—`.
 - **Códigos reutilizados para funciones distintas:** `DUE01` (login, registro, PWA, estética del inicio — cuatro cosas sin relación) y `DUE04` (carácter de la mascota vs. borrado lógico). `PER08` aparece dos veces para dos funciones opuestas entre sí.
 - **Funcionalidad construida sin código de historia identificado:** borrado lógico de mascota, edición de mascota, instalabilidad PWA, estética de la pantalla de inicio, accesibilidad.
 - **Verificadas contra el texto real de la historia** (las únicas cuatro de las que se tuvo el texto oficial): `DUE04`, `PER01`, `PER04` (no implementada) y `PER08`.
+
+## Historias con alcance reducido por el cambio de modelo
+
+- **REC05** — "Como rescatista, quiero poder donar el agradecimiento a
+  un refugio o a la mascota que encontré, en lugar de usarlo yo."
+  (Alta). Menciona dos destinos posibles. El primero, donar a un
+  refugio, quedó cubierto en REC04 (`generar_canje` con
+  `p_accion = 'donar'`, estado `donado` y `refugio_id`). El segundo,
+  donárselo a la mascota encontrada, quedó sin sentido con el cambio de
+  modelo de agradecimientos: tenía lógica cuando el agradecimiento era
+  un producto físico de una forrajería para el propio animal; ahora que
+  el agradecimiento es una placa QR grabada, la mascota encontrada ya
+  tiene la suya. REC05 se da por **terminada en su parte aplicable**,
+  con esta salvedad documentada; no se construyó nada nuevo para el
+  segundo destino.
