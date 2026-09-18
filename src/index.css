@@ -266,28 +266,6 @@ h2 { font-size: 18px; margin: 28px 0 8px; }
   color: #8a5a12;
 }
 
-.nav-admin {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
-}
-
-.nav-admin-enlace {
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid #d8d6d1;
-  color: #6f6e6a;
-  font-size: 13px;
-  text-decoration: none;
-}
-
-.nav-admin-enlace.activo {
-  background: #2e5c8a;
-  border-color: #2e5c8a;
-  color: #fff;
-}
-
 .contacto-dueno {
   display: flex;
   flex-direction: column;

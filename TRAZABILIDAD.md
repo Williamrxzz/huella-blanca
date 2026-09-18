@@ -49,6 +49,52 @@ infraestructura) se listan como `—`.
 - **Funcionalidad construida sin código de historia identificado:** borrado lógico de mascota, edición de mascota, instalabilidad PWA, estética de la pantalla de inicio, accesibilidad.
 - **Verificadas contra el texto real de la historia** (las únicas cuatro de las que se tuvo el texto oficial): `DUE04`, `PER01`, `PER04` (no implementada) y `PER08`.
 
+## 2026-09-18 — Simplificación de alcance: se retira el circuito de agradecimientos
+
+El bloque de reconocimiento (comercios adheridos, refugios, códigos de
+canje, validación en el local, configuración de aportes) terminó
+ocupando más pantallas de administración que la funcionalidad central
+del producto, y depende de acuerdos con comercios reales que están
+declarados fuera del alcance del proyecto desde el documento de
+Historias de Usuario. Un sistema que no puede funcionar sin esos
+acuerdos no debería formar parte de esta versión.
+
+Se reduce el reconocimiento a lo que efectivamente aporta y no depende
+de terceros: que quede registrado que una persona ayudó y que el dueño
+pueda agradecerle (REC01, REC02, TRA09/REC09), todo dentro del propio
+sistema.
+
+**Se descartan del alcance** las siguientes historias:
+
+- REC03, REC04, REC05, REC06, REC07
+- COM01, COM02, COM03
+- ADM04, ADM05, ADM09, ADM10, ADM12
+- DAT04
+
+De estas, **REC04, ADM04, ADM05, ADM09 y ADM12 llegaron a construirse
+y probarse en vivo** durante el Sprint 4; se retiran por esta decisión
+de alcance, no porque hayan fallado o estuvieran mal implementadas.
+
+**Cambios en el esquema**: se eliminaron las tablas `comercios`,
+`agradecimientos`, `canjes` y `refugios`, junto con las funciones
+`generar_canje()` y `validar_canje()`. La base pasa de diez a seis
+entidades: `perfiles`, `mascotas`, `placas`, `casos_perdida`,
+`escaneos`, `avistamientos`. El rol `'comercio'` de `perfiles.rol` se
+elimina (las cuentas que lo tenían pasan a `'usuario'`); los roles
+válidos quedan en `'usuario'` y `'admin'`. La función
+`historial_rescatista()` se reescribió para no depender de las tablas
+eliminadas, manteniendo su carácter `security definer` y sin exponer
+nunca domicilio ni coordenadas de la mascota — el motivo por el que
+existe en primer lugar no cambió.
+
+**Cambios en el código**: se eliminaron `AdminComercios.jsx`,
+`AdminAgradecimientos.jsx`, `AdminRefugios.jsx`, `ComercioValidarCanje.jsx`
+y el componente `NavAdmin` (con una sola pantalla de administración
+restante, `/admin/placas`, dejó de tener sentido). `/mi-historial`
+queda solo con el historial de avisos y reencuentros, incluyendo el
+mensaje y la foto de agradecimiento que deja el dueño (REC02), sin
+ningún dato de canje.
+
 ## Historias con alcance reducido por el cambio de modelo
 
 - **REC05** — "Como rescatista, quiero poder donar el agradecimiento a

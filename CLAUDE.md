@@ -39,20 +39,18 @@ propuesta las contradice, hay que descartarla:
   para que confirme o descarte. El collar **no tiene GPS**: la detección
   sucede únicamente cuando alguien escanea.
 - **No hay dinero ni recompensas publicadas.** El modelo es de
-  *reconocimiento*: queda registrado quién ayudó, el dueño agradece, y
-  las veterinarias y forrajerías adheridas ofrecen un agradecimiento
-  (descuento, producto o servicio) que el rescatista puede usar o donar a
-  un refugio. Nunca mostrar montos ni recompensas económicas en la ficha.
-- **Las bajas en este sistema son lógicas, nunca físicas.** Comercios,
-  agradecimientos, refugios y mascotas se desactivan (columna `activo` /
-  `activa`), no se borran. No agregar políticas de RLS que permitan
-  `delete` sobre estas tablas: `agradecimientos` tiene `on delete
-  cascade` sobre `comercios`, así que borrar un comercio se llevaría
-  puestos sus agradecimientos y los canjes asociados — exactamente el
-  historial que necesitan DAT04 y DAT05 para medir el impacto por
-  comercio. La limpieza de datos de prueba se hace desde el Table
-  Editor de Supabase (permisos de servicio, no pasa por RLS), nunca
-  agregando una política nueva para eso.
+  *reconocimiento*: queda registrado quién ayudó y el dueño puede
+  agradecerle (mensaje y foto al cerrar el caso). El sistema no maneja
+  dinero y quien ayuda no paga ni cobra. Nunca mostrar montos ni
+  recompensas económicas en la ficha. (El circuito de comercios
+  adheridos y placas grabadas que existió durante el Sprint 4 se
+  retiró del alcance — ver `TRAZABILIDAD.md`, entrada del
+  2026-09-18 — por depender de acuerdos con terceros declarados fuera
+  del proyecto desde el documento de Historias de Usuario.)
+- **Las bajas en este sistema son lógicas, nunca físicas.** Las
+  mascotas se desactivan (columna `activa`), no se borran; los avisos,
+  casos y escaneos nunca se eliminan, porque son el historial que
+  necesita el módulo de analítica (DAT).
 - **Los códigos de placa son aleatorios, no correlativos**, para que las
   fichas no puedan enumerarse probando valores consecutivos.
 - **Si el GPS falla o el permiso es denegado, se puede marcar el lugar a
@@ -148,8 +146,7 @@ volver a ejecutar los scripts de esquema. La URL del proyecto es
 ### Tablas
 
 `perfiles` — extiende `auth.users`. Campos: id (PK, referencia a
-auth.users), nombre, telefono, rol ('usuario' | 'comercio' | 'admin'),
-creado_en.
+auth.users), nombre, telefono, rol ('usuario' | 'admin'), creado_en.
 
 `mascotas` — id, dueno_id (FK a perfiles), nombre, especie ('perro' |
 'gato' | 'otro'), sexo ('macho' | 'hembra', nullable — las mascotas
@@ -181,25 +178,13 @@ ocurrido_en. Registra **todos** los escaneos, para las estadísticas.
 foto_url, contacto, reportado_por (nulo si avisó alguien sin cuenta),
 creado_en. Registra solo los avisos deliberados.
 
-`comercios` — id, nombre, rubro ('veterinaria' | 'forrajeria' | 'otro'),
-direccion, telefono, usuario_id, activo, creado_en.
-
-`agradecimientos` — id, comercio_id, titulo, descripcion, tipo
-('descuento' | 'producto' | 'servicio'), vigencia, max_canjes, activo.
-
-`canjes` — id, agradecimiento_id, caso_id, rescatista_id, codigo
-(único), estado ('pendiente' | 'retirado' | 'donado' | 'vencido'),
-refugio_id, creado_en, usado_en.
-
-`refugios` — id, nombre, contacto, activo.
-
 **Distinción importante:** `escaneos` guarda todos los escaneos de placa;
 `avistamientos` guarda solo cuando la persona apretó el botón para
 avisar. No mezclarlas.
 
 ### Seguridad
 
-RLS está activo en las diez tablas. Las políticas hacen que cada dueño
+RLS está activo en las seis tablas. Las políticas hacen que cada dueño
 acceda únicamente a sus mascotas, casos, escaneos y avistamientos.
 Política agregada para el registro: `perfiles` permite `insert` a
 `authenticated` cuando `auth.uid() = id`, para que un dueño recién
@@ -226,6 +211,10 @@ cuando la mascota del caso pertenece al dueño autenticado.
   ya existente en estado `sin_asignar` a una mascota propia. Devuelve
   `{"ok": true}` o `{"ok": false, "error": "..."}` (`placa_no_encontrada`,
   `placa_ya_asignada`, `mascota_no_encontrada`). Solo `authenticated`.
+- `historial_rescatista()` → JSON con los avisos dados y los
+  reencuentros (con el mensaje/foto de agradecimiento del dueño, si
+  los dejó) de la persona autenticada. Nunca devuelve domicilio ni
+  coordenadas de la mascota. Solo `authenticated`.
 
 Desde el frontend se llaman con `supabase.rpc('nombre', { parametros })`.
 
@@ -513,15 +502,39 @@ de cuenta nunca llegaba a crear la fila en `perfiles` (ver el aviso en
 dueño real que se registrara así habría quedado con una cuenta
 incapaz de cargar mascotas.
 
+### Sprint 4: reconocimiento simplificado, IA pendiente
+
+Terminado:
+- **REC01/REC02**: historial del rescatista en `/mi-historial`
+  (`historial_rescatista()`) — avisos dados y reencuentros logrados,
+  con el mensaje y la foto de agradecimiento que el dueño deja al
+  cerrar el caso en `MapaAvistamientos.jsx`.
+- **TRA09/REC09**: ya cubiertas desde el Sprint 3 (ver arriba).
+
+**Simplificación de alcance (2026-09-18):** se construyó y se retiró
+después un circuito completo de reconocimiento vía comercios adheridos
+(veterinarias/forrajerías que entregaban una placa grabada de regalo,
+con opción de donarla a un refugio) — pantallas de administración
+(`/admin/comercios`, `/admin/agradecimientos`, `/admin/refugios`),
+generación y validación de códigos de canje (`/comercio/validar`) y
+las tablas `comercios`, `agradecimientos`, `canjes`, `refugios`. Se
+sacó del alcance porque depende de acuerdos con comercios reales,
+declarados fuera del proyecto desde el documento de Historias de
+Usuario, y porque terminó ocupando más pantallas que la funcionalidad
+central. El detalle completo (qué se llegó a construir y probar antes
+de retirarlo, y por qué) está en `TRAZABILIDAD.md`. La base quedó en
+seis tablas: `perfiles`, `mascotas`, `placas`, `casos_perdida`,
+`escaneos`, `avistamientos`.
+
 ### Pendiente, en este orden
 
-1. **Panel de administración**: placas, comercios, agradecimientos.
-2. **Funciones de IA**: sugerir la ficha desde la foto (IA01), verificar
+1. **Funciones de IA**: sugerir la ficha desde la foto (IA01), verificar
    la imagen (IA02) y redactar el texto de búsqueda (IA03), siempre
-   desde una Edge Function para no exponer la clave de la API.
-3. **Módulo de analítica** con Recharts (DAT, pendiente más allá del
+   desde una Edge Function para no exponer la clave de la API. Modelo
+   Haiku. La app sigue funcionando si la IA no responde o tarda.
+2. **Módulo de analítica** con Recharts (DAT, pendiente más allá del
    DAT01 ya cubierto).
-4. Optimizar el bundle: Vite avisa que el JS de producción pasa los
+3. Optimizar el bundle: Vite avisa que el JS de producción pasa los
    500 KB (sobre todo por Leaflet). No es urgente, pero si se nota lento
    en el celular, dividir en chunks con `import()` dinámico.
 

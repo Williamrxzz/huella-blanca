@@ -264,7 +264,6 @@ export default function Panel() {
   const [mascotas, setMascotas] = useState([])
   const [casos, setCasos] = useState({})
   const [esAdmin, setEsAdmin] = useState(false)
-  const [esComercio, setEsComercio] = useState(false)
 
   async function cargar() {
     const { data: { session } } = await supabase.auth.getSession()
@@ -289,7 +288,6 @@ export default function Panel() {
       })
     } else {
       setEsAdmin(perfilExistente.rol === 'admin')
-      setEsComercio(perfilExistente.rol === 'comercio')
     }
 
     const avisoPendienteId = localStorage.getItem('avisoPendienteId')
@@ -355,10 +353,7 @@ export default function Panel() {
       <Link className="boton" to="/mascotas/nueva">Cargar mascota</Link>
       <Link className="enlace-discreto" to="/mi-historial">Tu colaboración</Link>
       {esAdmin && (
-        <Link className="enlace-discreto" to="/admin/comercios">Panel de administración</Link>
-      )}
-      {esComercio && (
-        <Link className="enlace-discreto" to="/comercio/validar">Validar código</Link>
+        <Link className="enlace-discreto" to="/admin/placas">Panel de administración</Link>
       )}
       <button className="boton secundario" onClick={cerrarSesion}>Cerrar sesión</button>
     </main>

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
-import NavAdmin from '../components/NavAdmin'
 
 const ESTADOS = {
   sin_asignar: 'Sin asignar',
@@ -70,7 +69,6 @@ export default function AdminPlacas() {
   return (
     <main className="pagina">
       <Encabezado />
-      <NavAdmin />
       <h1>Inventario de placas</h1>
       <p className="ayuda">Estado de cada placa generada, para controlar cuántas están libres, activas o perdidas.</p>
 
