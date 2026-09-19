@@ -5,6 +5,7 @@ import GeneradorQR from './pages/GeneradorQR'
 import Login from './pages/Login'
 import Registro from './pages/Registro'
 import Panel from './pages/Panel'
+import Perfil from './pages/Perfil'
 import AltaMascota from './pages/AltaMascota'
 import MapaAvistamientos from './pages/MapaAvistamientos'
 import Escanear from './pages/Escanear'
@@ -72,6 +73,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
         <Route path="/panel" element={<Panel />} />
+        <Route path="/perfil" element={<Perfil />} />
         <Route path="/mascotas/nueva" element={<AltaMascota />} />
         <Route path="/mascotas/:id/editar" element={<AltaMascota />} />
         <Route path="/mascotas/:id/mapa" element={<MapaAvistamientos />} />

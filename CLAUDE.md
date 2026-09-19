@@ -32,7 +32,13 @@ propuesta las contradice, hay que descartarla:
   ficha pública se sirve exclusivamente por la función `ficha_publica()`;
   nunca con un SELECT directo a `mascotas` desde el navegador.
 - **La ficha pública no muestra teléfono ni dirección del dueño.** El
-  contacto se hace mediante un botón que no revela el número en pantalla.
+  contacto se hace mediante un botón (`tel:`/`wa.me:`) que nunca
+  renderiza el número como texto en pantalla. Ese número sí viaja
+  dentro del `href` del botón — es inevitable, esos esquemas necesitan
+  el dato real para que el teléfono pueda llamar o abrir WhatsApp — pero
+  `ficha_publica()` solo lo incluye en el JSON cuando la mascota tiene
+  un caso de pérdida abierto (`perdida` o `posible_perdida`), nunca en
+  un escaneo normal. Ver `TRAZABILIDAD.md`, entrada del 2026-09-19.
 - **Detección automática de pérdida:** si un escaneo ocurre fuera del
   `radio_metros` configurado para el domicilio, y el modo paseo no está
   activo, se abre un caso en estado `posible_perdida` y se avisa al dueño
@@ -195,8 +201,13 @@ cuando la mascota del caso pertenece al dueño autenticado.
 ### Funciones (todas `security definer`, ejecutables por `anon`)
 
 - `ficha_publica(p_codigo text)` → JSON con los datos visibles de la
-  mascota. Nunca devuelve domicilio ni teléfono. Si no existe la placa o
-  no tiene mascota, devuelve `{"encontrada": false}`.
+  mascota. Nunca devuelve domicilio. Devuelve `contacto_tel`
+  (`tel:+...`) y `contacto_whatsapp` (`https://wa.me/...`)
+  **únicamente** cuando la mascota tiene un caso de pérdida abierto
+  (`perdida` o `posible_perdida`) y el dueño tiene teléfono cargado; en
+  cualquier otro caso esos dos campos vienen en `null` — así el número
+  no viaja al navegador en un escaneo normal (TRA05). Si no existe la
+  placa o no tiene mascota, devuelve `{"encontrada": false}`.
 - `registrar_escaneo(p_codigo, p_lat, p_lng)` → registra el escaneo,
   calcula la distancia al domicilio y, si corresponde, abre un caso en
   estado `posible_perdida`.
@@ -474,10 +485,15 @@ sprint:
 - **TRA08** (recomendación de trato según el carácter): construida y
   probada.
 - **TRA05** (contacto al dueño sin exponer el teléfono): construida y
-  probada; se agregó además una restricción de privacidad no pedida
-  originalmente en la historia pero sí explícitamente por el criterio
-  del proyecto: el botón de contacto solo se muestra si la mascota está
-  perdida o con sospecha de pérdida, nunca en un escaneo común.
+  probada en su momento; se agregó además una restricción de privacidad
+  no pedida originalmente en la historia pero sí explícitamente por el
+  criterio del proyecto: el botón de contacto solo se muestra si la
+  mascota está perdida o con sospecha de pérdida, nunca en un escaneo
+  común. **Corregida de nuevo el 2026-09-19** (ver debajo, "TRA05:
+  teléfono real y corrección de privacidad"): estaba rota para
+  cualquier dueño real porque nada en la app pedía ni permitía cargar
+  el teléfono, y además `ficha_publica()` enviaba el número al
+  navegador en todos los escaneos, no solo cuando correspondía.
 - **PER07** (marcar última ubicación y dejar un mensaje al reportar
   la pérdida): construida y probada, con varias vueltas de ajuste de
   diseño (zona aproximada de 100 m en vez de punto exacto, alerta
@@ -525,6 +541,37 @@ central. El detalle completo (qué se llegó a construir y probar antes
 de retirarlo, y por qué) está en `TRAZABILIDAD.md`. La base quedó en
 seis tablas: `perfiles`, `mascotas`, `placas`, `casos_perdida`,
 `escaneos`, `avistamientos`.
+
+**TRA05: teléfono real y corrección de privacidad (2026-09-19).** Al
+revisar el código (no solo el commit) apareció que TRA05 estaba rota
+para cualquier dueño real: `/registro` nunca pedía el teléfono, no
+existía ninguna pantalla para cargarlo después, y el único perfil que
+lo tenía lo había recibido a mano por SQL durante las pruebas
+originales de la historia. Se corrigió con tres cambios de código y
+uno de base:
+- `Registro.jsx` — teléfono opcional (no bloquea el alta; se guarda en
+  `user_metadata` para el caso de confirmación de email pendiente,
+  igual que `nombre`).
+- `Panel.jsx` — usa ese `user_metadata.telefono` al crear el perfil
+  diferido; y si el usuario ya tiene mascotas cargadas y no tiene
+  teléfono, muestra un aviso cerrable (no bloqueante) invitando a
+  cargarlo en `/perfil`.
+- **`Perfil.jsx`** (pantalla nueva, ruta `/perfil`) — ver y editar
+  nombre y teléfono, nada más por ahora.
+- `ficha_publica()` — corrección de privacidad real, no solo de UI:
+  antes devolvía `contacto_tel`/`contacto_whatsapp` en **cualquier**
+  escaneo si el dueño tenía teléfono cargado, sin importar si la
+  mascota estaba perdida. Ahora esos dos campos solo salen de la
+  función cuando hay un caso `perdida` o `posible_perdida` abierto;
+  fuera de eso vienen en `null`, así que el número no llega al
+  navegador en un escaneo normal. El botón en `FichaPublica.jsx` ya
+  filtraba por estado, pero eso no alcanzaba: el dato viajaba en el
+  JSON igual.
+- Queda documentada una limitación aceptada, no un bug: el número
+  **sí** viaja al navegador dentro del `href` de `tel:`/`wa.me:`
+  cuando hay caso abierto, porque esos esquemas lo necesitan para
+  funcionar — nunca se renderiza como texto en pantalla. Detalle
+  completo en `TRAZABILIDAD.md`, entrada del 2026-09-19.
 
 ### Pendiente, en este orden
 

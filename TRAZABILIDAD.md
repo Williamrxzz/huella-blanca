@@ -95,6 +95,49 @@ queda solo con el historial de avisos y reencuentros, incluyendo el
 mensaje y la foto de agradecimiento que deja el dueño (REC02), sin
 ningún dato de canje.
 
+## 2026-09-19 — TRA05: el teléfono no se podía cargar, y limitación conocida del botón de contacto
+
+Al revisar el código real de TRA05 (dada por terminada desde el
+Sprint 3) apareció que estaba rota para cualquier dueño real:
+`perfiles.telefono` existe desde el Sprint 1, pero ninguna pantalla lo
+pedía ni lo dejaba editar. El único perfil que tenía un número cargado
+lo tenía porque se insertó a mano por SQL para poder probar la
+historia en su momento — no porque un dueño lo hubiera cargado desde
+la app. Se corrigió con:
+- teléfono opcional en `/registro` (no bloquea el alta),
+- pantalla nueva `/perfil` para cargarlo o corregirlo después,
+- un aviso cerrable (no bloqueante) en `/panel` para quien tiene
+  mascotas cargadas y no tiene teléfono.
+
+**TRA05** ("contactar al dueño mediante un botón de llamada o mensaje,
+sin que su número quede visible en pantalla") se implementa con
+enlaces `tel:` y `wa.me:` armados por `ficha_publica()`
+(`contacto_tel`, `contacto_whatsapp`). Estos esquemas necesitan el
+número real dentro del `href` para que el sistema operativo pueda
+disparar la llamada o abrir WhatsApp — no existe una forma de que el
+botón funcione sin que el dato llegue al navegador en algún momento.
+
+Esto significa que el número del dueño **sí viaja al navegador**,
+dentro del HTML/JSON de la página, aunque nunca se renderiza como
+texto legible en pantalla. Alguien que abra las herramientas de
+desarrollador y busque a propósito podría verlo — es una limitación
+del mecanismo (`tel:`/`wa.me:`), no del diseño ni un descuido de
+implementación.
+
+Mitigación aplicada: `ficha_publica()` solo incluye `contacto_tel` y
+`contacto_whatsapp` en el JSON cuando la mascota tiene un caso de
+pérdida abierto (`perdida` o `posible_perdida`) — antes los devolvía
+siempre que el dueño tuviera teléfono cargado, sin importar el estado
+de la mascota. El botón en `FichaPublica.jsx` ya estaba condicionado a
+que la mascota estuviera perdida, pero eso no alcanzaba: el dato
+viajaba igual en cada escaneo, esté la mascota perdida o no. Con este
+cambio, el número solo sale de la base cuando corresponde.
+
+Corrige además una frase desactualizada del documento de Diseño de
+Base de Datos, que dice que `ficha_publica()` "nunca devuelve el
+teléfono" — eso era cierto antes de construir TRA05 en el Sprint 3, y
+dejó de serlo desde que existe el botón de contacto.
+
 ## Historias con alcance reducido por el cambio de modelo
 
 - **REC05** — "Como rescatista, quiero poder donar el agradecimiento a

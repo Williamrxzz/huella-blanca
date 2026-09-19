@@ -264,6 +264,8 @@ export default function Panel() {
   const [mascotas, setMascotas] = useState([])
   const [casos, setCasos] = useState({})
   const [esAdmin, setEsAdmin] = useState(false)
+  const [telefono, setTelefono] = useState(null)
+  const [avisoTelefonoCerrado, setAvisoTelefonoCerrado] = useState(false)
 
   async function cargar() {
     const { data: { session } } = await supabase.auth.getSession()
@@ -274,20 +276,24 @@ export default function Panel() {
 
     const { data: perfilExistente } = await supabase
       .from('perfiles')
-      .select('id, rol')
+      .select('id, rol, telefono')
       .eq('id', session.user.id)
       .maybeSingle()
 
     if (!perfilExistente) {
       // Si el registro pidió confirmar el email, la fila en "perfiles" queda
       // pendiente hasta este primer ingreso ya logueado.
+      const telefonoInicial = session.user.user_metadata?.telefono || null
       await supabase.from('perfiles').insert({
         id: session.user.id,
         nombre: session.user.user_metadata?.nombre || '',
+        telefono: telefonoInicial,
         rol: 'usuario',
       })
+      setTelefono(telefonoInicial)
     } else {
       setEsAdmin(perfilExistente.rol === 'admin')
+      setTelefono(perfilExistente.telefono)
     }
 
     const avisoPendienteId = localStorage.getItem('avisoPendienteId')
@@ -333,6 +339,23 @@ export default function Panel() {
       <Encabezado />
       <h1>Mis mascotas</h1>
 
+      {mascotas.length > 0 && !telefono && !avisoTelefonoCerrado && (
+        <div className="aviso-telefono">
+          <p>Cargá tu teléfono para que quien encuentre a tu mascota pueda llamarte.</p>
+          <div className="acciones-aviso">
+            <Link className="boton-accion" to="/perfil">Cargar teléfono</Link>
+            <button
+              className="boton-accion"
+              type="button"
+              onClick={() => setAvisoTelefonoCerrado(true)}
+              aria-label="Cerrar aviso"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
       {mascotas.length === 0 ? (
         <p className="ayuda">Todavía no cargaste ninguna mascota.</p>
       ) : (
@@ -351,6 +374,7 @@ export default function Panel() {
       )}
 
       <Link className="boton" to="/mascotas/nueva">Cargar mascota</Link>
+      <Link className="enlace-discreto" to="/perfil">Tu perfil</Link>
       <Link className="enlace-discreto" to="/mi-historial">Tu colaboración</Link>
       {esAdmin && (
         <Link className="enlace-discreto" to="/admin/placas">Panel de administración</Link>

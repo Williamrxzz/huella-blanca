@@ -7,6 +7,7 @@ export default function Registro() {
   const navigate = useNavigate()
   const [nombre, setNombre] = useState('')
   const [email, setEmail] = useState('')
+  const [telefono, setTelefono] = useState('')
   const [contrasena, setContrasena] = useState('')
   const [error, setError] = useState(null)
   const [enviando, setEnviando] = useState(false)
@@ -20,7 +21,7 @@ export default function Registro() {
     const { data, error: errorRegistro } = await supabase.auth.signUp({
       email,
       password: contrasena,
-      options: { data: { nombre } },
+      options: { data: { nombre, telefono: telefono.trim() || null } },
     })
 
     if (errorRegistro) {
@@ -42,7 +43,7 @@ export default function Registro() {
 
     const { error: errorPerfil } = await supabase
       .from('perfiles')
-      .insert({ id: data.user.id, nombre, rol: 'usuario' })
+      .insert({ id: data.user.id, nombre, telefono: telefono.trim() || null, rol: 'usuario' })
 
     setEnviando(false)
 
@@ -92,6 +93,19 @@ export default function Registro() {
           autoComplete="email"
           required
         />
+        <input
+          className="entrada"
+          type="tel"
+          placeholder="Teléfono (opcional)"
+          aria-label="Teléfono (opcional)"
+          value={telefono}
+          onChange={(e) => setTelefono(e.target.value)}
+          autoComplete="tel"
+        />
+        <p className="ayuda">
+          Para que quien encuentre a tu mascota pueda contactarte. Nunca se muestra en pantalla;
+          si no lo cargás ahora, podés hacerlo después desde tu perfil.
+        </p>
         <input
           className="entrada"
           type="password"
