@@ -136,7 +136,7 @@ export default function MapaAvistamientos() {
       fotoUrl = data.publicUrl
     }
 
-    const { data: avistamientoConRescatista } = await supabase
+    const { data: avistamientoConColaborador } = await supabase
       .from('avistamientos')
       .select('reportado_por')
       .eq('caso_id', caso.id)
@@ -150,7 +150,7 @@ export default function MapaAvistamientos() {
       .update({
         estado: 'cerrada',
         cerrado_en: new Date().toISOString(),
-        rescatista_id: avistamientoConRescatista?.reportado_por ?? null,
+        rescatista_id: avistamientoConColaborador?.reportado_por ?? null,
         mensaje_agradecimiento: mensaje,
         foto_reencuentro_url: fotoUrl,
       })

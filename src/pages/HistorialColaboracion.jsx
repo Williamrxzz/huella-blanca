@@ -18,7 +18,7 @@ function formatearFecha(fechaIso) {
   })
 }
 
-export default function HistorialRescatista() {
+export default function HistorialColaboracion() {
   const navigate = useNavigate()
   const [cargando, setCargando] = useState(true)
   const [avistamientos, setAvistamientos] = useState([])

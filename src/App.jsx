@@ -10,7 +10,7 @@ import AltaMascota from './pages/AltaMascota'
 import MapaAvistamientos from './pages/MapaAvistamientos'
 import Escanear from './pages/Escanear'
 import AdminPlacas from './pages/AdminPlacas'
-import HistorialRescatista from './pages/HistorialRescatista'
+import HistorialColaboracion from './pages/HistorialColaboracion'
 import { supabase } from './lib/supabase'
 
 function Inicio() {
@@ -78,7 +78,7 @@ export default function App() {
         <Route path="/mascotas/:id/mapa" element={<MapaAvistamientos />} />
         <Route path="/escanear" element={<Escanear />} />
         <Route path="/admin/placas" element={<AdminPlacas />} />
-        <Route path="/mi-historial" element={<HistorialRescatista />} />
+        <Route path="/mi-historial" element={<HistorialColaboracion />} />
         <Route path="/m/:codigo" element={<FichaPublica />} />
       </Routes>
     </BrowserRouter>
