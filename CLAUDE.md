@@ -572,6 +572,18 @@ uno de base:
   cuando hay caso abierto, porque esos esquemas lo necesitan para
   funcionar — nunca se renderiza como texto en pantalla. Detalle
   completo en `TRAZABILIDAD.md`, entrada del 2026-09-19.
+- Al probar el circuito completo apareció que **DUE03** también estaba
+  incompleta: la placa se vinculaba bien en la base, pero no había
+  forma de llegar al QR de una mascota ya cargada para imprimirlo.
+  Se agregó "Ver QR" en `/panel` (un clic hasta verlo) y se subió el
+  nivel de corrección de errores del QR a `H` (tolera hasta 30% de
+  daño, contra el 7% del valor por defecto), porque el código va
+  colgado del cuello del animal expuesto a barro, agua y roce.
+- **Probado en vivo de punta a punta por el dueño real del proyecto**:
+  cargar teléfono en `/perfil` → marcar una mascota como perdida →
+  escanear el QR desde el celular → el botón de contacto aparece y
+  funciona, sin mostrar el número → cerrar el caso → un escaneo
+  posterior ya no muestra el botón. Funcionó correctamente.
 
 ### Pendiente, en este orden
 
