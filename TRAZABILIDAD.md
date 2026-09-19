@@ -165,6 +165,18 @@ punta a punta. Se verificó además que:
   agua y roce constante; que quede más denso no afecta la lectura
   desde un teléfono a pocos centímetros.
 
+## 2026-09-16 — ADM08 descartada: la acción del agradecimiento no necesitaba ser configurable
+
+**ADM08** se descarta del alcance. Hacer configurable qué acción
+habilita un agradecimiento agregaba complejidad sin valor, porque la
+regla era fija (un reencuentro habilita un agradecimiento, sin
+variantes). Se eliminaron la tabla `acciones_agradecimiento` y la
+columna `agradecimientos.accion_id` que existían para soportar esa
+configurabilidad. Esta decisión es anterior y separada de la
+simplificación del 2026-09-18: en aquel momento se mantenía el
+circuito de comercios, solo se sacó la parte de ADM08 que lo hacía
+innecesariamente configurable.
+
 ## Historias con alcance reducido por el cambio de modelo
 
 - **REC05** — "Como rescatista, quiero poder donar el agradecimiento a

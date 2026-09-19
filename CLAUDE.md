@@ -173,7 +173,9 @@ requisito para empezar a usar la app.
 
 `casos_perdida` — id, mascota_id, estado ('posible_perdida' | 'perdida'
 | 'cerrada' | 'descartada'), origen ('manual' | 'automatico'), mensaje,
-ultima_lat, ultima_lng, iniciado_en, cerrado_en, rescatista_id.
+ultima_lat, ultima_lng, iniciado_en, cerrado_en, rescatista_id,
+mensaje_agradecimiento, foto_reencuentro_url (estas dos últimas, para
+REC02: el agradecimiento que el dueño deja al cerrar el caso).
 Hay un índice único que impide dos casos abiertos para la misma mascota.
 
 `escaneos` — id, placa_id, mascota_id, lat, lng, distancia_m,
@@ -226,6 +228,11 @@ cuando la mascota del caso pertenece al dueño autenticado.
   reencuentros (con el mensaje/foto de agradecimiento del dueño, si
   los dejó) de la persona autenticada. Nunca devuelve domicilio ni
   coordenadas de la mascota. Solo `authenticated`.
+- `reclamar_avistamiento(p_avistamiento_id uuid)` → asocia a la cuenta
+  recién creada un aviso que se había hecho sin sesión (TRA09/REC09),
+  dentro de una ventana de 1 hora. Se llama desde `Panel.jsx` al
+  primer ingreso logueado, leyendo el id guardado en `localStorage`.
+  Solo `authenticated`.
 
 Desde el frontend se llaman con `supabase.rpc('nombre', { parametros })`.
 
