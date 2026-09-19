@@ -187,6 +187,43 @@ y sin abrir un caso falso — se verificó por RPC directa antes de tocar
 el frontend, y de nuevo en un navegador real con un perfil sin permiso
 de ubicación concedido.
 
+## 2026-09-19 — ADM01 y DUE05 cumplidas parcialmente; corrección de seguridad en /placas
+
+**ADM01** ("generar lotes de códigos QR únicos y aleatorios... para
+producir las placas físicas") se da por **cumplida parcialmente**. La
+parte sustantiva de la historia —que los códigos sean aleatorios y no
+correlativos, para que las fichas no puedan enumerarse probando
+valores consecutivos— está cumplida: `generar_placa()` genera un
+código aleatorio de 8 caracteres por mascota, uno por vez, al darla de
+alta. La generación de **lotes por adelantado**, sin mascota asociada,
+no se construye: corresponde a la producción física de placas, que el
+documento de Historias de Usuario declara explícitamente fuera del
+alcance del proyecto.
+
+Al verificar ADM01 apareció además una falla de seguridad real, ya
+corregida: `/placas` era una pantalla pública con un campo de texto
+libre, así que cualquiera podía escribir el código de la placa de otra
+persona y descargarse el QR de esa mascota. Se corrigió para que
+requiera sesión iniciada y solo muestre el código de una placa
+vinculada a una mascota del usuario logueado (la política de RLS de
+`placas` ya lo permitía sin cambios); si el código no es del usuario,
+muestra "no tenés acceso". Se sacó el campo de texto libre: ahora solo
+se llega desde el redirect post-alta o "Ver QR" del panel. Verificado
+en un navegador real, con clics reales, en tres escenarios: sin
+sesión, logueado sin ser dueño de la placa, y el dueño real.
+
+**DUE05** ("definir qué datos son públicos y cuáles solo se muestran
+cuando la mascota está perdida") se da por **cumplida parcialmente**,
+sin construir nada nuevo. El dueño sí decide sobre un dato concreto:
+el checkbox `mostrar_salud` en el alta de la mascota controla si la
+información de salud es pública o no. El resto del gating por estado
+de pérdida (contacto, última ubicación, mensaje) es una regla fija del
+sistema, no configurable campo por campo — se decide así a propósito:
+hacerlo configurable agregaría complejidad al formulario de alta sin
+un beneficio claro, y una regla fija protege mejor al usuario que una
+configuración que puede equivocarse (por ejemplo, dejar expuesto el
+contacto por error en un dueño que no entendió la opción).
+
 ## 2026-09-16 — ADM08 descartada: la acción del agradecimiento no necesitaba ser configurable
 
 **ADM08** se descarta del alcance. Hacer configurable qué acción
