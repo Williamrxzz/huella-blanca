@@ -68,12 +68,13 @@ export default function FichaPublica() {
     cargar()
 
     async function registrarEscaneo() {
+      // DAT01 pide registrar CADA escaneo, no solo los que tienen ubicación:
+      // sin permiso concedido de antes, igual queda la fecha y hora.
       const ubicacion = await pedirUbicacionSiYaHayPermiso()
-      if (!ubicacion) return
       await supabase.rpc('registrar_escaneo', {
         p_codigo: codigo,
-        p_lat: ubicacion.lat,
-        p_lng: ubicacion.lng,
+        p_lat: ubicacion?.lat ?? null,
+        p_lng: ubicacion?.lng ?? null,
       })
     }
     registrarEscaneo()
