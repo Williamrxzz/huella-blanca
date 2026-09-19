@@ -207,6 +207,9 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
         <div className="acciones-mascota">
           <Link className="boton-accion" to={`/mascotas/${mascota.id}/editar`}>Editar</Link>
           <Link className="boton-accion" to={`/mascotas/${mascota.id}/mapa`}>Mapa</Link>
+          {placaActiva && (
+            <Link className="boton-accion" to={`/placas?codigo=${placaActiva.codigo}`}>Ver QR</Link>
+          )}
 
           {!caso && (
             <button className="boton-accion alerta" type="button" onClick={() => setMostrandoFormularioPerdida(true)}>
