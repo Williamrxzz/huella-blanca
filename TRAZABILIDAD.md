@@ -165,6 +165,28 @@ punta a punta. Se verificó además que:
   agua y roce constante; que quede más denso no afecta la lectura
   desde un teléfono a pocos centímetros.
 
+## 2026-09-19 — DAT01: se registraba solo un subconjunto de los escaneos
+
+Al verificar DAT01 ("registrar cada escaneo de placa — fecha, hora,
+ubicación aproximada — para conocer el uso del sistema") contra el
+texto exacto de la historia, apareció que `FichaPublica.jsx` solo
+llamaba a `registrar_escaneo()` cuando el navegador **ya tenía**
+permiso de ubicación concedido de antes; sin ese permiso previo, la
+llamada ni se intentaba, y el escaneo no dejaba ningún rastro — ni
+fecha ni hora. Para alguien que escanea el QR de una mascota por
+primera vez (el caso más común), lo probable es no tener ese permiso
+ya concedido a este dominio, así que la mayoría de los escaneos reales
+quedaban fuera del conteo.
+
+Corregido: `registrarEscaneo()` ahora llama a `registrar_escaneo()`
+siempre, pasando `null` en `p_lat`/`p_lng` cuando no hay ubicación
+disponible, sin pedir el permiso de golpe (sigue usando
+`pedirUbicacionSiYaHayPermiso`, que nunca dispara el cartel del
+navegador). `registrar_escaneo()` ya toleraba lat/lng nulos sin error
+y sin abrir un caso falso — se verificó por RPC directa antes de tocar
+el frontend, y de nuevo en un navegador real con un perfil sin permiso
+de ubicación concedido.
+
 ## 2026-09-16 — ADM08 descartada: la acción del agradecimiento no necesitaba ser configurable
 
 **ADM08** se descarta del alcance. Hacer configurable qué acción

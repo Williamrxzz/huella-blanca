@@ -325,10 +325,13 @@ Usuario", con siete listas, una por bloque.
   estado: roja y con un indicador que pulsa si el dueño ya confirmó la
   pérdida, ámbar si es una sospecha automática todavía sin confirmar
   (el título de esa alerta se mantiene deliberadamente breve para no
-  restarle atención al resto de la ficha). Al cargar, llama a
-  `registrar_escaneo` (TRA04) pero solo si el navegador **ya tenía** el
-  permiso de ubicación concedido de antes — nunca se le pide permiso a
-  quien solo está mirando la ficha, eso sería fricción innecesaria.
+  restarle atención al resto de la ficha). Al cargar, llama **siempre**
+  a `registrar_escaneo` (TRA04, DAT01), tenga o no ubicación: si el
+  navegador ya tenía el permiso concedido de antes, la manda; si no,
+  la manda en `null` y queda igual el registro de fecha y hora. Nunca
+  se le pide permiso a quien solo está mirando la ficha, eso sería
+  fricción innecesaria — la corrección del 2026-09-19 solo cambió que
+  la ausencia de permiso ya no significa "no registrar nada".
   Muestra también (**TRA08**) una recomendación de trato según el
   campo `caracter` (amigable / temerosa / no acercarse), y (**TRA05**)
   un botón de contacto al dueño (llamada o WhatsApp armados con
