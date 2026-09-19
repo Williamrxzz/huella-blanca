@@ -160,7 +160,10 @@ punta a punta. Se verificó además que:
 - El nivel de corrección de errores del QR quedó en el valor por
   defecto de la librería (`'L'`, el más bajo) — poco robusto para un
   código que va a vivir en una chapita expuesta a roce, tierra y agua.
-  Pendiente de decidir si se sube a `'M'` o `'H'`.
+  Corregido a `'H'` (tolera hasta 30% de daño, contra 7% de `'L'`):
+  el código de la mascota va colgado del cuello, expuesto a barro,
+  agua y roce constante; que quede más denso no afecta la lectura
+  desde un teléfono a pocos centímetros.
 
 ## Historias con alcance reducido por el cambio de modelo
 

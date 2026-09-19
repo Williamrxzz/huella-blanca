@@ -44,7 +44,7 @@ export default function GeneradorQR() {
       {url && (
         <>
           <div className="qr" ref={contenedorRef}>
-            <QRCodeCanvas value={url} size={240} includeMargin />
+            <QRCodeCanvas value={url} size={240} level="H" includeMargin />
           </div>
           <p className="ayuda">{url}</p>
           <button className="boton" onClick={descargar}>Descargar QR</button>
