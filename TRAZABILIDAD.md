@@ -138,6 +138,30 @@ Base de Datos, que dice que `ficha_publica()` "nunca devuelve el
 teléfono" — eso era cierto antes de construir TRA05 en el Sprint 3, y
 dejó de serlo desde que existe el botón de contacto.
 
+## 2026-09-19 — "Ver QR" corrige un hueco de DUE03, no agrega una historia nueva
+
+Al probar el circuito completo de TRA05 apareció que **DUE03**
+("vincular una placa QR a la ficha de mi mascota") estaba incompleta
+en la práctica: la placa se generaba y vinculaba bien en la base
+(`generar_placa()`), pero para una mascota ya cargada no existía
+ninguna forma de llegar al QR para imprimirlo — solo se mostraba una
+vez, en el momento de crear la mascota. Sin QR impreso en la chapita,
+el sistema no arranca: es el punto de partida de todo el producto.
+
+El enlace "Ver QR" agregado en `/panel` (commit `bdf3685`) no es una
+mejora de UX opcional, es lo que le falta a DUE03 para funcionar de
+punta a punta. Se verificó además que:
+- `/placas` no queda como una ruta suelta: converge en una sola
+  implementación (`GeneradorQR.jsx`) con tres entradas legítimas
+  (enlace público desde el inicio, redirección post-alta, y ahora
+  "Ver QR" desde el panel) — no hay dos caminos distintos para lo
+  mismo.
+- La descarga genera un PNG real, no solo una vista en pantalla.
+- El nivel de corrección de errores del QR quedó en el valor por
+  defecto de la librería (`'L'`, el más bajo) — poco robusto para un
+  código que va a vivir en una chapita expuesta a roce, tierra y agua.
+  Pendiente de decidir si se sube a `'M'` o `'H'`.
+
 ## Historias con alcance reducido por el cambio de modelo
 
 - **REC05** — "Como rescatista, quiero poder donar el agradecimiento a
