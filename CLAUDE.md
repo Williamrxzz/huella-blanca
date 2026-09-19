@@ -224,7 +224,7 @@ cuando la mascota del caso pertenece al dueño autenticado.
   ya existente en estado `sin_asignar` a una mascota propia. Devuelve
   `{"ok": true}` o `{"ok": false, "error": "..."}` (`placa_no_encontrada`,
   `placa_ya_asignada`, `mascota_no_encontrada`). Solo `authenticated`.
-- `historial_rescatista()` → JSON con los avisos dados y los
+- `historial_colaboracion()` → JSON con los avisos dados y los
   reencuentros (con el mensaje/foto de agradecimiento del dueño, si
   los dejó) de la persona autenticada. Nunca devuelve domicilio ni
   coordenadas de la mascota. Solo `authenticated`.
@@ -531,8 +531,9 @@ incapaz de cargar mascotas.
 ### Sprint 4: reconocimiento simplificado, IA pendiente
 
 Terminado:
-- **REC01/REC02**: historial del rescatista en `/mi-historial`
-  (`historial_rescatista()`) — avisos dados y reencuentros logrados,
+- **REC01/REC02**: historial de colaboración en `/mi-historial`
+  (`historial_colaboracion()`, renombrada — ver `TRAZABILIDAD.md`,
+  entrada del 2026-09-19) — avisos dados y reencuentros logrados,
   con el mensaje y la foto de agradecimiento que el dueño deja al
   cerrar el caso en `MapaAvistamientos.jsx`.
 - **TRA09/REC09**: ya cubiertas desde el Sprint 3 (ver arriba).

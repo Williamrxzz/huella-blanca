@@ -95,6 +95,31 @@ queda solo con el historial de avisos y reencuentros, incluyendo el
 mensaje y la foto de agradecimiento que deja el dueño (REC02), sin
 ningún dato de canje.
 
+## 2026-09-19 — Resto de la simplificación: historial_rescatista() renombrada
+
+Al retirar el circuito de comercios (2026-09-18) desapareció el rol
+`'comercio'` de `perfiles.rol`, pero quedó un resto suelto: la función
+`historial_rescatista()` seguía llamándose así aunque "rescatista" ya
+no es un rol del sistema — nunca lo fue en `perfiles.rol` (los roles
+son `'usuario'` y `'admin'`); ser rescatista es simplemente haber
+avisado alguna vez, registrado en `avistamientos.reportado_por`.
+
+Renombrada a `historial_colaboracion()` (`alter function ... rename
+to`, conserva `security definer`, el cuerpo y los permisos sin
+cambios). Actualizada la llamada en `HistorialRescatista.jsx`
+(`supabase.rpc('historial_colaboracion')`). Verificado en vivo: la
+función nueva responde bien y la vieja ya no existe.
+
+Se revisó todo `src/` buscando texto **visible en pantalla** que
+hablara de "rescatista" como si fuera un rol — no apareció ninguno;
+`/mi-historial` ya decía "Tu colaboración" desde antes. Quedan sin
+tocar, a propósito, tres identificadores internos que no son texto de
+pantalla ni afirman un rol: el archivo/componente
+`HistorialRescatista.jsx`, la columna `casos_perdida.rescatista_id` y
+la variable `avistamientoConRescatista` en `MapaAvistamientos.jsx` —
+esta columna solo guarda quién queda acreditado por un reencuentro (FK
+a `perfiles`), sin relación con `perfiles.rol`.
+
 ## 2026-09-19 — TRA05: el teléfono no se podía cargar, y limitación conocida del botón de contacto
 
 Al revisar el código real de TRA05 (dada por terminada desde el

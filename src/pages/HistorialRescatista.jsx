@@ -26,7 +26,7 @@ export default function HistorialRescatista() {
   const [error, setError] = useState(null)
 
   async function cargar() {
-    const { data, error: errorHistorial } = await supabase.rpc('historial_rescatista')
+    const { data, error: errorHistorial } = await supabase.rpc('historial_colaboracion')
 
     if (errorHistorial) setError('No pudimos cargar tu historial: ' + errorHistorial.message)
     setAvistamientos(data?.avistamientos || [])
