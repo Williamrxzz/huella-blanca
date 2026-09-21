@@ -219,8 +219,12 @@ cuando la mascota del caso pertenece al dueño autenticado.
   **únicamente** cuando la mascota tiene un caso de pérdida abierto
   (`perdida` o `posible_perdida`) y el dueño tiene teléfono cargado; en
   cualquier otro caso esos dos campos vienen en `null` — así el número
-  no viaja al navegador en un escaneo normal (TRA05). Si no existe la
-  placa o no tiene mascota, devuelve `{"encontrada": false}`.
+  no viaja al navegador en un escaneo normal (TRA05). Distingue dos
+  casos de "no encontrada" (ADM01): si el código no existe en `placas`,
+  devuelve `{"encontrada": false}` sin más; si la placa existe pero no
+  tiene mascota vinculada (`sin_asignar`, generada por lote y todavía
+  no activada), devuelve `{"encontrada": false, "sin_activar": true}`,
+  sin exponer nada de una mascota que no existe.
 - `registrar_escaneo(p_codigo, p_lat, p_lng)` → registra el escaneo,
   calcula la distancia al domicilio y, si corresponde, abre un caso en
   estado `posible_perdida`.
@@ -235,6 +239,14 @@ cuando la mascota del caso pertenece al dueño autenticado.
   ya existente en estado `sin_asignar` a una mascota propia. Devuelve
   `{"ok": true}` o `{"ok": false, "error": "..."}` (`placa_no_encontrada`,
   `placa_ya_asignada`, `mascota_no_encontrada`). Solo `authenticated`.
+- `generar_lote_placas(p_cantidad int)` → ADM01. Verifica **dentro de
+  la función** que quien llama tenga `rol = 'admin'` en `perfiles` (no
+  alcanza con proteger la pantalla); genera `p_cantidad` placas nuevas
+  en estado `sin_asignar` sin mascota, con la misma lógica de código
+  aleatorio que `generar_placa()` (y el mismo manejo de colisión).
+  Tope de 50 por lote. Devuelve `{"codigos": [...]}`. Revocada de
+  `public`, solo `authenticated` (el chequeo de rol igual la bloquea
+  para cualquiera que no sea admin).
 - `historial_colaboracion()` → JSON con los avisos dados y los
   reencuentros (con el mensaje/foto de agradecimiento del dueño, si
   los dejó) de la persona autenticada. Nunca devuelve domicilio ni
@@ -606,6 +618,21 @@ uno de base:
   escanear el QR desde el celular → el botón de contacto aparece y
   funciona, sin mostrar el número → cerrar el caso → un escaneo
   posterior ya no muestra el botón. Funcionó correctamente.
+
+### ADM01: terminada (2026-09-21)
+
+Circuito completo de generación de lotes y activación — ver
+`generar_lote_placas()` en la sección 5 y el detalle en
+`TRAZABILIDAD.md`, entrada del 2026-09-21. Resumen: admin genera un
+lote de placas sin dueño desde `/admin/placas`; quien recibe una la
+escanea y ve "Esta placa todavía no está activada"; para activarla
+tiene que registrarse o iniciar sesión (una mascota sin dueño no se
+puede gestionar); carga los datos de su mascota y la placa queda
+vinculada con `vincular_placa()`, sin escribir el código a mano. A
+partir de ahí, quien encuentre a esa mascota la escanea y ve la ficha
+sin registrarse — esa regla no cambió. Probado de punta a punta con
+clics reales, salvo la confirmación real de email (no se puede hacer
+desde este entorno).
 
 ### IA01 + IA02: terminadas (2026-09-21)
 

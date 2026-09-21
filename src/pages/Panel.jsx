@@ -305,6 +305,13 @@ export default function Panel() {
       localStorage.removeItem('avisoPendienteId')
     }
 
+    const placaPendiente = localStorage.getItem('placaPendiente')
+    if (placaPendiente) {
+      localStorage.removeItem('placaPendiente')
+      navigate(`/mascotas/nueva?placa=${placaPendiente}`)
+      return
+    }
+
     const { data } = await supabase
       .from('mascotas')
       .select('*, placas(codigo, estado)')

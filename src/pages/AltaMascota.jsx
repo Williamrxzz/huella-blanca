@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
 import { pedirUbicacion } from '../lib/ubicacion'
 import Encabezado from '../components/Encabezado'
 
 const CENTRO_INICIAL = { lat: -46.4380, lng: -67.5280 } // Caleta Olivia
+
+const ERRORES_VINCULAR = {
+  placa_no_encontrada: 'No encontramos esa placa',
+  placa_ya_asignada: 'Esa placa ya está asignada a otra mascota',
+  mascota_no_encontrada: 'No pudimos identificar la mascota',
+}
 
 function archivoABase64(archivo) {
   return new Promise((resolve, reject) => {
@@ -29,6 +35,8 @@ export default function AltaMascota() {
   const { id } = useParams()
   const editando = Boolean(id)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const placaAActivar = !editando ? searchParams.get('placa') : null
   const [sesion, setSesion] = useState(null)
   const [cargandoMascota, setCargandoMascota] = useState(editando)
 
@@ -230,6 +238,26 @@ export default function AltaMascota() {
       return
     }
 
+    if (placaAActivar) {
+      const { data: resultado, error: errorVincular } = await supabase.rpc('vincular_placa', {
+        p_codigo: placaAActivar,
+        p_mascota_id: nuevaMascota.id,
+      })
+
+      setGuardando(false)
+
+      if (errorVincular || !resultado?.ok) {
+        setError(
+          (ERRORES_VINCULAR[resultado?.error] || 'No pudimos activar la placa') +
+            ' — igual guardamos a tu mascota, podés vincular la placa después desde el panel.'
+        )
+        return
+      }
+
+      navigate(`/placas?codigo=${placaAActivar}&nueva=1`)
+      return
+    }
+
     const { data: codigo, error: errorPlaca } = await supabase.rpc('generar_placa', {
       p_mascota_id: nuevaMascota.id,
     })
@@ -258,6 +286,12 @@ export default function AltaMascota() {
     <main className="pagina">
       <Encabezado />
       <h1>{editando ? 'Editar mascota' : 'Cargar mascota'}</h1>
+
+      {placaAActivar && (
+        <p className="ayuda">
+          Vas a activar la placa <strong>{placaAActivar}</strong>: al guardar, queda vinculada a esta mascota.
+        </p>
+      )}
 
       <form className="formulario-aviso" onSubmit={guardar}>
         <input

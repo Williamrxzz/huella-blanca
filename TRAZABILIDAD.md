@@ -95,6 +95,57 @@ queda solo con el historial de avisos y reencuentros, incluyendo el
 mensaje y la foto de agradecimiento que deja el dueño (REC02), sin
 ningún dato de canje.
 
+## 2026-09-21 — ADM01: de parcial a terminada, con generación de lotes y activación
+
+Se completa **ADM01** ("generar lotes de códigos QR únicos y
+aleatorios para producir las placas físicas, sin que las fichas
+puedan encontrarse probando códigos"), con el circuito completo:
+
+1. **Generación de lotes** — `generar_lote_placas(p_cantidad int)`,
+   nueva función `security definer`: verifica el rol admin **dentro**
+   de la función (no alcanza con proteger la pantalla), genera hasta
+   50 placas por lote en estado `sin_asignar` sin mascota, con la
+   misma lógica de código aleatorio y el mismo manejo de colisión que
+   `generar_placa()`. En `/admin/placas`, un formulario "Generar
+   lote" muestra los códigos nuevos con su QR (nivel `H`) y permite
+   descargarlos para imprimir.
+
+2. **Activación** — `ficha_publica()` distingue ahora "código
+   inexistente" (`{"encontrada": false}`, como siempre) de "placa
+   existente sin mascota" (`{"encontrada": false, "sin_activar":
+   true}`), sin exponer nada de una mascota que no existe.
+   `FichaPublica.jsx` muestra "Esta placa todavía no está activada"
+   con un botón "Activar esta placa": sin sesión, lleva a
+   `/registro?placa=CODIGO` (o a `/login?placa=CODIGO` desde el link
+   "Ya tengo cuenta", propagando el mismo parámetro); con sesión,
+   lleva directo a `/mascotas/nueva?placa=CODIGO`. `AltaMascota.jsx`
+   usa `vincular_placa()` en vez de `generar_placa()` cuando hay un
+   código de activación pendiente, así el dueño no escribe el código
+   a mano. Si el registro queda pendiente de confirmar el email, el
+   código se guarda en `localStorage` (`placaPendiente`) y `Panel.jsx`
+   lo retoma en el primer ingreso logueado, con el mismo mecanismo que
+   ya existía para `avisoPendienteId` (TRA09).
+
+Se mantiene sin cambios que **quien encuentra una mascota nunca se
+registra** — la activación es un paso del futuro *dueño* al recibir
+una placa en blanco, un rol distinto del transeúnte que escanea una
+placa ya activa.
+
+Probado en un navegador real, con clics reales, el circuito completo:
+generar un lote de 3 como admin → escanear uno de los códigos sin
+sesión (muestra "todavía no está activada") → tocar "Activar" (lleva
+a `/registro?placa=...`) → cargar una mascota con sesión y el código
+de activación en la URL (queda vinculada, sin escribirla a mano) →
+reescanear sin sesión (ahora aparece la ficha completa). El paso de
+registro con confirmación de email real no se probó de punta a punta
+en este entorno (no se puede confirmar un email desde acá); se
+verificó en cambio que el código de activación se propaga
+correctamente por `user_metadata`/`localStorage` en ambos caminos
+(sesión inmediata y diferida), igual que ya se hacía para TRA09.
+
+También se confirmó que el formulario de vincular placa que ya existía
+en el panel sigue funcionando sin cambios con un código de lote.
+
 ## 2026-09-21 — IA01 + IA02 construidas; IA03 pasa al backlog
 
 Se acorta el Grupo D del Sprint 4 a **IA01 e IA02**, en una sola Edge
@@ -283,6 +334,13 @@ muestra "no tenés acceso". Se sacó el campo de texto libre: ahora solo
 se llega desde el redirect post-alta o "Ver QR" del panel. Verificado
 en un navegador real, con clics reales, en tres escenarios: sin
 sesión, logueado sin ser dueño de la placa, y el dueño real.
+
+**Actualización del 2026-09-21: ADM01 pasó de parcial a terminada** —
+ver la entrada de esa fecha más abajo. La generación de lotes sí se
+construyó, con otro criterio: es una herramienta de trabajo interna
+(imprimir placas antes de tener dueño), no "producción física" en el
+sentido de fabricar o vender placas, que es lo que el documento de
+Historias de Usuario excluye.
 
 **DUE05** ("definir qué datos son públicos y cuáles solo se muestran
 cuando la mascota está perdida") se da por **cumplida parcialmente**,

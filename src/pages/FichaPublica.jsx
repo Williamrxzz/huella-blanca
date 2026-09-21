@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
 import { pedirUbicacion, pedirUbicacionSiYaHayPermiso } from '../lib/ubicacion'
@@ -33,9 +33,11 @@ function SelectorMapa({ onSeleccionar }) {
 
 export default function FichaPublica() {
   const { codigo } = useParams()
+  const navigate = useNavigate()
   const [ficha, setFicha] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
+  const [activando, setActivando] = useState(false)
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [buscandoUbicacion, setBuscandoUbicacion] = useState(false)
@@ -79,6 +81,13 @@ export default function FichaPublica() {
     }
     registrarEscaneo()
   }, [codigo])
+
+  async function activarPlaca() {
+    setActivando(true)
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) navigate(`/mascotas/nueva?placa=${codigo}`)
+    else navigate(`/registro?placa=${codigo}`)
+  }
 
   async function abrirFormulario() {
     setMostrarFormulario(true)
@@ -177,11 +186,23 @@ export default function FichaPublica() {
     </main>
   )
 
+  if (ficha?.sin_activar) return (
+    <main className="pagina">
+      <Encabezado />
+      <h1>Esta placa todavía no está activada</h1>
+      <p>Para usarla, primero hay que cargar los datos de la mascota que la va a llevar.</p>
+      <button className="boton" onClick={activarPlaca} disabled={activando}>
+        {activando ? 'Un momento…' : 'Activar esta placa'}
+      </button>
+      <p className="ayuda">Código: {codigo}</p>
+    </main>
+  )
+
   if (!ficha?.encontrada) return (
     <main className="pagina">
       <Encabezado />
       <h1>Placa no reconocida</h1>
-      <p>Esta placa no está registrada o todavía no fue asignada a una mascota.</p>
+      <p>Esta placa no está registrada.</p>
       <p className="ayuda">Código leído: {codigo}</p>
     </main>
   )

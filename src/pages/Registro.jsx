@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
 
 export default function Registro() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const placaPendiente = searchParams.get('placa')
   const [nombre, setNombre] = useState('')
   const [email, setEmail] = useState('')
   const [telefono, setTelefono] = useState('')
@@ -35,7 +37,10 @@ export default function Registro() {
     }
 
     if (!data.session) {
-      // El proyecto pide confirmar el email antes de dar la sesión.
+      // El proyecto pide confirmar el email antes de dar la sesión: la placa
+      // pendiente (ADM01, activación) se guarda para retomarla en Panel.jsx
+      // apenas haya sesión, igual que avisoPendienteId de TRA09.
+      if (placaPendiente) localStorage.setItem('placaPendiente', placaPendiente)
       setEnviando(false)
       setRevisarEmail(true)
       return
@@ -52,7 +57,7 @@ export default function Registro() {
       return
     }
 
-    navigate('/panel')
+    navigate(placaPendiente ? `/mascotas/nueva?placa=${placaPendiente}` : '/panel')
   }
 
   if (revisarEmail) return (
@@ -125,7 +130,12 @@ export default function Registro() {
         </button>
       </form>
 
-      <Link className="enlace-discreto" to="/login">Ya tengo cuenta</Link>
+      <Link
+        className="enlace-discreto"
+        to={placaPendiente ? `/login?placa=${placaPendiente}` : '/login'}
+      >
+        Ya tengo cuenta
+      </Link>
     </main>
   )
 }
