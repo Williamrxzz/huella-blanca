@@ -89,10 +89,21 @@ Ya instalado y funcionando:
 - jsqr — lectura de códigos QR desde la cámara dentro de la propia app
   (`/escanear`), pensado para hacer la demo sin depender del lector de
   QR nativo del celular.
+- API de Claude, modelo Haiku (`claude-haiku-4-5-20251001`), llamada
+  desde la Edge Function `sugerir-ficha` (IA01+IA02, ver sección 7).
+  Nunca se llama a la API desde el navegador: la clave vive como
+  secreto de Supabase (`ANTHROPIC_API_KEY`), nunca en `.env.local` ni
+  en el código del frontend.
+- Supabase CLI, instalada como devDependency del proyecto (`npm
+  install supabase --save-dev`, se invoca con `npx supabase ...`) en
+  vez de por Homebrew: evita depender de las Command Line Tools de
+  Xcode para desplegar Edge Functions. No hace falta Docker para
+  `supabase functions deploy` — solo para `supabase functions serve`
+  en local, que no se usó.
 
 Pendiente de incorporar:
 - Recharts (gráficos del panel de analítica)
-- API de Claude, modelo Haiku, llamada desde una Edge Function
+- IA03 (texto de búsqueda al reportar la pérdida) — en el backlog, no descartada.
 
 Infraestructura:
 - Supabase (PostgreSQL + Auth + Storage + Edge Functions)
@@ -596,12 +607,31 @@ uno de base:
   funciona, sin mostrar el número → cerrar el caso → un escaneo
   posterior ya no muestra el botón. Funcionó correctamente.
 
+### IA01 + IA02: terminadas (2026-09-21)
+
+Una sola Edge Function, `sugerir-ficha` (`supabase/functions/sugerir-ficha`),
+llamada desde `AltaMascota.jsx` al elegir una foto **solo al cargar
+una mascota nueva** (no al editar, para no pisar datos reales). Manda
+la foto a Claude Haiku y devuelve `categoria` ("apta" | "incorrecta" |
+"inapropiada"):
+- **apta** → sugerencia de especie/raza-o-cruza/tamaño/color/señas
+  (señas: solo rasgos físicos permanentes, nunca la pose de la foto),
+  aplicada a los campos del formulario para que el dueño la corrija.
+- **incorrecta** (no se distingue un animal, foto borrosa) → solo
+  advertencia, no bloquea.
+- **inapropiada** (contenido ofensivo/violento/sexual) → bloquea, se
+  descarta la foto.
+- Si la función no responde → se sigue sin verificar, sin bloquear.
+
+Detalle completo y qué se probó (incluida la simulación de
+"inapropiada" sin usar contenido real) en `TRAZABILIDAD.md`, entrada
+del 2026-09-21.
+
 ### Pendiente, en este orden
 
-1. **Funciones de IA**: sugerir la ficha desde la foto (IA01), verificar
-   la imagen (IA02) y redactar el texto de búsqueda (IA03), siempre
-   desde una Edge Function para no exponer la clave de la API. Modelo
-   Haiku. La app sigue funcionando si la IA no responde o tarda.
+1. **IA03**: redactar el texto de búsqueda para compartir al reportar
+   la pérdida, con los datos de la ficha y la última ubicación. En el
+   backlog, no descartada.
 2. **Módulo de analítica** con Recharts (DAT, pendiente más allá del
    DAT01 ya cubierto).
 3. Optimizar el bundle: Vite avisa que el JS de producción pasa los

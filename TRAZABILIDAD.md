@@ -95,6 +95,53 @@ queda solo con el historial de avisos y reencuentros, incluyendo el
 mensaje y la foto de agradecimiento que deja el dueño (REC02), sin
 ningún dato de canje.
 
+## 2026-09-21 — IA01 + IA02 construidas; IA03 pasa al backlog
+
+Se acorta el Grupo D del Sprint 4 a **IA01 e IA02**, en una sola Edge
+Function (`supabase/functions/sugerir-ficha`), la misma foto y el
+mismo pedido a Claude Haiku para las dos historias a la vez. **IA03**
+(texto de búsqueda para compartir al reportar la pérdida) **queda
+pendiente en el backlog, no descartada** — se retoma más adelante.
+
+La función devuelve `categoria` ("apta" | "incorrecta" |
+"inapropiada") en vez de un booleano, porque la historia distingue dos
+problemas distintos y el sistema los trata distinto en
+`AltaMascota.jsx`:
+- **"incorrecta"** (no se distingue un animal, foto borrosa u oscura):
+  solo **advertencia**. El dueño puede seguir igual — un falso
+  positivo de la IA no puede dejar a alguien sin poder registrar a su
+  mascota.
+- **"inapropiada"** (contenido ofensivo, violento o sexual): **bloqueo**
+  real, se descarta la foto y hay que elegir otra — se justifica
+  porque la ficha es pública.
+- Si la Edge Function no responde (falla, timeout, sin crédito): se
+  sigue sin verificar, sin bloquear nada. Evita la asimetría de que el
+  sistema termine siendo más estricto cuando la IA funciona que cuando
+  está caída.
+
+`especie` y `tamano` se normalizan dentro de la función contra los
+mismos valores que aceptan los checks de la tabla `mascotas`; si el
+modelo devuelve algo fuera de esa lista, el campo vuelve vacío en vez
+de arriesgar el guardado. El prompt pide explícitamente que "señas"
+describa solo rasgos físicos permanentes (manchas, cicatrices, forma
+de orejas o cola) y nunca la pose o el momento de la foto.
+
+El análisis solo corre al **cargar** una mascota nueva, no al editar
+una existente, para no pisar datos reales con una sugerencia.
+
+Probado: con la foto real de una mascota (categoría "apta", sugerencia
+aplicada a los campos del formulario, sin datos de pose en "señas");
+con una imagen que no es una foto de mascota (categoría "incorrecta",
+solo advertencia). La categoría "inapropiada" **no se probó con
+contenido real** — se verificó el bloqueo en la pantalla simulando
+temporalmente esa respuesta en el código, y se sacó la simulación
+antes de commitear.
+
+Instalación de la CLI de Supabase como devDependency del proyecto
+(`npm install supabase --save-dev`) para poder desplegar Edge
+Functions sin depender de Homebrew ni de actualizar las Command Line
+Tools de Xcode, que fallaba en esta máquina.
+
 ## 2026-09-19 — Resto de la simplificación: historial_rescatista() renombrada
 
 Al retirar el circuito de comercios (2026-09-18) desapareció el rol

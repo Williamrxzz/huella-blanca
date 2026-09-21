@@ -7,6 +7,15 @@ import Encabezado from '../components/Encabezado'
 
 const CENTRO_INICIAL = { lat: -46.4380, lng: -67.5280 } // Caleta Olivia
 
+function archivoABase64(archivo) {
+  return new Promise((resolve, reject) => {
+    const lector = new FileReader()
+    lector.onload = () => resolve(String(lector.result).split(',')[1])
+    lector.onerror = reject
+    lector.readAsDataURL(archivo)
+  })
+}
+
 function SelectorMapa({ onSeleccionar }) {
   useMapEvents({
     click(e) {
@@ -33,6 +42,8 @@ export default function AltaMascota() {
   const [caracter, setCaracter] = useState('amigable')
   const [foto, setFoto] = useState(null)
   const [fotoUrlActual, setFotoUrlActual] = useState(null)
+  const [analizandoFoto, setAnalizandoFoto] = useState(false)
+  const [avisoFotoIA, setAvisoFotoIA] = useState(null)
   const [radioMetros, setRadioMetros] = useState(100)
   const [mostrarSalud, setMostrarSalud] = useState(false)
   const [salud, setSalud] = useState('')
@@ -88,6 +99,54 @@ export default function AltaMascota() {
     }
     iniciar()
   }, [editando, id, navigate])
+
+  async function elegirFoto(e) {
+    const archivo = e.target.files?.[0] || null
+    setAvisoFotoIA(null)
+    setFoto(archivo)
+
+    // IA01/IA02 solo corren al cargar una mascota nueva: al editar ya hay
+    // datos reales cargados, y no queremos que una foto nueva los pise.
+    if (!archivo || editando) return
+
+    setAnalizandoFoto(true)
+    try {
+      const base64 = await archivoABase64(archivo)
+      const { data, error: errorFn } = await supabase.functions.invoke('sugerir-ficha', {
+        body: { imagen_base64: base64, media_type: archivo.type },
+      })
+
+      // La IA sugiere, la persona confirma: si no responde o falla, se
+      // sigue sin verificar, nunca se traba el alta de la mascota.
+      if (errorFn || !data || data.error) return
+
+      if (data.categoria === 'inapropiada') {
+        setFoto(null)
+        e.target.value = ''
+        setAvisoFotoIA({ tipo: 'bloqueo', motivo: data.motivo })
+        return
+      }
+
+      if (data.categoria === 'incorrecta') {
+        setAvisoFotoIA({ tipo: 'advertencia', motivo: data.motivo })
+        return
+      }
+
+      if (data.categoria === 'apta' && data.sugerencia) {
+        const s = data.sugerencia
+        if (s.especie) setEspecie(s.especie)
+        if (s.raza) setRaza(s.raza)
+        if (s.tamano) setTamano(s.tamano)
+        if (s.color) setColor(s.color)
+        if (s.senas) setSenas(s.senas)
+        setAvisoFotoIA({ tipo: 'sugerencia', motivo: null })
+      }
+    } catch {
+      // Sin conexión, timeout, lo que sea: se sigue sin verificar.
+    } finally {
+      setAnalizandoFoto(false)
+    }
+  }
 
   async function usarUbicacionActual() {
     setBuscandoUbicacion(true)
@@ -287,8 +346,28 @@ export default function AltaMascota() {
 
         <label className="campo-archivo">
           {fotoUrlActual ? 'Cambiar foto (opcional)' : 'Foto (opcional)'}
-          <input type="file" accept="image/*" onChange={(e) => setFoto(e.target.files?.[0] || null)} />
+          <input type="file" accept="image/*" onChange={elegirFoto} />
         </label>
+
+        {analizandoFoto && <p className="ayuda">Analizando la foto…</p>}
+
+        {avisoFotoIA?.tipo === 'bloqueo' && (
+          <p className="ayuda error">
+            Esa foto no se puede usar ({avisoFotoIA.motivo || 'contenido no permitido'}). Elegí otra.
+          </p>
+        )}
+
+        {avisoFotoIA?.tipo === 'advertencia' && (
+          <p className="ayuda error">
+            {avisoFotoIA.motivo || 'La foto no se ve del todo clara.'} Podés seguir igual, o elegir otra.
+          </p>
+        )}
+
+        {avisoFotoIA?.tipo === 'sugerencia' && (
+          <p className="confirmacion">
+            Completamos algunos campos a partir de la foto — revisalos y corregí lo que no coincida.
+          </p>
+        )}
 
         <button
           type="button"
