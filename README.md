@@ -1,16 +1,45 @@
-# React + Vite
+# Huella Blanca
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+PWA de identificación y recuperación de mascotas perdidas, mediante un
+código QR en el collar. Proyecto académico de la UNPA, Caleta Olivia,
+Argentina.
 
-Currently, two official plugins are available:
+Quien encuentra a la mascota escanea el QR con la cámara del teléfono,
+ve su ficha y puede avisar dónde la vio — sin instalar nada y sin
+registrarse. El dueño usa la app instalable para gestionar la búsqueda.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**Producción**: https://huella-blanca.vercel.app
 
-## React Compiler
+## Instalación
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev
+```
 
-## Expanding the ESLint configuration
+Para el build de producción:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm run build
+npm run preview
+```
+
+## Variables de entorno
+
+Van en un archivo `.env.local` en la raíz (nunca se commitea):
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+La clave de la API de Claude (`ANTHROPIC_API_KEY`) **no** es una
+variable de este archivo: vive únicamente como secreto de Supabase,
+porque la usa una Edge Function, nunca el frontend.
+
+## Documentación
+
+Los documentos de la entrega (Historias de Usuario, Diseño de Base de
+Datos, Modelo de Datos, Product Backlog / Sprint Board y User Story
+Mapping) están en [`docs/`](docs/). El detalle de decisiones, qué se
+construyó y qué se descartó y por qué está en `TRAZABILIDAD.md`; el
+contexto completo del proyecto y el estado de cada sprint, en
+`CLAUDE.md`.

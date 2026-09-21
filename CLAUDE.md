@@ -170,7 +170,10 @@ auth.users), nombre, telefono, rol ('usuario' | 'admin'), creado_en.
 cargadas antes de este campo no lo tienen), raza, tamano ('pequeno' |
 'mediano' | 'grande'), color, senas, caracter ('amigable' |
 'temerosa' | 'no_acercarse'), foto_url, domicilio_lat, domicilio_lng,
-radio_metros (por defecto 1000), pausado_hasta (modo paseo),
+radio_metros (por defecto 100), pausado_hasta (modo paseo: suspende
+la detección automática mientras esté en el futuro — el chequeo ya
+está implementado en `registrar_escaneo()`, pero no existe ninguna
+pantalla para que el dueño lo active; es DUE11, pendiente),
 mostrar_salud, salud, activa, creado_en.
 
 `placas` — id, codigo (único, aleatorio), mascota_id (FK, puede ser
@@ -226,8 +229,11 @@ cuando la mascota del caso pertenece al dueño autenticado.
   no activada), devuelve `{"encontrada": false, "sin_activar": true}`,
   sin exponer nada de una mascota que no existe.
 - `registrar_escaneo(p_codigo, p_lat, p_lng)` → registra el escaneo,
-  calcula la distancia al domicilio y, si corresponde, abre un caso en
-  estado `posible_perdida`.
+  con o sin ubicación. Si hay ubicación, calcula la distancia al
+  domicilio y, si supera `radio_metros` y el modo paseo no está activo
+  (`pausado_hasta` nulo o vencido), abre un caso en estado
+  `posible_perdida`. Fuente verificada con `pg_get_functiondef` el
+  2026-09-21.
 - `registrar_avistamiento(p_codigo, p_lat, p_lng, p_origen, p_situacion,
   p_mensaje, p_contacto)` → registra el aviso; funciona con o sin cuenta.
 - `distancia_metros(lat1, lng1, lat2, lng2)` → fórmula de Haversine.
@@ -287,6 +293,13 @@ El sistema cubre los cinco componentes que exige la cátedra:
 5. Módulo de analítica → vistas SQL mostradas con Recharts (pendiente)
 
 ### Documentos ya entregados
+
+Los archivos de la entrega viven en `docs/` (agregados el 2026-09-21):
+`Historias_de_Usuario_Huella_Blanca_v4.pdf`,
+`Diseno_Base_Datos_Huella_Blanca_v3.pdf`,
+`Modelo_datos_Huella_Blanca_v2.pdf`,
+`Product_Backlog_Sprint_Board_v3.pdf`,
+`User_Story_Mapping_Huella_Blanca_v3.pdf`.
 
 1. **Historias de Usuario** — 63 historias en siete bloques, con
    prioridad Alta, Media o Baja. Prefijos: DUE (dueño), PER (pérdida y
@@ -654,16 +667,38 @@ Detalle completo y qué se probó (incluida la simulación de
 "inapropiada" sin usar contenido real) en `TRAZABILIDAD.md`, entrada
 del 2026-09-21.
 
+### Estado final de las 63 historias (al cierre del Sprint 1, 2026-09-21)
+
+- **34 terminadas.**
+- **1 cumplida parcialmente**: DUE05 (el dueño decide sobre los datos
+  de salud; el resto del gating por estado de pérdida es una regla
+  fija del sistema, no configurable campo por campo — ver
+  `TRAZABILIDAD.md`, entrada del 2026-09-19).
+- **11 pendientes**: DUE08, DUE11, TRA07, TRA10, PER04, PER09, REC08,
+  ADM03, ADM07, IA03, DAT05.
+- **17 descartadas**: REC03 a REC07, COM01 a COM03, ADM04, ADM05,
+  ADM06, ADM08, ADM09, ADM10, ADM11, ADM12 y DAT04 — el detalle y el
+  motivo de cada una están en `TRAZABILIDAD.md`.
+
 ### Pendiente, en este orden
 
 1. **IA03**: redactar el texto de búsqueda para compartir al reportar
-   la pérdida, con los datos de la ficha y la última ubicación. En el
-   backlog, no descartada.
-2. **Módulo de analítica** con Recharts (DAT, pendiente más allá del
-   DAT01 ya cubierto).
-3. Optimizar el bundle: Vite avisa que el JS de producción pasa los
+   la pérdida, con los datos de la ficha y la última ubicación.
+2. **Módulo de analítica** con Recharts — **DAT05**, del Sprint 5
+   (no confundir con DAT02/DAT03, ya cubiertas por el esquema, ni con
+   DAT01, ya construida).
+3. El resto de las pendientes (DUE08, DUE11, TRA07, TRA10, PER04,
+   PER09, REC08, ADM03, ADM07) no tienen todavía un plan de trabajo
+   asignado a un sprint.
+4. Optimizar el bundle: Vite avisa que el JS de producción pasa los
    500 KB (sobre todo por Leaflet). No es urgente, pero si se nota lento
    en el celular, dividir en chunks con `import()` dinámico.
+5. **Deuda técnica conocida, pospuesta a propósito** (ver
+   `TRAZABILIDAD.md`, entrada del 2026-09-21): los `useEffect` de
+   `Panel.jsx` y `MapaAvistamientos.jsx` llaman a `cargar()`
+   (que hace `setState`) directamente en el cuerpo del efecto —
+   `react-hooks/set-state-in-effect`. Funciona y está probado; se
+   decidió no tocarlo antes de la presentación del Sprint 1.
 
 ---
 

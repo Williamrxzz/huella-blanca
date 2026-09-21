@@ -68,12 +68,21 @@ sistema.
 
 - REC03, REC04, REC05, REC06, REC07
 - COM01, COM02, COM03
-- ADM04, ADM05, ADM09, ADM10, ADM12
+- ADM04, ADM05, ADM06, ADM09, ADM10, ADM11, ADM12
 - DAT04
 
 De estas, **REC04, ADM04, ADM05, ADM09 y ADM12 llegaron a construirse
 y probarse en vivo** durante el Sprint 4; se retiran por esta decisión
 de alcance, no porque hayan fallado o estuvieran mal implementadas.
+
+**ADM06** ("asignar un usuario de comercio") y **ADM11** ("crear
+insignias") se agregan a esta lista el 2026-09-21, con un motivo
+puntual cada una, no el motivo general del resto del bloque: ADM06
+depende del rol `'comercio'`, que ya no existe en `perfiles.rol`
+desde esta misma simplificación; ADM11 depende de REC06 (insignias
+para quien colabora), que ya está descartada arriba. Ninguna de las
+dos se llegó a construir. Con esto, el total de historias descartadas
+del proyecto pasa a 17.
 
 **Cambios en el esquema**: se eliminaron las tablas `comercios`,
 `agradecimientos`, `canjes` y `refugios`, junto con las funciones
@@ -94,6 +103,70 @@ restante, `/admin/placas`, dejó de tener sentido). `/mi-historial`
 queda solo con el historial de avisos y reencuentros, incluyendo el
 mensaje y la foto de agradecimiento que deja el dueño (REC02), sin
 ningún dato de canje.
+
+## 2026-09-21 — Verificación de los cinco documentos de entrega contra el código
+
+Se leyeron los cinco PDF de `docs/` (Historias de Usuario v4, Diseño
+de Base de Datos v3, Modelo de Datos v2, Product Backlog/Sprint Board
+v3, User Story Mapping v3) y se cruzaron contra el código, la base y
+este mismo documento. Coinciden en los cuatro números (34 terminadas,
+1 parcial, 11 pendientes, 17 descartadas), en las 9 funciones + la
+Edge Function, en las 6 tablas y sus columnas, en las 17 historias
+descartadas con fecha y motivo, y en la lista de trabajo sin historia
+asociada.
+
+Dos afirmaciones puntuales del documento de Diseño de Base de Datos
+se verificaron contra la fuente real, en vez de darlas por ciertas:
+
+- **`mascotas.radio_metros` por defecto**: el documento decía `100`.
+  `CLAUDE.md` tenía una contradicción interna (decía `1000` en un
+  lugar y `100` en otro). Se confirmó por
+  `information_schema.columns` que el valor real es `100` — se
+  corrigió `CLAUDE.md`.
+- **Modo paseo en `registrar_escaneo()`**: se leyó el código fuente
+  completo de la función (`pg_get_functiondef`) y se confirmó que
+  efectivamente respeta `pausado_hasta` antes de abrir un caso
+  automático — no era una afirmación sin comprobar. Esto deja una
+  nota útil para el Sprint 5: la mitad de DUE11 (modo paseo) ya está
+  resuelta del lado de la base; solo falta la pantalla para que el
+  dueño active `pausado_hasta`, no una función nueva.
+
+Observación menor, sin corregir: DUE03 dice "vincular una placa
+QR/NFC"; el sistema solo implementa QR, no hay nada de NFC en el
+código ni en el stack. No se considera un error del documento — puede
+leerse como el alcance aspiracional de la historia — pero queda
+anotado por si la cátedra pregunta.
+
+## 2026-09-21 — Limpieza final del Sprint 1: deuda técnica conocida, no corregida a propósito
+
+Al preparar el commit final del Sprint 1 se revisó todo el proyecto
+(archivos sin usar, imports muertos, `console.log`, comentarios sobre
+conceptos ya retirados, y seguridad de credenciales — nada de eso
+tenía nada pendiente salvo cinco archivos sueltos de la plantilla de
+Vite, ya borrados: `src/App.css`, `src/assets/hero.png`,
+`src/assets/react.svg`, `src/assets/vite.svg`, `public/icons.svg`).
+
+Quedan dos errores de lint **preexistentes** (no introducidos en esta
+limpieza, ya estaban documentados como conocidos en `CLAUDE.md`), que
+se decide **no corregir antes de la presentación**, a propósito: el
+código funciona y está probado, y no conviene tocar la carga de datos
+del panel ni del mapa justo antes de mostrarlo. Quedan anotados como
+deuda técnica para el Sprint 5:
+
+- `src/pages/Panel.jsx` (línea ~337) — `react-hooks/set-state-in-effect`:
+  el `useEffect` llama a `cargar()` (que hace `setState`) directamente
+  en el cuerpo del efecto, en vez de manejarlo de otra forma. Trae
+  además un warning de `exhaustive-deps` por la dependencia `cargar`
+  faltante en el array.
+- `src/pages/MapaAvistamientos.jsx` (línea ~117) — el mismo patrón:
+  `useEffect(() => { cargar() }, [id, navigate])`, mismo error y mismo
+  warning de dependencia faltante.
+
+Arreglar esto bien requiere revisar cómo se dispara la recarga de
+datos en las dos pantallas (por ejemplo, moviendo la lógica a una
+función invocada por evento en vez de en el cuerpo del efecto, o
+reestructurando con un flag), y no es un cambio de una línea — por
+eso se pospone a un momento sin la presión de la entrega.
 
 ## 2026-09-21 — ADM01: de parcial a terminada, con generación de lotes y activación
 
