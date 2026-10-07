@@ -45,13 +45,42 @@ export default function GeneradorQR() {
 
   const url = placa ? `${window.location.origin}/m/${placa.codigo}` : ''
 
-  function descargar() {
+  function obtenerBlob() {
     const canvas = contenedorRef.current?.querySelector('canvas')
-    if (!canvas) return
+    if (!canvas) return Promise.resolve(null)
+    return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
+  }
+
+  function descargar(blob) {
     const enlace = document.createElement('a')
     enlace.download = `placa-${placa.codigo}.png`
-    enlace.href = canvas.toDataURL('image/png')
+    enlace.href = URL.createObjectURL(blob)
     enlace.click()
+    URL.revokeObjectURL(enlace.href)
+  }
+
+  async function compartirQR() {
+    const blob = await obtenerBlob()
+    if (!blob) return
+
+    const archivo = new File([blob], `placa-${placa.codigo}.png`, { type: 'image/png' })
+    const puedeCompartirArchivo = navigator.canShare?.({ files: [archivo] })
+
+    if (puedeCompartirArchivo) {
+      try {
+        await navigator.share({
+          files: [archivo],
+          title: `Código QR de ${placa.mascotas?.nombre || 'tu mascota'}`,
+        })
+        return
+      } catch (err) {
+        // Si la persona cancela el panel de compartir, no hacemos nada más.
+        // Cualquier otro error cae en la descarga, igual que si no soportara compartir.
+        if (err?.name === 'AbortError') return
+      }
+    }
+
+    descargar(blob)
   }
 
   if (verificando) return <main className="pagina"><p>Cargando…</p></main>
@@ -80,7 +109,7 @@ export default function GeneradorQR() {
             <QRCodeCanvas value={url} size={240} level="H" includeMargin />
           </div>
           <p className="ayuda">{url}</p>
-          <button className="boton" onClick={descargar}>Descargar QR</button>
+          <button className="boton" onClick={compartirQR}>Compartir QR</button>
         </>
       )}
 
