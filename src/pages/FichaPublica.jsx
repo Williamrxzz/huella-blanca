@@ -210,7 +210,14 @@ export default function FichaPublica() {
   const perdida = ficha.estado === 'perdida' || ficha.estado === 'posible_perdida'
 
   return (
-    <main className="pagina">
+    <main className="pagina pagina-ficha">
+      <div className="ficha-foto-fija">
+        {ficha.foto_url
+          ? <img className="foto" src={ficha.foto_url} alt={ficha.nombre} />
+          : <div className="foto vacia">Sin foto</div>}
+      </div>
+
+      <div className="ficha-contenido">
       <Encabezado />
       {perdida && (
         <div className={`alerta ${ficha.estado === 'perdida' ? 'confirmada' : 'posible'}`}>
@@ -227,10 +234,6 @@ export default function FichaPublica() {
           </div>
         </div>
       )}
-
-      {ficha.foto_url
-        ? <img className="foto" src={ficha.foto_url} alt={ficha.nombre} />
-        : <div className="foto vacia">Sin foto</div>}
 
       <h1>¡Hola! Soy {ficha.nombre}</h1>
       <p className="ayuda">Llamala por su nombre, para que se acerque con más confianza.</p>
@@ -428,6 +431,7 @@ export default function FichaPublica() {
           </button>
         </form>
       )}
+      </div>
     </main>
   )
 }
