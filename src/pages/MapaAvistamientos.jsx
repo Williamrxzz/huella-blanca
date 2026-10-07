@@ -264,10 +264,16 @@ export default function MapaAvistamientos() {
         <ul className="lista-avistamientos">
           {avistamientos.map((a) => (
             <li key={a.id}>
-              <span className="nombre">{ETIQUETA_SITUACION[a.situacion] || a.situacion}</span>
-              <span className="ayuda">{formatearFecha(a.creado_en)}</span>
-              {a.mensaje && <span className="ayuda">{a.mensaje}</span>}
-              {a.contacto && <span className="ayuda">Contacto: {a.contacto}</span>}
+              <div className="fila-principal-avistamiento">
+                <span className="situacion-avistamiento">{ETIQUETA_SITUACION[a.situacion] || a.situacion}</span>
+                <span className="hora-avistamiento">{formatearFecha(a.creado_en)}</span>
+              </div>
+              {(a.mensaje || a.contacto) && (
+                <div className="detalle-avistamiento">
+                  {a.mensaje && <span>{a.mensaje}</span>}
+                  {a.contacto && <span>Contacto: {a.contacto}</span>}
+                </div>
+              )}
             </li>
           ))}
         </ul>

@@ -1,9 +1,19 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from 'react-leaflet'
+import { Phone } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { pedirUbicacion, pedirUbicacionSiYaHayPermiso } from '../lib/ubicacion'
 import Encabezado from '../components/Encabezado'
+
+function IconoWhatsApp(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M17.47 14.38c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.15-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.48-1.76-1.66-2.06-.17-.3-.02-.46.13-.61.14-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.6-.91-2.2-.24-.58-.49-.5-.67-.5-.17-.01-.37-.01-.57-.01s-.52.07-.8.37c-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.22 1.36.19 1.87.12.57-.09 1.75-.72 2-1.41.25-.69.25-1.28.17-1.41-.07-.12-.27-.2-.57-.35Z" />
+      <path d="M12.02 2C6.5 2 2 6.48 2 12c0 1.85.5 3.58 1.38 5.07L2 22l5.07-1.33A9.96 9.96 0 0 0 12.02 22C17.53 22 22 17.52 22 12S17.53 2 12.02 2Zm0 18.2c-1.6 0-3.1-.45-4.37-1.23l-.31-.19-3.01.79.8-2.93-.2-.3A8.17 8.17 0 0 1 3.8 12c0-4.54 3.7-8.2 8.22-8.2 4.53 0 8.2 3.67 8.2 8.2 0 4.53-3.68 8.2-8.2 8.2Z" />
+    </svg>
+  )
+}
 
 const INFO_CARACTER = {
   amigable: {
@@ -210,7 +220,14 @@ export default function FichaPublica() {
   const perdida = ficha.estado === 'perdida' || ficha.estado === 'posible_perdida'
 
   return (
-    <main className="pagina">
+    <main className="pagina pagina-ficha">
+      <div className="ficha-foto-fija">
+        {ficha.foto_url
+          ? <img className="foto" src={ficha.foto_url} alt={ficha.nombre} />
+          : <div className="foto vacia">Sin foto</div>}
+      </div>
+
+      <div className="ficha-contenido">
       <Encabezado />
       {perdida && (
         <div className={`alerta ${ficha.estado === 'perdida' ? 'confirmada' : 'posible'}`}>
@@ -228,21 +245,21 @@ export default function FichaPublica() {
         </div>
       )}
 
-      {ficha.foto_url
-        ? <img className="foto" src={ficha.foto_url} alt={ficha.nombre} />
-        : <div className="foto vacia">Sin foto</div>}
-
       <h1>¡Hola! Soy {ficha.nombre}</h1>
       <p className="ayuda">Llamala por su nombre, para que se acerque con más confianza.</p>
 
       <ul className="datos">
-        {ficha.especie && <li><span>Especie</span>{ficha.especie}</li>}
-        {ficha.sexo && <li><span>Sexo</span>{ficha.sexo === 'macho' ? 'Macho' : 'Hembra'}</li>}
-        {ficha.raza && <li><span>Raza</span>{ficha.raza}</li>}
-        {ficha.tamano && <li><span>Tamaño</span>{ficha.tamano}</li>}
-        {ficha.color && <li><span>Color</span>{ficha.color}</li>}
-        {ficha.senas && <li><span>Señas</span>{ficha.senas}</li>}
-        {ficha.salud && <li><span>Salud</span>{ficha.salud}</li>}
+        {ficha.especie && <li><span>Especie:</span> {ficha.especie}</li>}
+        {ficha.sexo && (
+          <li className={ficha.sexo === 'macho' ? 'chip-macho' : 'chip-hembra'}>
+            <span>Sexo:</span> {ficha.sexo === 'macho' ? 'Macho' : 'Hembra'}
+          </li>
+        )}
+        {ficha.raza && <li><span>Raza:</span> {ficha.raza}</li>}
+        {ficha.tamano && <li><span>Tamaño:</span> {ficha.tamano}</li>}
+        {ficha.color && <li><span>Color:</span> {ficha.color}</li>}
+        {ficha.senas && <li><span>Señas:</span> {ficha.senas}</li>}
+        {ficha.salud && <li><span>Salud:</span> {ficha.salud}</li>}
       </ul>
 
       {ficha.caracter && INFO_CARACTER[ficha.caracter] && (
@@ -276,13 +293,15 @@ export default function FichaPublica() {
       {perdida && (ficha.contacto_tel || ficha.contacto_whatsapp) && (
         <div className="contacto-dueno">
           {ficha.contacto_whatsapp && (
-            <a className="boton" href={ficha.contacto_whatsapp} target="_blank" rel="noopener noreferrer">
-              Escribir por WhatsApp
+            <a className="boton boton-contacto" href={ficha.contacto_whatsapp} target="_blank" rel="noopener noreferrer">
+              <IconoWhatsApp />
+              WhatsApp
             </a>
           )}
           {ficha.contacto_tel && (
-            <a className="boton secundario" href={ficha.contacto_tel}>
-              Llamar al dueño
+            <a className="boton secundario boton-contacto" href={ficha.contacto_tel}>
+              <Phone size={22} />
+              Llamar
             </a>
           )}
         </div>
@@ -428,6 +447,7 @@ export default function FichaPublica() {
           </button>
         </form>
       )}
+      </div>
     </main>
   )
 }
