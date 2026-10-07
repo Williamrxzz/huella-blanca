@@ -14,6 +14,7 @@ export default function GeneradorQR() {
   const [verificando, setVerificando] = useState(true)
   const [placa, setPlaca] = useState(null)
   const [sinAcceso, setSinAcceso] = useState(false)
+  const [linkCopiado, setLinkCopiado] = useState(false)
 
   useEffect(() => {
     async function verificar() {
@@ -83,6 +84,45 @@ export default function GeneradorQR() {
     descargar(blob)
   }
 
+  async function copiarLink() {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url)
+      } else {
+        const textarea = document.createElement('textarea')
+        textarea.value = url
+        textarea.style.position = 'fixed'
+        textarea.style.opacity = '0'
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textarea)
+      }
+      setLinkCopiado(true)
+      setTimeout(() => setLinkCopiado(false), 2000)
+    } catch {
+      // Si ni siquiera se puede copiar, no hay más nada que intentar.
+    }
+  }
+
+  async function compartirFicha() {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          url,
+          title: placa.mascotas?.nombre || 'Huella Blanca',
+        })
+        return
+      } catch (err) {
+        // Si la persona cancela el panel de compartir, no hacemos nada más.
+        // Cualquier otro error cae en copiar el link, igual que si no soportara compartir.
+        if (err?.name === 'AbortError') return
+      }
+    }
+
+    await copiarLink()
+  }
+
   if (verificando) return <main className="pagina"><p>Cargando…</p></main>
 
   return (
@@ -109,7 +149,13 @@ export default function GeneradorQR() {
             <QRCodeCanvas value={url} size={240} level="H" includeMargin />
           </div>
           <p className="ayuda">{url}</p>
-          <button className="boton" onClick={compartirQR}>Compartir QR</button>
+
+          <div className="acciones-tarjeta">
+            <button className="boton" onClick={compartirQR}>Compartir QR</button>
+            <button className="boton secundario" onClick={compartirFicha}>Compartir ficha</button>
+          </div>
+
+          {linkCopiado && <p className="confirmacion">Link copiado</p>}
         </>
       )}
 
