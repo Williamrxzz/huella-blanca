@@ -239,13 +239,17 @@ export default function FichaPublica() {
       <p className="ayuda">Llamala por su nombre, para que se acerque con más confianza.</p>
 
       <ul className="datos">
-        {ficha.especie && <li><span>Especie</span>{ficha.especie}</li>}
-        {ficha.sexo && <li><span>Sexo</span>{ficha.sexo === 'macho' ? 'Macho' : 'Hembra'}</li>}
-        {ficha.raza && <li><span>Raza</span>{ficha.raza}</li>}
-        {ficha.tamano && <li><span>Tamaño</span>{ficha.tamano}</li>}
-        {ficha.color && <li><span>Color</span>{ficha.color}</li>}
-        {ficha.senas && <li><span>Señas</span>{ficha.senas}</li>}
-        {ficha.salud && <li><span>Salud</span>{ficha.salud}</li>}
+        {ficha.especie && <li><span>Especie:</span> {ficha.especie}</li>}
+        {ficha.sexo && (
+          <li className={ficha.sexo === 'macho' ? 'chip-macho' : 'chip-hembra'}>
+            <span>Sexo:</span> {ficha.sexo === 'macho' ? 'Macho' : 'Hembra'}
+          </li>
+        )}
+        {ficha.raza && <li><span>Raza:</span> {ficha.raza}</li>}
+        {ficha.tamano && <li><span>Tamaño:</span> {ficha.tamano}</li>}
+        {ficha.color && <li><span>Color:</span> {ficha.color}</li>}
+        {ficha.senas && <li><span>Señas:</span> {ficha.senas}</li>}
+        {ficha.salud && <li><span>Salud:</span> {ficha.salud}</li>}
       </ul>
 
       {ficha.caracter && INFO_CARACTER[ficha.caracter] && (

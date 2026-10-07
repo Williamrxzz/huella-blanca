@@ -252,17 +252,27 @@ h2 { font-size: 18px; margin: 28px 0 8px; }
   .alerta.confirmada .punto { animation: none; }
 }
 
-.datos { list-style: none; padding: 0; margin: 16px 0; }
+.datos {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
 
 .datos li {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 10px 0;
-  border-bottom: 1px solid #e8e6e2;
+  background: #eeece7;
+  border-radius: 10px;
+  padding: 8px 12px;
+  line-height: 1.35;
 }
 
 .datos li span { color: #6f6e6a; }
+
+.datos li.chip-hembra { background: #f9dde8; }
+
+.datos li.chip-macho { background: #dce8f4; }
 
 .caracter {
   background: #eef3f8;
