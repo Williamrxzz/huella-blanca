@@ -600,14 +600,45 @@ textarea.entrada { resize: vertical; font-family: inherit; }
   list-style: none;
   padding: 0;
   margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .lista-avistamientos li {
   display: flex;
   flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid #e8e6e2;
+  border-radius: 8px;
+  background: #fafaf8;
+}
+
+.fila-principal-avistamiento {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.situacion-avistamiento {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.hora-avistamiento {
+  color: #6f6e6a;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.detalle-avistamiento {
+  display: flex;
+  flex-direction: column;
   gap: 2px;
-  padding: 10px 0;
-  border-bottom: 1px solid #e8e6e2;
+  color: #6f6e6a;
+  font-size: 13px;
 }
 
 .lista-mascotas .nombre {
