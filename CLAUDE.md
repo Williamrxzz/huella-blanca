@@ -667,6 +667,58 @@ Detalle completo y qué se probó (incluida la simulación de
 "inapropiada" sin usar contenido real) en `TRAZABILIDAD.md`, entrada
 del 2026-09-21.
 
+### Sprint 2: confirmado de punta a punta, mejoras de interfaz y deploy a producción (2026-10-07)
+
+- **Sprint 2 (TRA04, TRA11, PER01, PER05, PER08) probado hoy de punta
+  a punta**, no solo releído: TRA04 y TRA11 con GPS real desde el
+  teléfono (confirmado con una consulta directa a `avistamientos`,
+  no solo por pantalla), y el ciclo completo PER01 → PER05 → PER08
+  (marcar perdida, ver el aviso con hora en el mapa, cerrar el caso)
+  contra la mascota real del proyecto. Tag `sprint-2-entrega` apunta
+  a `cb775a5`.
+- **El repositorio pasa a público** (`Williamrxzz/huella-blanca`,
+  antes privado) — ya no hace falta invitar a la cátedra por separado.
+- **Rama `mejora-ficha-publica` mergeada a `master` y en producción**:
+  en `FichaPublica.jsx`, la foto queda fija arriba (hasta 40% de la
+  pantalla) con el resto del contenido scrolleando aparte; los datos
+  (especie, sexo, raza, tamaño, color, señas) pasaron de lista
+  vertical a chips en grilla de 2 columnas, con el de sexo coloreado
+  (rosado hembra, celeste macho); los botones de contacto (WhatsApp y
+  Llamar) son ahora cuadrados con ícono, en vez de rectángulos largos
+  apilados — se agregó `lucide-react` para el ícono de teléfono, y un
+  SVG propio inline para el logo de WhatsApp (sin librería nueva solo
+  para eso). La miniatura circular de la mascota (`Panel.jsx`,
+  `AltaMascota.jsx`, `HistorialColaboracion.jsx`) se corrigió para
+  recortar con `object-position: center top`, priorizando la cabeza
+  del animal. En `MapaAvistamientos.jsx`, cada aviso pasó a mostrarse
+  como tarjeta compacta (situación y hora en una línea, mensaje y
+  contacto debajo, más chico) en vez de texto corrido.
+- **`GeneradorQR.jsx` (ruta `/placas`) ganó dos botones nuevos**,
+  directo en `master` (no en la rama de diseño, por ser función
+  nueva): "Compartir QR" (reemplaza a "Descargar QR"; usa
+  `navigator.share` con el PNG como archivo adjunto si el navegador
+  lo soporta, y si no cae en la descarga de siempre) y "Compartir
+  ficha" (comparte la URL pública `/m/CODIGO` como link, sin archivo
+  — para que se pueda tocar directo en un chat, a diferencia del QR
+  que ahí no se puede escanear; si no hay soporte de `navigator.share`
+  copia el link al portapapeles con la confirmación "Link copiado").
+- **Avistamientos de prueba de la mascota real limpiados**: se
+  borraron los 10 avisos viejos de prueba (incluido uno con un chiste
+  de plata, que va contra la regla de "no hay dinero ni recompensas"
+  de este documento aunque fuera solo un dato de prueba), y quedó
+  solo el de hoy (2026-10-07, origen GPS). Esto es una excepción
+  puntual a la regla de bajas lógicas (sección 2) y a que la limpieza
+  de datos de prueba la hace el dueño del proyecto desde el Table
+  Editor: se ejecutó por un pedido explícito y detallado en el chat,
+  con el `count(*)` final confirmado por consulta directa, no de
+  memoria.
+- **Pendiente para la sesión de Trello**: el Sprint 2 del tablero
+  todavía no se actualizó (listas renombradas, las cinco historias en
+  TERMINADO, PER04 al backlog, tarjeta de Entregas) — el conector de
+  Trello se reconectó recién hoy (`claude mcp add --transport http
+  trello https://mcp.trello.com/v1 --scope user`), así que falta
+  retomarlo en una sesión nueva que sí lo tenga disponible.
+
 ### Estado final de las 63 historias (al cierre del Sprint 1, 2026-09-21)
 
 - **34 terminadas.**
