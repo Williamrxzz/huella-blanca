@@ -53,7 +53,8 @@ export default function AltaMascota() {
   const [analizandoFoto, setAnalizandoFoto] = useState(false)
   const [avisoFotoIA, setAvisoFotoIA] = useState(null)
   const [radioMetros, setRadioMetros] = useState(100)
-  const [mostrarSalud, setMostrarSalud] = useState(false)
+  const [visibilidadSenas, setVisibilidadSenas] = useState('publico')
+  const [visibilidadSalud, setVisibilidadSalud] = useState('privado')
   const [salud, setSalud] = useState('')
 
   const [centroMapa, setCentroMapa] = useState(CENTRO_INICIAL)
@@ -97,7 +98,8 @@ export default function AltaMascota() {
       setCaracter(mascota.caracter)
       setFotoUrlActual(mascota.foto_url)
       setRadioMetros(mascota.radio_metros)
-      setMostrarSalud(mascota.mostrar_salud)
+      setVisibilidadSenas(mascota.visibilidad_senas)
+      setVisibilidadSalud(mascota.visibilidad_salud)
       setSalud(mascota.salud || '')
 
       const domicilioExistente = { lat: mascota.domicilio_lat, lng: mascota.domicilio_lng }
@@ -210,8 +212,9 @@ export default function AltaMascota() {
       domicilio_lat: domicilio.lat,
       domicilio_lng: domicilio.lng,
       radio_metros: radioMetros,
-      mostrar_salud: mostrarSalud,
-      salud: mostrarSalud ? (salud.trim() || null) : null,
+      salud: salud.trim() || null,
+      visibilidad_senas: visibilidadSenas,
+      visibilidad_salud: visibilidadSalud,
     }
 
     if (editando) {
@@ -365,6 +368,17 @@ export default function AltaMascota() {
 
         <select
           className="entrada"
+          aria-label="Quién ve las señas particulares"
+          value={visibilidadSenas}
+          onChange={(e) => setVisibilidadSenas(e.target.value)}
+        >
+          <option value="publico">Señas: las ve cualquiera que escanee la placa</option>
+          <option value="perdida">Señas: solo si está perdida</option>
+          <option value="privado">Señas: no se muestran</option>
+        </select>
+
+        <select
+          className="entrada"
           aria-label="Carácter"
           value={caracter}
           onChange={(e) => setCaracter(e.target.value)}
@@ -454,25 +468,25 @@ export default function AltaMascota() {
           />
         </label>
 
-        <label className="casilla">
-          <input
-            type="checkbox"
-            checked={mostrarSalud}
-            onChange={(e) => setMostrarSalud(e.target.checked)}
-          />
-          Mostrar información de salud en la ficha pública
-        </label>
+        <textarea
+          className="entrada"
+          placeholder="Información de salud (opcional)"
+          aria-label="Información de salud"
+          value={salud}
+          onChange={(e) => setSalud(e.target.value)}
+          rows={2}
+        />
 
-        {mostrarSalud && (
-          <textarea
-            className="entrada"
-            placeholder="Información de salud"
-            aria-label="Información de salud"
-            value={salud}
-            onChange={(e) => setSalud(e.target.value)}
-            rows={2}
-          />
-        )}
+        <select
+          className="entrada"
+          aria-label="Quién ve la información de salud"
+          value={visibilidadSalud}
+          onChange={(e) => setVisibilidadSalud(e.target.value)}
+        >
+          <option value="publico">Salud: la ve cualquiera que escanee la placa</option>
+          <option value="perdida">Salud: solo si está perdida</option>
+          <option value="privado">Salud: no se muestra</option>
+        </select>
 
         {error && <p className="ayuda error">{error}</p>}
 
