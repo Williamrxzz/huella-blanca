@@ -41,7 +41,7 @@ infraestructura) se listan como `—`.
 | `5f8c43e` | PER01: marcar mascota como perdida manualmente desde el panel | PER01 — OK (confirmado contra el texto real de la historia) |
 | `806afe9` | PER08: marcar mascota como recuperada y cerrar el caso desde el mapa | PER08 — OK (confirmado contra el texto real de la historia; nota: reutiliza un código ya usado antes en `3568137` para otra función) |
 | `251b323` | docs: actualizar CLAUDE.md con el estado real verificado del MVP | — (documentación) |
-| `007990d` | PER03: descartar la sospecha de pérdida | PER03 — OK (detección automática / confirmar o descartar la sospecha) |
+| `007990d` | PER03: descartar la sospecha de pérdida | PER03 — **PARCIAL** (implementa solo "descartar"; "confirmar" ya existía con PER01. Faltan la alerta con la distancia y el paso automático a `perdida`; ver la entrada del 2026-10-25) |
 
 ## Resumen de los problemas encontrados
 
@@ -427,6 +427,9 @@ un beneficio claro, y una regla fija protege mejor al usuario que una
 configuración que puede equivocarse (por ejemplo, dejar expuesto el
 contacto por error en un dueño que no entendió la opción).
 
+**Actualización del 2026-10-19: DUE05 pasó de parcial a completada.**
+Ver la entrada del 2026-10-25 para la línea de tiempo.
+
 ## 2026-09-16 — ADM08 descartada: la acción del agradecimiento no necesitaba ser configurable
 
 **ADM08** se descarta del alcance. Hacer configurable qué acción
@@ -438,6 +441,69 @@ configurabilidad. Esta decisión es anterior y separada de la
 simplificación del 2026-09-18: en aquel momento se mantenía el
 circuito de comercios, solo se sacó la parte de ADM08 que lo hacía
 innecesariamente configurable.
+
+## 2026-10-25 — Sprint 3: PER03 parcial y DUE05 completada después del cierre
+
+Al armar las tarjetas del Sprint 3 (14 historias según el Product
+Backlog v3) se verificó cada una contra el código, no contra el estado
+que dicen los documentos. Resultado: doce quedaron como estaban,
+una cambia de estado (PER03) y otra tiene fecha de cierre distinta de
+la del sprint (DUE05).
+
+**PER03 — de "Terminada" a Parcial.** El texto de la historia es:
+"recibir una alerta con la distancia al domicilio y poder confirmar o
+descartar la pérdida en un toque, para que el estado pase a perdida si
+no respondo en el tiempo configurado". Cuatro partes:
+
+| Parte | Estado | Dónde |
+|---|---|---|
+| Confirmar la pérdida en un toque | Hecha | `Panel.jsx`, botón "Confirmar pérdida" (actualiza el caso `posible_perdida` a `perdida`) |
+| Descartar la sospecha en un toque | Hecha | `Panel.jsx`, botón "No, está conmigo" (`estado: 'descartada'`), commit `007990d` |
+| Alerta con la distancia al domicilio | **Sin construir** | `registrar_escaneo()` calcula y guarda `escaneos.distancia_m`, pero no hay alerta al dueño ni pantalla que la muestre |
+| Paso automático a `perdida` por tiempo | **Sin construir** | No hay trabajo programado, trigger ni columna de plazo; el dueño decide siempre a mano |
+
+Lo que falta depende de la misma infraestructura que PER04 (un servicio
+de correo o de notificaciones push, que hoy no está integrado), más un
+trabajo programado que tampoco existe. Pasa al Sprint 5 junto con PER04.
+Los PDFs de Historias de Usuario v4 y de Product Backlog v3 la dan por
+Terminada; hay que corregirlos (ver abajo).
+
+**DUE05 — línea de tiempo real.** Al cierre del Sprint 3 (tag
+`sprint-3-entrega`, commit `d9f96dc`, 2026-09-19) seguía **Parcial**, y
+así lo dice el mensaje de ese commit. Se completó el 2026-10-19:
+`mascotas.visibilidad_senas` y `mascotas.visibilidad_salud` (`publico`,
+`perdida` o `privado`), `ficha_publica()` actualizada y selectores en
+`AltaMascota.jsx` (commits `6f031a9` y `5ca9cec`). No cuenta entre las
+historias cerradas en la entrega del Sprint 3: es una corrección
+posterior. Quedó aplicado también el cambio que deja de borrar el texto
+de salud al ocultarlo. La columna `mostrar_salud` sigue en la base y se
+elimina en una migración aparte.
+
+**DUE07 — alcance real.** Los datos de salud son un único campo de
+texto libre (`mascotas.salud`), no campos separados de vacunas,
+medicación y alergias. Cubre la historia en su forma mínima.
+
+**Correcciones pendientes en los PDFs de `docs/`** (no están en el
+repositorio los archivos fuente, así que no se pueden editar desde acá;
+hay que corregirlos en el documento original y volver a exportarlos):
+
+- Historias de Usuario v4: PER03, de "Terminada" a "Parcial".
+- Product Backlog v3, sección 3 (tabla del Sprint 3): PER03, de
+  "Terminada" a "Parcial"; DUE05, de "Parcial" a "Terminada" con la
+  fecha 2026-10-19.
+- Product Backlog v3, sección 5 (hoja de ruta): Sprint 3 pasa de "13
+  terminadas y DUE05 parcial" a "12 terminadas y PER03 parcial; DUE05
+  completada el 2026-10-19".
+- Product Backlog v3, sección 5 (Sprint 5): sumar lo que falta de PER03
+  (alerta con la distancia al domicilio y paso automático a "perdida"
+  por tiempo), junto a PER04.
+- Product Backlog v3, sección 7: la nota "Historia cumplida
+  parcialmente: DUE05" ya no vale; hay que reemplazarla por PER03
+  (cumplida parcialmente, con el detalle de la tabla de arriba) y dejar
+  anotado que DUE05 se completó el 2026-10-19.
+- Resumen de estados (Historias v4 y Backlog v3): el conteo sigue en 34
+  terminadas y 1 parcial, pero la parcial pasa a ser PER03 en lugar de
+  DUE05 (DUE05 entra como terminada y PER03 sale de las terminadas).
 
 ## Historias con alcance reducido por el cambio de modelo
 
