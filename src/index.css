@@ -566,7 +566,9 @@ textarea.entrada { resize: vertical; font-family: inherit; }
   align-items: center;
   justify-content: center;
   padding: 20px;
-  z-index: 10;
+  /* Leaflet usa z-index de 200 a 1000 en sus capas y controles: el cartel
+     tiene que quedar por encima para no quedar tapado por el mapa. */
+  z-index: 2000;
 }
 
 .tarjeta-confirmacion {
