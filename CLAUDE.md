@@ -174,7 +174,10 @@ radio_metros (por defecto 100), pausado_hasta (modo paseo: suspende
 la detección automática mientras esté en el futuro — el chequeo ya
 está implementado en `registrar_escaneo()`, pero no existe ninguna
 pantalla para que el dueño lo active; es DUE11, pendiente),
-mostrar_salud, salud, activa, creado_en.
+mostrar_salud (sin uso desde 2026-10-19; se elimina en una migración
+aparte), salud, visibilidad_senas y visibilidad_salud ('publico' |
+'perdida' | 'privado', por defecto 'publico' y 'privado'; DUE05),
+activa, creado_en.
 
 `placas` — id, codigo (único, aleatorio), mascota_id (FK, puede ser
 nulo), estado ('sin_asignar' | 'activa' | 'baja'), creado_en. Al cargar
@@ -719,13 +722,32 @@ del 2026-09-21.
   trello https://mcp.trello.com/v1 --scope user`), así que falta
   retomarlo en una sesión nueva que sí lo tenga disponible.
 
-### Estado final de las 63 historias (al cierre del Sprint 1, 2026-09-21)
+### Estado de las 63 historias (actualizado el 2026-10-26)
 
-- **34 terminadas.**
-- **1 cumplida parcialmente**: DUE05 (el dueño decide sobre los datos
-  de salud; el resto del gating por estado de pérdida es una regla
-  fija del sistema, no configurable campo por campo — ver
-  `TRAZABILIDAD.md`, entrada del 2026-09-19).
+- **34 terminadas.** Incluye **DUE05**, completada el 2026-10-19: era
+  Parcial al cierre del Sprint 3 (2026-09-19, tag `sprint-3-entrega`,
+  commit `d9f96dc`). Señas y salud son configurables por el dueño con
+  tres niveles (`publico`, `perdida` —caso `posible_perdida` o
+  `perdida` abierto, el mismo criterio que usa el contacto— o
+  `privado`) mediante `mascotas.visibilidad_senas` y
+  `visibilidad_salud`; la visibilidad es independiente del texto (ya no
+  se borra al ocultarlo). Domicilio, contacto, última ubicación y
+  mensaje siguen con su regla fija. `mostrar_salud` sigue en la tabla,
+  sin uso; se elimina en una migración aparte. No cuenta entre las
+  historias cerradas en la entrega del Sprint 3: es una corrección
+  posterior. Ver `TRAZABILIDAD.md`, entradas del 2026-10-25.
+- **1 cumplida parcialmente**: **PER03** (antes figuraba como
+  Terminada). Funcionan "Confirmar pérdida" y "No, está conmigo", un
+  toque cada uno (`Panel.jsx`). Sin construir: la alerta al dueño con la
+  distancia al domicilio (`registrar_escaneo()` ya guarda
+  `escaneos.distancia_m`, pero nada la muestra ni avisa) y el paso
+  automático a `perdida` si el dueño no responde en el tiempo
+  configurado (no hay trabajo programado, trigger ni columna de plazo).
+  Ambas dependen de la misma infraestructura de notificaciones que
+  PER04 (correo o push, no integrado) más un trabajo programado que
+  tampoco existe; pasan al Sprint 5. Los PDFs de Historias v4 y Product
+  Backlog v3 todavía la dan por Terminada. Ver `TRAZABILIDAD.md`,
+  entrada del 2026-10-25.
 - **11 pendientes**: DUE08, DUE11, TRA07, TRA10, PER04, PER09, REC08,
   ADM03, ADM07, IA03, DAT05.
 - **17 descartadas**: REC03 a REC07, COM01 a COM03, ADM04, ADM05,
@@ -740,8 +762,10 @@ del 2026-09-21.
    (no confundir con DAT02/DAT03, ya cubiertas por el esquema, ni con
    DAT01, ya construida).
 3. El resto de las pendientes (DUE08, DUE11, TRA07, TRA10, PER04,
-   PER09, REC08, ADM03, ADM07) no tienen todavía un plan de trabajo
-   asignado a un sprint.
+   PER09, REC08, ADM03, ADM07) y la parte sin construir de **PER03**
+   (alerta con la distancia y paso automático a `perdida`, junto con
+   PER04) no tienen todavía un plan de trabajo asignado a un sprint
+   más allá de figurar en el Sprint 5.
 4. Optimizar el bundle: Vite avisa que el JS de producción pasa los
    500 KB (sobre todo por Leaflet). No es urgente, pero si se nota lento
    en el celular, dividir en chunks con `import()` dinámico.
