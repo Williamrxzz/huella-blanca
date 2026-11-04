@@ -333,8 +333,8 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
           </button>
         </div>
 
-        {error && <p className="ayuda error">{error}</p>}
-        {errorCaso && <p className="ayuda error">{errorCaso}</p>}
+        {error && <p className="ayuda error" role="alert">{error}</p>}
+        {errorCaso && <p className="ayuda error" role="alert">{errorCaso}</p>}
 
         {caso?.estado === 'perdida' && <TextoParaCompartir mascota={mascota} caso={caso} />}
       </div>

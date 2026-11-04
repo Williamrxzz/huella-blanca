@@ -55,7 +55,7 @@ export default function Login() {
           required
         />
 
-        {error && <p className="ayuda error">{error}</p>}
+        {error && <p className="ayuda error" role="alert">{error}</p>}
 
         <button className="boton" type="submit" disabled={enviando}>
           {enviando ? 'Ingresando…' : 'Ingresar'}

@@ -121,7 +121,7 @@ h2 { font-size: calc(18px * var(--escala-texto)); margin: 28px 0 8px; }
 .enlace-discreto {
   display: block;
   margin-top: 18px;
-  color: #9a9892;
+  color: #6f6e6a;
   font-size: calc(13px * var(--escala-texto));
 }
 
@@ -138,7 +138,7 @@ h2 { font-size: calc(18px * var(--escala-texto)); margin: 28px 0 8px; }
   display: grid;
   place-items: center;
   background: #ececea;
-  color: #8a8a86;
+  color: #5f5e5a;
   font-size: calc(14px * var(--escala-texto));
 }
 
@@ -269,7 +269,7 @@ h2 { font-size: calc(18px * var(--escala-texto)); margin: 28px 0 8px; }
   line-height: 1.35;
 }
 
-.datos li span { color: #6f6e6a; }
+.datos li span { color: #5f5e5a; }
 
 .datos li.chip-hembra { background: #f9dde8; }
 
@@ -555,7 +555,7 @@ textarea.entrada { resize: vertical; font-family: inherit; }
   display: grid;
   place-items: center;
   background: #ececea;
-  color: #8a8a86;
+  color: #5f5e5a;
   font-size: calc(10px * var(--escala-texto));
   text-align: center;
 }

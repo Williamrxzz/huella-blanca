@@ -54,7 +54,7 @@ export default function HistorialColaboracion() {
       <h1>Tu colaboración</h1>
       <p className="ayuda">Cada aviso y cada reencuentro en el que ayudaste queda registrado acá.</p>
 
-      {error && <p className="ayuda error">{error}</p>}
+      {error && <p className="ayuda error" role="alert">{error}</p>}
 
       <h2>Reencuentros logrados</h2>
       {reencuentros.length === 0 ? (

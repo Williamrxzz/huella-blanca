@@ -364,7 +364,7 @@ export default function FichaPublica() {
                 minLength={6}
                 required
               />
-              {errorCuenta && <p className="ayuda error">{errorCuenta}</p>}
+              {errorCuenta && <p className="ayuda error" role="alert">{errorCuenta}</p>}
               <button className="boton" type="submit" disabled={creandoCuenta}>
                 {creandoCuenta ? 'Creando cuenta…' : 'Crear cuenta'}
               </button>
@@ -453,7 +453,7 @@ export default function FichaPublica() {
             onChange={(e) => setContacto(e.target.value)}
           />
 
-          {errorEnvio && <p className="ayuda error">{errorEnvio}</p>}
+          {errorEnvio && <p className="ayuda error" role="alert">{errorEnvio}</p>}
 
           <button className="boton" type="submit" disabled={enviando || buscandoUbicacion}>
             {enviando ? 'Enviando…' : 'Enviar aviso'}

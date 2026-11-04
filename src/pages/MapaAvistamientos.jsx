@@ -198,7 +198,7 @@ export default function MapaAvistamientos() {
         </button>
       )}
 
-      {errorCierre && <p className="ayuda error">{errorCierre}</p>}
+      {errorCierre && <p className="ayuda error" role="alert">{errorCierre}</p>}
 
       {mostrarFormularioVolvio && (
         <FormularioReencuentro

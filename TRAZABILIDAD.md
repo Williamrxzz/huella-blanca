@@ -820,3 +820,18 @@ campos, diálogo modal); esto agrega el botón con preferencias.
   real; (2) el alto contraste cubre las clases conocidas de la app, no es
   un tema completo: lo nuevo que se agregue hay que revisarlo; (3) no
   cambia el tamaño de los mapas ni de las fotos.
+- **Revisión de lo básico (misma fecha).** Se revisaron la ficha pública y
+  el panel. Estaba bien: todas las `<img>` con `alt`, todos los campos con
+  nombre accesible, idioma `es-AR`, zoom no bloqueado y ningún elemento
+  clicable que no fuera botón o enlace. Se corrigieron dos cosas:
+  (1) **contraste**: "Ver un ejemplo de ficha" (2,74:1 → 4,85:1), el texto
+  de las miniaturas vacías (2,93:1 → 5,49:1) y las etiquetas de los chips
+  de la ficha (4,31:1 → 5,49:1); (2) **errores sin anunciar**: los 16
+  mensajes de error (`<p className="ayuda error">`) llevan ahora
+  `role="alert"`, así un lector de pantalla los avisa (probado con una
+  contraseña incorrecta en el login). **Quedan sin hacer**, para el
+  Sprint 5: etiquetas visibles en los campos (hoy la etiqueta es solo el
+  placeholder y los `select` no tienen), marcar el punto del mapa con
+  teclado (se puede avisar escribiendo una referencia, TRA11), rol y foco
+  en las ventanas modales del panel, y toques de menos de 44 px
+  (por ejemplo "Ver texto").

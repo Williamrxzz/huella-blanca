@@ -485,7 +485,7 @@ export default function AltaMascota() {
             volver a "sin foto" (que es válido). */}
         {fotoRechazada && (
           <div className="aviso-foto-rechazada" role="alert">
-            <p className="ayuda error">
+            <p className="ayuda error" role="alert">
               {avisoFotoIA.tipo === 'sin_animal'
                 ? 'Esta foto no parece ser de un animal. Subí una foto de tu mascota (perro, gato u otro animal) para continuar.'
                 : `Esa foto no se puede usar (${avisoFotoIA.motivo || 'contenido no permitido'}). Elegí otra.`}
@@ -511,7 +511,7 @@ export default function AltaMascota() {
         )}
 
         {avisoFotoIA?.tipo === 'advertencia' && (
-          <p className="ayuda error">
+          <p className="ayuda error" role="alert">
             {avisoFotoIA.motivo || 'La foto no se ve del todo clara.'} Podés seguir igual, o elegir otra.
           </p>
         )}
@@ -593,7 +593,7 @@ export default function AltaMascota() {
           <option value="privado">Salud: no se muestra</option>
         </select>
 
-        {error && <p className="ayuda error">{error}</p>}
+        {error && <p className="ayuda error" role="alert">{error}</p>}
 
         {/* Mientras la IA analiza la foto no se puede guardar: si no, una foto
             que después resulta bloqueada llegaría a guardarse igual. */}

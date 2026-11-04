@@ -85,7 +85,7 @@ export default function Perfil() {
           autoComplete="tel"
         />
 
-        {error && <p className="ayuda error">{error}</p>}
+        {error && <p className="ayuda error" role="alert">{error}</p>}
         {guardado && <p className="confirmacion">Cambios guardados.</p>}
 
         <button className="boton" type="submit" disabled={guardando}>

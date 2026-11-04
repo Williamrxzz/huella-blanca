@@ -131,7 +131,7 @@ export default function GeneradorQR() {
       <h1>{esMascotaNueva ? '¡Mascota cargada!' : 'Código QR'}</h1>
 
       {sinAcceso && (
-        <p className="ayuda error">No tenés acceso a esa placa.</p>
+        <p className="ayuda error" role="alert">No tenés acceso a esa placa.</p>
       )}
 
       {!codigoParam && !sinAcceso && (

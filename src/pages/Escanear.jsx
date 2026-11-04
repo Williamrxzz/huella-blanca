@@ -87,7 +87,7 @@ export default function Escanear() {
       <p className="ayuda">Apuntá la cámara al código QR de la placa.</p>
 
       {error ? (
-        <p className="ayuda error">{error}</p>
+        <p className="ayuda error" role="alert">{error}</p>
       ) : (
         <div className="visor-camara">
           <video ref={videoRef} playsInline muted aria-hidden="true" />

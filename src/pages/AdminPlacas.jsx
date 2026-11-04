@@ -146,7 +146,7 @@ export default function AdminPlacas() {
           />
         </label>
 
-        {errorLote && <p className="ayuda error">{errorLote}</p>}
+        {errorLote && <p className="ayuda error" role="alert">{errorLote}</p>}
 
         <button className="boton" type="submit" disabled={generandoLote}>
           {generandoLote ? 'Generando…' : 'Generar lote'}
@@ -164,7 +164,7 @@ export default function AdminPlacas() {
         </>
       )}
 
-      {error && <p className="ayuda error">{error}</p>}
+      {error && <p className="ayuda error" role="alert">{error}</p>}
 
       {placas.length === 0 ? (
         <p className="ayuda">Todavía no hay placas generadas.</p>
