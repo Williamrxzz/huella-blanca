@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
 import { pedirUbicacion } from '../lib/ubicacion'
+import { X } from 'lucide-react'
 import Encabezado from '../components/Encabezado'
 
 const CENTRO_INICIAL = { lat: -46.4380, lng: -67.5280 } // Caleta Olivia
@@ -480,22 +481,27 @@ export default function AltaMascota() {
 
         {analizandoFoto && <p className="ayuda">Analizando la foto…</p>}
 
-        {avisoFotoIA?.tipo === 'bloqueo' && (
-          <p className="ayuda error">
-            Esa foto no se puede usar ({avisoFotoIA.motivo || 'contenido no permitido'}). Elegí otra.
-          </p>
-        )}
-
-        {avisoFotoIA?.tipo === 'sin_animal' && (
-          <p className="ayuda error">
-            Esta foto no parece ser de un animal. Subí una foto de tu mascota (perro, gato u otro animal) para continuar.
-          </p>
-        )}
-
+        {/* Foto rechazada: el mensaje lleva una "×" chica al final para quitarla y
+            volver a "sin foto" (que es válido). */}
         {fotoRechazada && (
-          <button className="boton secundario" type="button" onClick={quitarFoto}>
-            Quitar foto
-          </button>
+          <div className="aviso-foto-rechazada" role="alert">
+            <p className="ayuda error">
+              {avisoFotoIA.tipo === 'sin_animal'
+                ? 'Esta foto no parece ser de un animal. Subí una foto de tu mascota (perro, gato u otro animal) para continuar.'
+                : `Esa foto no se puede usar (${avisoFotoIA.motivo || 'contenido no permitido'}). Elegí otra.`}
+            </p>
+            <button
+              className="boton-x"
+              type="button"
+              onClick={quitarFoto}
+              aria-label="Quitar foto"
+              title="Quitar foto"
+            >
+              <span className="boton-x-circulo">
+                <X size={14} strokeWidth={2.5} aria-hidden="true" />
+              </span>
+            </button>
+          </div>
         )}
 
         {avisoFotoIA?.tipo === 'sin_verificar' && (

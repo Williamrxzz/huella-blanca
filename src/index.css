@@ -439,6 +439,61 @@ textarea.entrada { resize: vertical; font-family: inherit; }
   color: #6f6e6a;
 }
 
+/* Mensaje de foto rechazada con una "×" chica al final para quitarla.
+   El círculo se ve de 24 px, pero el botón mide 44 px: es el área de toque
+   que recomiendan Apple y Google para dedos. Los márgenes negativos hacen que
+   esa área extra no ocupe lugar en el diseño. */
+.aviso-foto-rechazada {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  margin: 14px 0;
+}
+
+.aviso-foto-rechazada p {
+  flex: 1;
+  margin: 0;
+}
+
+.boton-x {
+  flex: none;
+  -webkit-appearance: none;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: -12px -12px -12px 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #8c2f2f;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.boton-x-circulo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(140, 47, 47, 0.1);
+  transition: background 0.15s;
+}
+
+.boton-x:hover .boton-x-circulo { background: rgba(140, 47, 47, 0.2); }
+.boton-x:active .boton-x-circulo { background: rgba(140, 47, 47, 0.3); }
+
+.boton-x:focus { outline: none; }
+.boton-x:focus-visible .boton-x-circulo {
+  outline: 2px solid #2e5c8a;
+  outline-offset: 2px;
+}
+
 .casilla {
   display: flex;
   align-items: center;
