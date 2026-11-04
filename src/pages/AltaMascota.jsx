@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { iconoCasa } from '../lib/leaflet-iconos'
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
 import { pedirUbicacion } from '../lib/ubicacion'
@@ -551,7 +552,7 @@ export default function AltaMascota() {
           <SelectorMapa onSeleccionar={setDomicilio} />
           {domicilio && (
             <>
-              <Marker position={[domicilio.lat, domicilio.lng]} />
+              <Marker position={[domicilio.lat, domicilio.lng]} icon={iconoCasa} title="Domicilio" alt="Domicilio" />
               <Circle
                 center={[domicilio.lat, domicilio.lng]}
                 radius={radioMetros}

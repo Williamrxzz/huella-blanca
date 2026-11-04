@@ -835,3 +835,16 @@ campos, diálogo modal); esto agrega el botón con preferencias.
   teclado (se puede avisar escribiendo una referencia, TRA11), rol y foco
   en las ventanas modales del panel, y toques de menos de 44 px
   (por ejemplo "Ver texto").
+
+## 2026-11-04 — Ícono de casa para el domicilio en los mapas
+
+Mejora de interfaz, sin historia asociada. Al marcar el domicilio en el alta
+de la mascota (`AltaMascota.jsx`, que también sirve para editar), el punto
+ya no es el alfiler azul de Leaflet sino una casa blanca dentro de un
+círculo azul (`iconoCasa` en `src/lib/leaflet-iconos.js`, un `divIcon` con
+SVG propio, sin librerías ni imágenes nuevas). El mapa de avistamientos
+(`MapaAvistamientos.jsx`) usa el mismo ícono para el domicilio, así se
+distingue de los alfileres de quienes avisaron. El punto exacto es el centro
+del círculo. No cambia lo que se guarda ni la privacidad: el domicilio sigue
+siendo solo una coordenada que nunca se muestra en la ficha pública.
+Probado en el formulario real y en el mapa de Blanca (sin guardar nada).

@@ -1003,3 +1003,14 @@ html[data-contraste="alto"] .accesibilidad-panel { border: 2px solid #000; }
 html[data-contraste="alto"] .accesibilidad-opcion input { background: #000; }
 html[data-contraste="alto"] .accesibilidad-opcion input:checked { background: #0b3d91; }
 html[data-contraste="alto"] .accesibilidad-tamano[aria-pressed="true"] { background: #000; border-color: #000; }
+
+/* Marcador del domicilio en los mapas: una casa dentro de un círculo azul. */
+.icono-casa {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2e5c8a;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}

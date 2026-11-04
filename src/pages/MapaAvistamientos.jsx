@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
+import { iconoCasa } from '../lib/leaflet-iconos'
 import { MapContainer, TileLayer, Marker, Circle, Popup } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
@@ -236,7 +237,7 @@ export default function MapaAvistamientos() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <Marker position={[mascota.domicilio_lat, mascota.domicilio_lng]}>
+        <Marker position={[mascota.domicilio_lat, mascota.domicilio_lng]} icon={iconoCasa} title="Domicilio" alt="Domicilio">
           <Popup>Domicilio de {mascota.nombre}</Popup>
         </Marker>
         <Circle
