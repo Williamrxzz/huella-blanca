@@ -719,3 +719,26 @@ code {
   border-radius: 4px;
   font-size: 13px;
 }
+
+/* IA03: texto de búsqueda para compartir cuando la mascota está perdida. */
+.texto-busqueda {
+  background: #eef3f8;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 10px;
+}
+
+.texto-busqueda .ayuda { margin: 2px 0 8px; }
+
+.texto-busqueda-contenido {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #d8e0e8;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

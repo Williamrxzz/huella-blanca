@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
+import { armarTextoBusqueda, enlaceWhatsApp } from '../lib/textoBusqueda'
 
 const ERRORES_VINCULAR = {
   placa_no_encontrada: 'No existe una placa con ese código',
@@ -90,6 +91,50 @@ function CartelConfirmacion({ titulo, texto, onCancelar, onConfirmar, confirmand
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// IA03: texto listo para compartir mientras la mascota está perdida. Se arma en
+// cada render con los datos actuales de la ficha y del caso, así que se
+// actualiza solo si cambian (por ejemplo, al volver de editar la mascota).
+function TextoParaCompartir({ mascota, caso }) {
+  const [copiado, setCopiado] = useState(false)
+  const texto = armarTextoBusqueda({ mascota, caso, origen: window.location.origin })
+
+  async function copiar() {
+    try {
+      await navigator.clipboard.writeText(texto)
+    } catch {
+      // Navegadores sin portapapeles moderno (o sin permiso): se copia con un
+      // campo temporal.
+      const campo = document.createElement('textarea')
+      campo.value = texto
+      campo.style.position = 'fixed'
+      campo.style.opacity = '0'
+      document.body.appendChild(campo)
+      campo.select()
+      try { document.execCommand('copy') } catch { /* no hay nada más que intentar */ }
+      document.body.removeChild(campo)
+    }
+    setCopiado(true)
+    setTimeout(() => setCopiado(false), 2000)
+  }
+
+  return (
+    <div className="texto-busqueda">
+      <strong>Texto para compartir</strong>
+      <p className="ayuda">
+        Lo armamos con los datos de {mascota.nombre}. Si los cambiás, se actualiza solo.
+      </p>
+      <pre className="texto-busqueda-contenido">{texto}</pre>
+      <div className="acciones-mascota">
+        <a className="boton-accion" href={enlaceWhatsApp(texto)} target="_blank" rel="noopener noreferrer">
+          Compartir por WhatsApp
+        </a>
+        <button className="boton-accion" type="button" onClick={copiar}>Copiar texto</button>
+      </div>
+      {copiado && <p className="confirmacion">Texto copiado</p>}
     </div>
   )
 }
@@ -237,6 +282,8 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
 
         {error && <p className="ayuda error">{error}</p>}
         {errorCaso && <p className="ayuda error">{errorCaso}</p>}
+
+        {caso?.estado === 'perdida' && <TextoParaCompartir mascota={mascota} caso={caso} />}
       </div>
 
       {confirmando && (
@@ -320,7 +367,7 @@ export default function Panel() {
 
     const { data: casosAbiertos } = await supabase
       .from('casos_perdida')
-      .select('id, mascota_id, estado, origen')
+      .select('id, mascota_id, estado, origen, ultima_lat, ultima_lng')
       .in('estado', ['perdida', 'posible_perdida'])
 
     const casosPorMascota = {}
