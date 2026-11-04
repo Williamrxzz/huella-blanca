@@ -131,6 +131,13 @@ export default function AltaMascota() {
 
   async function elegirFoto(e) {
     const archivo = e.target.files?.[0] || null
+
+    // Si no se eligió ningún archivo (por ejemplo, se canceló el selector o se
+    // vació el campo tras un rechazo), no se toca el estado: una foto
+    // rechazada sigue bloqueando el guardado hasta elegir otra que pase.
+    if (!archivo) return
+
+    setError(null)
     setAvisoFotoIA(null)
     setFoto(archivo)
 
@@ -141,10 +148,6 @@ export default function AltaMascota() {
     // Cada elección de foto tiene su número: si la persona elige otra antes de
     // que termine el análisis, la respuesta vieja se ignora.
     const numeroVerificacion = ++verificacionActual.current
-    if (!archivo) {
-      setAnalizandoFoto(false)
-      return
-    }
 
     setAnalizandoFoto(true)
     try {
@@ -215,9 +218,23 @@ export default function AltaMascota() {
     }
   }
 
+  // Una foto rechazada por la verificación (sin animal o inapropiada) bloquea el
+  // guardado: el campo de foto es opcional, así que sin esto la mascota se
+  // guardaría igual, solo que sin foto. Se libera al elegir otra foto que pase.
+  const fotoRechazada = avisoFotoIA?.tipo === 'sin_animal' || avisoFotoIA?.tipo === 'bloqueo'
+
   async function guardar(e) {
     e.preventDefault()
     setError(null)
+
+    if (fotoRechazada || analizandoFoto) {
+      setError(
+        fotoRechazada
+          ? 'Elegí una foto de tu mascota que sí se pueda usar para poder guardar.'
+          : 'Esperá a que termine de verificarse la foto.'
+      )
+      return
+    }
 
     if (!domicilio) {
       setError('Falta marcar el domicilio en el mapa.')
@@ -548,12 +565,14 @@ export default function AltaMascota() {
 
         {/* Mientras la IA analiza la foto no se puede guardar: si no, una foto
             que después resulta bloqueada llegaría a guardarse igual. */}
-        <button className="boton" type="submit" disabled={guardando || analizandoFoto}>
+        <button className="boton" type="submit" disabled={guardando || analizandoFoto || fotoRechazada}>
           {guardando
             ? 'Guardando…'
             : analizandoFoto
               ? 'Verificando la foto…'
-              : editando ? 'Guardar cambios' : 'Guardar mascota'}
+              : fotoRechazada
+                ? 'Elegí otra foto para poder guardar'
+                : editando ? 'Guardar cambios' : 'Guardar mascota'}
         </button>
       </form>
     </main>
