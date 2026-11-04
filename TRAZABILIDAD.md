@@ -519,7 +519,7 @@ diferencias con el enunciado; IA02 es la más importante.
 | REC09 | Vincula solo el aviso recién enviado, en el mismo navegador y dentro de 1 hora, no "los avisos que envié". Si el email ya tenía cuenta, el mensaje decía que iniciar sesión vincula la ayuda, pero el aviso no se guardaba para reclamarlo: no se vinculaba. **Corregido el 2026-11-04** (`FichaPublica.jsx`, `crearCuentaYReclamar`: esa rama ahora guarda `avisoPendienteId` en `localStorage`, como la de confirmación de email pendiente, y `Panel.jsx` lo reclama al iniciar sesión). El alcance sigue siendo un único aviso. |
 | ADM02 | `/admin/placas` es un listado sin totales ni filtros. El estado "Dada de baja" no se puede alcanzar: nada en la app pone una placa en `baja` (DUE08, pendiente). "Perdida" incluye la sospecha automática. |
 | IA01 | Solo corre al crear una mascota. Al aplicar la sugerencia pisa lo que el usuario ya hubiera escrito. |
-| IA02 | La versión desplegada el 2026-09-21 deja subir una foto sin animal (solo advierte). La verificación solo corre en el navegador y solo para la foto de perfil. |
+| IA02 | La versión desplegada el 2026-09-21 dejaba subir una foto sin animal (solo advertía). **Corregido el 2026-11-04** (ver "IA02 — estado"). La verificación sigue corriendo solo en el navegador y solo para la foto de perfil. |
 | DAT02, DAT03 | Registran los datos (inicio, cierre y `caso_id`); el análisis de recuperación y de contribución de avisos es DAT05, pendiente. Un aviso sin caso abierto queda con `caso_id` nulo. |
 | IA03 | No se construyó nada (confirmado en `src/` y `supabase/`). Sigue en el Sprint 5. |
 
@@ -529,15 +529,22 @@ Supabase estaba pausado por inactividad, así que no se pudieron leer
 `registrar_avistamiento()`. Lo que dependa de ellas se dedujo de cómo
 las llama el frontend y de `CLAUDE.md`.
 
-**IA02 — estado:** pasa a **Parcial**. La corrección (categoría
-`sin_animal`, que bloquea la foto sin animal, y verificación también al
-editar la ficha) está escrita en `sugerir-ficha` y `AltaMascota.jsx`,
-pero al 2026-11-04 **no está desplegada**: la publicación de la función
-falló porque el proyecto de Supabase estaba pausado por inactividad
-(`INACTIVE`). Aun desplegada, IA02 queda Parcial: la verificación corre
-solo en el navegador y solo cubre la foto de perfil de la mascota, no la
-del reencuentro. El conteo pasa a 33 terminadas y 2 parciales (IA02 y
-PER03).
+**IA02 — estado:** pasa a **Parcial**. El 2026-11-04, una vez
+reactivado el proyecto de Supabase (la primera publicación había
+fallado con el proyecto en `INACTIVE`), se desplegó la corrección:
+`sugerir-ficha` (versión 4) distingue la categoría `sin_animal`
+(persona, objeto, paisaje) de `incorrecta` (hay un animal, pero la foto
+es borrosa u oscura), y `AltaMascota.jsx` bloquea y descarta la foto sin
+animal, igual que las inapropiadas; la verificación corre ahora también
+al editar la ficha, mientras que las sugerencias de IA01 siguen
+aplicándose solo al crear (commit `85bee1a`). Probada contra la función
+real con tres imágenes: la foto de Blanca da `apta`, un dibujo sin
+animal da `sin_animal` y la foto de un animal muy pixelada da
+`incorrecta` (solo advertencia). IA02 queda Parcial porque la
+verificación corre solo en el navegador y solo cubre la foto de perfil
+de la mascota, no la del reencuentro. No se probó todavía el bloqueo en
+la pantalla del formulario con una foto real de una persona. El conteo
+pasa a 33 terminadas y 2 parciales (IA02 y PER03).
 
 ## Historias con alcance reducido por el cambio de modelo
 

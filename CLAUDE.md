@@ -650,21 +650,28 @@ sin registrarse — esa regla no cambió. Probado de punta a punta con
 clics reales, salvo la confirmación real de email (no se puede hacer
 desde este entorno).
 
-### IA01 + IA02: terminadas (2026-09-21)
+### IA01 + IA02: IA01 terminada; IA02 parcial (actualizado el 2026-11-04)
 
-Una sola Edge Function, `sugerir-ficha` (`supabase/functions/sugerir-ficha`),
-llamada desde `AltaMascota.jsx` al elegir una foto **solo al cargar
-una mascota nueva** (no al editar, para no pisar datos reales). Manda
-la foto a Claude Haiku y devuelve `categoria` ("apta" | "incorrecta" |
-"inapropiada"):
+Una sola Edge Function, `sugerir-ficha` (`supabase/functions/sugerir-ficha`,
+versión 4 desde el 2026-11-04), llamada desde `AltaMascota.jsx` al
+elegir una foto. Manda la foto a Claude Haiku y devuelve `categoria`
+("apta" | "sin_animal" | "incorrecta" | "inapropiada"). La verificación
+corre **al crear y al editar**; las sugerencias de ficha se aplican
+**solo al crear** (no al editar, para no pisar datos reales):
 - **apta** → sugerencia de especie/raza-o-cruza/tamaño/color/señas
   (señas: solo rasgos físicos permanentes, nunca la pose de la foto),
   aplicada a los campos del formulario para que el dueño la corrija.
-- **incorrecta** (no se distingue un animal, foto borrosa) → solo
-  advertencia, no bloquea.
+- **sin_animal** (la foto muestra una persona, un objeto, un paisaje)
+  → bloquea, se descarta la foto: "No hay un animal en la imagen".
+- **incorrecta** (hay un animal, pero la foto está borrosa, oscura o
+  cortada) → solo advertencia, no bloquea.
 - **inapropiada** (contenido ofensivo/violento/sexual) → bloquea, se
   descarta la foto.
 - Si la función no responde → se sigue sin verificar, sin bloquear.
+
+IA02 queda **Parcial**: el bloqueo es solo del navegador y solo cubre la
+foto de perfil de la mascota (no la del reencuentro). Ver
+`TRAZABILIDAD.md`, entrada del 2026-11-04.
 
 Detalle completo y qué se probó (incluida la simulación de
 "inapropiada" sin usar contenido real) en `TRAZABILIDAD.md`, entrada
@@ -722,9 +729,9 @@ del 2026-09-21.
   trello https://mcp.trello.com/v1 --scope user`), así que falta
   retomarlo en una sesión nueva que sí lo tenga disponible.
 
-### Estado de las 63 historias (actualizado el 2026-10-26)
+### Estado de las 63 historias (actualizado el 2026-11-04)
 
-- **34 terminadas.** Incluye **DUE05**, completada el 2026-10-19: era
+- **33 terminadas.** Incluye **DUE05**, completada el 2026-10-19: era
   Parcial al cierre del Sprint 3 (2026-09-19, tag `sprint-3-entrega`,
   commit `d9f96dc`). Señas y salud son configurables por el dueño con
   tres niveles (`publico`, `perdida` —caso `posible_perdida` o
@@ -736,8 +743,10 @@ del 2026-09-21.
   sin uso; se elimina en una migración aparte. No cuenta entre las
   historias cerradas en la entrega del Sprint 3: es una corrección
   posterior. Ver `TRAZABILIDAD.md`, entradas del 2026-10-25.
-- **1 cumplida parcialmente**: **PER03** (antes figuraba como
-  Terminada). Funcionan "Confirmar pérdida" y "No, está conmigo", un
+- **2 cumplidas parcialmente**: **IA02** (antes figuraba como
+  Terminada: el bloqueo corre solo en el navegador y solo cubre la foto
+  de perfil; ver la sección de IA01 + IA02) y **PER03** (antes figuraba
+  como Terminada). De PER03 funcionan "Confirmar pérdida" y "No, está conmigo", un
   toque cada uno (`Panel.jsx`). Sin construir: la alerta al dueño con la
   distancia al domicilio (`registrar_escaneo()` ya guarda
   `escaneos.distancia_m`, pero nada la muestra ni avisa) y el paso
