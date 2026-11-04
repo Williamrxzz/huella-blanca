@@ -458,6 +458,15 @@ export default function AltaMascota() {
           <input type="file" accept="image/*" onChange={elegirFoto} />
         </label>
 
+        {/* Recomendación suave: solo informa, no cambia nada (la foto sigue siendo
+            opcional). Se muestra al cargar una mascota nueva y desaparece apenas
+            se elige una foto, sea válida o rechazada. */}
+        {!editando && !foto && !avisoFotoIA && (
+          <p className="ayuda">
+            Con una foto de tu mascota podemos sugerir los datos de la ficha automáticamente y es más fácil que la reconozcan si se pierde. Podés seguir sin foto si preferís.
+          </p>
+        )}
+
         {analizandoFoto && <p className="ayuda">Analizando la foto…</p>}
 
         {avisoFotoIA?.tipo === 'bloqueo' && (
