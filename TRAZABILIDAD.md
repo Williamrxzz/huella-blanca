@@ -861,8 +861,15 @@ y el popup dice "Aviso N" (más "el más reciente"). El domicilio sigue siendo
 la casa en círculo azul. El número, y no solo el color, identifica cada aviso.
 Sin librerías nuevas. Probado en el mapa de Blanca (solo lectura).
 
-**Límite conocido:** el mapa sigue arrancando centrado en el domicilio con el
-zoom de siempre, así que un aviso lejano puede quedar fuera de la vista hasta
-mover el mapa (en la prueba, solo se veía el 1 de los 3). Agrupar avisos
-cercanos en un solo círculo con un número requiere una librería nueva
+**Ajuste automático de la vista (mismo día):** el mapa arrancaba centrado en
+el domicilio con el zoom de siempre, y un aviso lejano quedaba fuera de la
+vista (en la prueba solo se veía el 1 de los 3). Ahora, con al menos un aviso
+con ubicación, el mapa se ajusta solo para mostrar el domicilio y todos los
+avisos a la vez (`fitBounds`, sin librerías; zoom máximo 16 para no acercarse
+de más a un solo punto). Solo se reajusta cuando cambian los puntos, no
+mientras la persona mueve el mapa.
+
+**Límite conocido:** dos avisos casi en el mismo lugar se superponen y uno
+tapa al otro (en la prueba, el 2 queda detrás del 1; se ve en la lista). Agrupar
+avisos cercanos en un solo círculo con un número requiere una librería nueva
 (por ejemplo `react-leaflet-cluster`), no incorporada.

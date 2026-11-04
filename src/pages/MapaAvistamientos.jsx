@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { iconoAviso, iconoCasa } from '../lib/leaflet-iconos'
-import { MapContainer, TileLayer, Marker, Circle, Popup } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Circle, Popup, useMap } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
 
@@ -62,6 +62,20 @@ function FormularioReencuentro({ mascota, onCancelar, onConfirmar, enviando }) {
       </div>
     </div>
   )
+}
+
+// Ajusta el mapa para que se vean a la vez el domicilio y todos los avisos con
+// ubicación, en vez de quedar fijo sobre el domicilio con avisos fuera de la
+// vista. Solo vuelve a ajustar cuando cambian los puntos, no en cada dibujo.
+function AjustarVista({ puntos }) {
+  const map = useMap()
+  const clave = JSON.stringify(puntos)
+  useEffect(() => {
+    if (puntos.length < 2) return
+    map.fitBounds(puntos, { padding: [40, 40], maxZoom: 16 })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, clave])
+  return null
 }
 
 export default function MapaAvistamientos() {
@@ -240,6 +254,13 @@ export default function MapaAvistamientos() {
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+
+        <AjustarVista
+          puntos={[
+            [mascota.domicilio_lat, mascota.domicilio_lng],
+            ...conUbicacion.map((a) => [a.lat, a.lng]),
+          ]}
         />
 
         <Marker position={[mascota.domicilio_lat, mascota.domicilio_lng]} icon={iconoCasa} title="Domicilio" alt="Domicilio">
