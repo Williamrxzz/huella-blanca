@@ -128,8 +128,10 @@ export default function AltaMascota() {
         body: { imagen_base64: base64, media_type: archivo.type },
       })
 
-      // La IA sugiere, la persona confirma: si no responde o falla, se
-      // sigue sin verificar, nunca se traba el alta de la mascota.
+      // Error técnico (timeout, sin conexión, API caída, o el modelo no
+      // devolvió una clasificación): la IA sugiere y la persona confirma, así
+      // que se sigue sin verificar y nunca se traba el alta de la mascota.
+      // Solo se bloquea abajo, cuando el modelo SÍ contestó que no hay un animal.
       if (errorFn || !data || data.error) return
 
       if (data.categoria === 'inapropiada') {
@@ -142,7 +144,7 @@ export default function AltaMascota() {
       if (data.categoria === 'sin_animal') {
         setFoto(null)
         e.target.value = ''
-        setAvisoFotoIA({ tipo: 'sin_animal', motivo: data.motivo })
+        setAvisoFotoIA({ tipo: 'sin_animal', motivo: null })
         return
       }
 
@@ -416,9 +418,7 @@ export default function AltaMascota() {
 
         {avisoFotoIA?.tipo === 'sin_animal' && (
           <p className="ayuda error">
-            No hay un animal en la imagen
-            {avisoFotoIA.motivo ? ` (${avisoFotoIA.motivo.replace(/\.$/, '')})` : ''}.
-            {' '}Esa foto no se puede usar: elegí una foto de tu mascota.
+            Esta foto no parece ser de un animal. Subí una foto de tu mascota (perro, gato u otro animal) para continuar.
           </p>
         )}
 

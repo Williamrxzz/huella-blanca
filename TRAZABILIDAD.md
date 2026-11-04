@@ -542,9 +542,26 @@ real con tres imágenes: la foto de Blanca da `apta`, un dibujo sin
 animal da `sin_animal` y la foto de un animal muy pixelada da
 `incorrecta` (solo advertencia). IA02 queda Parcial porque la
 verificación corre solo en el navegador y solo cubre la foto de perfil
-de la mascota, no la del reencuentro. No se probó todavía el bloqueo en
-la pantalla del formulario con una foto real de una persona. El conteo
-pasa a 33 terminadas y 2 parciales (IA02 y PER03).
+de la mascota, no la del reencuentro. El conteo pasa a 33 terminadas y 2 parciales (IA02 y PER03).
+
+**IA02 — ajuste del mismo día (versión 7 de `sugerir-ficha`).** Para no
+depender de que el modelo acepte analizar fotos de personas, el prompt
+pide solo clasificar el contenido (sin identificar ni describir
+personas) y la respuesta es una llamada obligatoria a una herramienta
+(salida estructurada), no texto libre que haya que interpretar. Se
+probó contra la función real: fotos públicas de Messi (reducida y
+original de 5 MB), Obama, Einstein y Taylor Swift dan `sin_animal`; la
+foto de Blanca da `apta`; un dibujo sin animal da `sin_animal`; un
+animal muy pixelado da `incorrecta`. La normalización de la sugerencia
+acepta ahora tildes y mayúsculas ("pequeño" → `pequeno`). En
+`AltaMascota.jsx` el bloqueo ocurre solo si el modelo contestó
+`sin_animal` o `inapropiada`; cualquier error técnico deja pasar la
+foto sin verificar. Probado en el formulario real en Chrome: Messi →
+bloquea con el mensaje "Esta foto no parece ser de un animal…" y
+descarta el archivo; Blanca → completa los campos; fallo de red
+forzado con la foto de Messi → no bloquea. **Límite conocido:** una
+imagen que la API no acepta (por ejemplo formato HEIC) se trata como
+error técnico y pasa sin verificar.
 
 ## Historias con alcance reducido por el cambio de modelo
 

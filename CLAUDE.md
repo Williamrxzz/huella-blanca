@@ -653,8 +653,11 @@ desde este entorno).
 ### IA01 + IA02: IA01 terminada; IA02 parcial (actualizado el 2026-11-04)
 
 Una sola Edge Function, `sugerir-ficha` (`supabase/functions/sugerir-ficha`,
-versión 4 desde el 2026-11-04), llamada desde `AltaMascota.jsx` al
-elegir una foto. Manda la foto a Claude Haiku y devuelve `categoria`
+versión 7 desde el 2026-11-04), llamada desde `AltaMascota.jsx` al
+elegir una foto. Manda la foto a Claude Haiku, que **solo clasifica** el
+contenido (nunca identifica ni describe personas) y responde con una
+llamada obligatoria a una herramienta (salida estructurada, no texto
+libre), y devuelve `categoria`
 ("apta" | "sin_animal" | "incorrecta" | "inapropiada"). La verificación
 corre **al crear y al editar**; las sugerencias de ficha se aplican
 **solo al crear** (no al editar, para no pisar datos reales):
@@ -667,7 +670,12 @@ corre **al crear y al editar**; las sugerencias de ficha se aplican
   cortada) → solo advertencia, no bloquea.
 - **inapropiada** (contenido ofensivo/violento/sexual) → bloquea, se
   descarta la foto.
-- Si la función no responde → se sigue sin verificar, sin bloquear.
+- Si la función falla (timeout, sin conexión, API caída, imagen que la
+  API no puede procesar, o el modelo no devolvió una clasificación) → se
+  sigue sin verificar, sin bloquear. Solo se bloquea cuando el modelo
+  SÍ contestó que no hay un animal (mensaje: "Esta foto no parece ser de
+  un animal. Subí una foto de tu mascota (perro, gato u otro animal)
+  para continuar.") o que la foto es inapropiada.
 
 IA02 queda **Parcial**: el bloqueo es solo del navegador y solo cubre la
 foto de perfil de la mascota (no la del reencuentro). Ver
