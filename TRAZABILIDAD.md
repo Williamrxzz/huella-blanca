@@ -770,3 +770,53 @@ la foto de la mascota, un título y una descripción.
   tiene la suya. REC05 se da por **terminada en su parte aplicable**,
   con esta salvedad documentada; no se construyó nada nuevo para el
   segundo destino.
+
+## 2026-11-04 — Botón de accesibilidad (mejora transversal, sin historia)
+
+No corresponde a ninguna de las 63 historias: es una mejora transversal,
+igual que la configuración de la PWA y el lector de QR. Ya había una
+primera pasada de accesibilidad en `c6994bf` (idioma, `aria-label` en los
+campos, diálogo modal); esto agrega el botón con preferencias.
+
+- **Qué es:** un botón flotante (abajo a la izquierda, en **todas** las
+  pantallas, incluida la ficha pública) que abre un panel con:
+  tamaño del texto (normal / grande ×1,2 / muy grande ×1,4), alto
+  contraste, reducir animaciones y subrayar enlaces y botones, más un
+  "Restablecer".
+- **Dónde:** `src/components/BotonAccesibilidad.jsx`,
+  `src/lib/accesibilidad.js` y el final de `src/index.css`. Se monta una
+  sola vez en `App.jsx`; `main.jsx` aplica las preferencias antes de
+  dibujar para que no haya parpadeo.
+- **Cómo funciona:** las preferencias se guardan en `localStorage` (sin
+  cuenta: quien encuentra una mascota puede usarlas igual) y se aplican
+  como atributos `data-*` en `<html>`. El tamaño del texto escala todos los
+  `font-size` con una variable CSS (`--escala-texto`) y no con `zoom`,
+  porque `zoom` desajusta los clics sobre los mapas de Leaflet.
+- **Respeta el sistema:** sin elección previa, el alto contraste parte de
+  `prefers-contrast: more` y reducir animaciones de
+  `prefers-reduced-motion: reduce` (esta última además se aplica siempre
+  por CSS). Lo que la persona elige en el panel pisa al sistema.
+- **Teclado y lectores de pantalla:** el panel es un `dialog` con nombre,
+  el botón informa `aria-expanded`, los tamaños usan `aria-pressed` y las
+  opciones son `switch`; Escape cierra y devuelve el foco al botón. Cada
+  control mide al menos 44 px de alto.
+- **Se puede mover:** el botón se arrastra con el dedo o el mouse (un
+  movimiento corto sigue siendo un toque) y la posición se guarda en
+  `localStorage` como fracción de la pantalla, así sigue en un lugar
+  razonable si se gira el teléfono. Como arrastrar no lo puede hacer toda
+  la gente, el panel tiene además cuatro botones de esquina como
+  alternativa. El panel se acomoda junto al botón y siempre queda dentro
+  de la pantalla (al probarlo apareció un defecto: con el botón hacia el
+  medio, el panel se salía por el borde; corregido). Por defecto, abajo a
+  la derecha, donde llega el pulgar.
+- **Sin librerías nuevas:** solo el ícono de `lucide-react`, que ya estaba.
+- **Probado** en Chrome con celular simulado, en la ficha pública y en el
+  panel del dueño (con la respuesta del caso simulada, sin escribir en la
+  base): cada opción cambia el atributo y la apariencia; "muy grande" no
+  produce desborde horizontal; las preferencias sobreviven a recargar y
+  pasan de la ficha al login; "animaciones reducidas" apaga el pulso de la
+  alerta roja; Escape y "Restablecer" funcionan.
+- **Límites:** (1) no se probó con VoiceOver/TalkBack ni en un teléfono
+  real; (2) el alto contraste cubre las clases conocidas de la app, no es
+  un tema completo: lo nuevo que se agregue hay que revisarlo; (3) no
+  cambia el tamaño de los mapas ni de las fotos.

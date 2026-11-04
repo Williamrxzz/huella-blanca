@@ -11,6 +11,7 @@ import MapaAvistamientos from './pages/MapaAvistamientos'
 import Escanear from './pages/Escanear'
 import AdminPlacas from './pages/AdminPlacas'
 import HistorialColaboracion from './pages/HistorialColaboracion'
+import BotonAccesibilidad from './components/BotonAccesibilidad'
 import { supabase } from './lib/supabase'
 
 function Inicio() {
@@ -81,6 +82,7 @@ export default function App() {
         <Route path="/mi-historial" element={<HistorialColaboracion />} />
         <Route path="/m/:codigo" element={<FichaPublica />} />
       </Routes>
+      <BotonAccesibilidad />
     </BrowserRouter>
   )
 }
