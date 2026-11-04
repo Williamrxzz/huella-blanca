@@ -505,6 +505,40 @@ hay que corregirlos en el documento original y volver a exportarlos):
   terminadas y 1 parcial, pero la parcial pasa a ser PER03 en lugar de
   DUE05 (DUE05 entra como terminada y PER03 sale de las terminadas).
 
+## 2026-11-04 — Sprint 4: verificación contra el código
+
+Al armar la entrega del Sprint 4 se verificó cada historia contra el
+código, no contra el estado que dicen los documentos. Las ocho que los
+PDFs dan por Terminadas existen y funcionan, pero cuatro tienen
+diferencias con el enunciado; IA02 es la más importante.
+
+| Historia | Diferencia con el enunciado |
+|---|---|
+| REC01 | Solo quedan registrados los avisos hechos con sesión o reclamados por REC09. Un reencuentro se acredita a una sola persona por caso (el último aviso con sesión), no a todas las que ayudaron. |
+| REC02 | No hay notificación: el rescatista ve el agradecimiento solo si entra a `/mi-historial`. Llega a una sola persona por caso. |
+| REC09 | Vincula solo el aviso recién enviado, en el mismo navegador y dentro de 1 hora, no "los avisos que envié". Si el email ya tenía cuenta, el mensaje decía que iniciar sesión vincula la ayuda, pero el aviso no se guardaba para reclamarlo: no se vinculaba. **Corregido el 2026-11-04** (`FichaPublica.jsx`, `crearCuentaYReclamar`: esa rama ahora guarda `avisoPendienteId` en `localStorage`, como la de confirmación de email pendiente, y `Panel.jsx` lo reclama al iniciar sesión). El alcance sigue siendo un único aviso. |
+| ADM02 | `/admin/placas` es un listado sin totales ni filtros. El estado "Dada de baja" no se puede alcanzar: nada en la app pone una placa en `baja` (DUE08, pendiente). "Perdida" incluye la sospecha automática. |
+| IA01 | Solo corre al crear una mascota. Al aplicar la sugerencia pisa lo que el usuario ya hubiera escrito. |
+| IA02 | La versión desplegada el 2026-09-21 deja subir una foto sin animal (solo advierte). La verificación solo corre en el navegador y solo para la foto de perfil. |
+| DAT02, DAT03 | Registran los datos (inicio, cierre y `caso_id`); el análisis de recuperación y de contribución de avisos es DAT05, pendiente. Un aviso sin caso abierto queda con `caso_id` nulo. |
+| IA03 | No se construyó nada (confirmado en `src/` y `supabase/`). Sigue en el Sprint 5. |
+
+**Limitación de esta verificación:** el 2026-11-04 el proyecto de
+Supabase estaba pausado por inactividad, así que no se pudieron leer
+`historial_colaboracion()`, `reclamar_avistamiento()` ni
+`registrar_avistamiento()`. Lo que dependa de ellas se dedujo de cómo
+las llama el frontend y de `CLAUDE.md`.
+
+**IA02 — estado:** pasa a **Parcial**. La corrección (categoría
+`sin_animal`, que bloquea la foto sin animal, y verificación también al
+editar la ficha) está escrita en `sugerir-ficha` y `AltaMascota.jsx`,
+pero al 2026-11-04 **no está desplegada**: la publicación de la función
+falló porque el proyecto de Supabase estaba pausado por inactividad
+(`INACTIVE`). Aun desplegada, IA02 queda Parcial: la verificación corre
+solo en el navegador y solo cubre la foto de perfil de la mascota, no la
+del reencuentro. El conteo pasa a 33 terminadas y 2 parciales (IA02 y
+PER03).
+
 ## Historias con alcance reducido por el cambio de modelo
 
 - **REC05** — "Como rescatista, quiero poder donar el agradecimiento a
