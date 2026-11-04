@@ -563,6 +563,25 @@ forzado con la foto de Messi → no bloquea. **Límite conocido:** una
 imagen que la API no acepta (por ejemplo formato HEIC) se trata como
 error técnico y pasa sin verificar.
 
+**IA02 — endurecimiento de la subida (2026-11-04, tarde).** Una prueba
+real desde un iPhone con la foto de un pizarrón no fue bloqueada. La
+función clasifica bien un pizarrón (`sin_animal`), así que se corrigieron
+los huecos del lado del formulario (`AltaMascota.jsx`): (1) el botón
+Guardar queda deshabilitado ("Verificando la foto…") mientras la IA
+analiza, porque antes se podía guardar una foto que después resultaba
+bloqueada; (2) la foto se reduce a 1280 px y se convierte a JPEG en el
+navegador antes de mandarla (la API no acepta HEIC y rechaza imágenes
+muy pesadas); (3) si la verificación falla por cualquier motivo, se
+muestra el aviso gris "No pudimos verificar la foto en este momento.
+Podés seguir igual." en vez de fallar en silencio; (4) una respuesta
+vieja del análisis ya no pisa a una foto elegida después. Probado en el
+formulario real: pizarrón (PNG) y la foto original de 5 MB de Messi se
+bloquean; Blanca completa los campos; un archivo corrupto y un fallo de
+red muestran el aviso gris y dejan pasar. **Límite que sigue vigente:**
+la verificación es solo del navegador; quien suba una foto saltándose la
+app (directo a Storage) no pasa por ella. Cerrarlo del todo requiere
+subir la foto a través de la Edge Function.
+
 ## Historias con alcance reducido por el cambio de modelo
 
 - **REC05** — "Como rescatista, quiero poder donar el agradecimiento a

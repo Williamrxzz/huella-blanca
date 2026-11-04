@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
@@ -20,6 +20,24 @@ function archivoABase64(archivo) {
     lector.onerror = reject
     lector.readAsDataURL(archivo)
   })
+}
+
+// Reduce la foto y la convierte a JPEG antes de mandarla a la IA. La API solo
+// acepta JPEG, PNG, GIF y WebP (no HEIC, el formato de las fotos de iPhone) y
+// rechaza imágenes muy pesadas: así la verificación no falla por el formato o
+// el tamaño del archivo, y además viaja menos y responde más rápido.
+async function fotoAJpegBase64(archivo, ladoMaximo = 1280) {
+  const imagen = await createImageBitmap(archivo)
+  const escala = Math.min(1, ladoMaximo / Math.max(imagen.width, imagen.height))
+  const lienzo = document.createElement('canvas')
+  lienzo.width = Math.max(1, Math.round(imagen.width * escala))
+  lienzo.height = Math.max(1, Math.round(imagen.height * escala))
+  lienzo.getContext('2d').drawImage(imagen, 0, 0, lienzo.width, lienzo.height)
+  imagen.close?.()
+  const jpeg = await new Promise((resolve, reject) => {
+    lienzo.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('sin_jpeg'))), 'image/jpeg', 0.85)
+  })
+  return archivoABase64(jpeg)
 }
 
 function SelectorMapa({ onSeleccionar }) {
@@ -51,6 +69,7 @@ export default function AltaMascota() {
   const [foto, setFoto] = useState(null)
   const [fotoUrlActual, setFotoUrlActual] = useState(null)
   const [analizandoFoto, setAnalizandoFoto] = useState(false)
+  const verificacionActual = useRef(0)
   const [avisoFotoIA, setAvisoFotoIA] = useState(null)
   const [radioMetros, setRadioMetros] = useState(100)
   const [visibilidadSenas, setVisibilidadSenas] = useState('publico')
@@ -119,20 +138,31 @@ export default function AltaMascota() {
     // para que no se pueda subir una imagen que no sea un animal. Las
     // sugerencias de ficha (IA01) solo se aplican al crear: al editar ya hay
     // datos reales cargados, y no queremos que una foto nueva los pise.
-    if (!archivo) return
+    // Cada elección de foto tiene su número: si la persona elige otra antes de
+    // que termine el análisis, la respuesta vieja se ignora.
+    const numeroVerificacion = ++verificacionActual.current
+    if (!archivo) {
+      setAnalizandoFoto(false)
+      return
+    }
 
     setAnalizandoFoto(true)
     try {
-      const base64 = await archivoABase64(archivo)
+      const base64 = await fotoAJpegBase64(archivo)
       const { data, error: errorFn } = await supabase.functions.invoke('sugerir-ficha', {
-        body: { imagen_base64: base64, media_type: archivo.type },
+        body: { imagen_base64: base64, media_type: 'image/jpeg' },
       })
+
+      if (numeroVerificacion !== verificacionActual.current) return
 
       // Error técnico (timeout, sin conexión, API caída, o el modelo no
       // devolvió una clasificación): la IA sugiere y la persona confirma, así
       // que se sigue sin verificar y nunca se traba el alta de la mascota.
       // Solo se bloquea abajo, cuando el modelo SÍ contestó que no hay un animal.
-      if (errorFn || !data || data.error) return
+      if (errorFn || !data || data.error) {
+        setAvisoFotoIA({ tipo: 'sin_verificar', motivo: null })
+        return
+      }
 
       if (data.categoria === 'inapropiada') {
         setFoto(null)
@@ -164,8 +194,11 @@ export default function AltaMascota() {
       }
     } catch {
       // Sin conexión, timeout, lo que sea: se sigue sin verificar.
+      if (numeroVerificacion === verificacionActual.current) {
+        setAvisoFotoIA({ tipo: 'sin_verificar', motivo: null })
+      }
     } finally {
-      setAnalizandoFoto(false)
+      if (numeroVerificacion === verificacionActual.current) setAnalizandoFoto(false)
     }
   }
 
@@ -422,6 +455,12 @@ export default function AltaMascota() {
           </p>
         )}
 
+        {avisoFotoIA?.tipo === 'sin_verificar' && (
+          <p className="ayuda">
+            No pudimos verificar la foto en este momento. Podés seguir igual.
+          </p>
+        )}
+
         {avisoFotoIA?.tipo === 'advertencia' && (
           <p className="ayuda error">
             {avisoFotoIA.motivo || 'La foto no se ve del todo clara.'} Podés seguir igual, o elegir otra.
@@ -507,8 +546,14 @@ export default function AltaMascota() {
 
         {error && <p className="ayuda error">{error}</p>}
 
-        <button className="boton" type="submit" disabled={guardando}>
-          {guardando ? 'Guardando…' : editando ? 'Guardar cambios' : 'Guardar mascota'}
+        {/* Mientras la IA analiza la foto no se puede guardar: si no, una foto
+            que después resulta bloqueada llegaría a guardarse igual. */}
+        <button className="boton" type="submit" disabled={guardando || analizandoFoto}>
+          {guardando
+            ? 'Guardando…'
+            : analizandoFoto
+              ? 'Verificando la foto…'
+              : editando ? 'Guardar cambios' : 'Guardar mascota'}
         </button>
       </form>
     </main>
