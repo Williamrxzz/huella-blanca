@@ -223,6 +223,17 @@ export default function AltaMascota() {
   // guardaría igual, solo que sin foto. Se libera al elegir otra foto que pase.
   const fotoRechazada = avisoFotoIA?.tipo === 'sin_animal' || avisoFotoIA?.tipo === 'bloqueo'
 
+  // Salida explícita del estado de foto rechazada: vuelve a "sin foto elegida"
+  // (la foto es opcional) y libera el guardado. No es lo mismo que cancelar el
+  // selector de archivos, que no cambia nada.
+  function quitarFoto() {
+    verificacionActual.current += 1
+    setFoto(null)
+    setAvisoFotoIA(null)
+    setAnalizandoFoto(false)
+    setError(null)
+  }
+
   async function guardar(e) {
     e.preventDefault()
     setError(null)
@@ -479,6 +490,12 @@ export default function AltaMascota() {
           <p className="ayuda error">
             Esta foto no parece ser de un animal. Subí una foto de tu mascota (perro, gato u otro animal) para continuar.
           </p>
+        )}
+
+        {fotoRechazada && (
+          <button className="boton secundario" type="button" onClick={quitarFoto}>
+            Quitar foto
+          </button>
         )}
 
         {avisoFotoIA?.tipo === 'sin_verificar' && (
