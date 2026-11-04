@@ -582,6 +582,28 @@ la verificación es solo del navegador; quien suba una foto saltándose la
 app (directo a Storage) no pasa por ella. Cerrarlo del todo requiere
 subir la foto a través de la Edge Function.
 
+**Limpieza de Storage (2026-11-04).** La foto se verifica antes de
+subirse: al elegirla viaja a `sugerir-ficha` como imagen en base64 y
+solo se sube al bucket `fotos-mascotas` al guardar, con el guardado
+bloqueado si fue rechazada; por eso una foto rechazada nunca llega al
+bucket. Se borraron del bucket la foto del pizarrón de las pruebas
+(3 MB, había quedado asignada a la mascota inactiva "Jejeje" antes del
+bloqueo) y cuatro archivos de pruebas de septiembre (tres `gorda.png`
+de 26 MB, una sin mascota y dos de las mascotas inactivas "1111123" y
+"blanca", y un `foto_reencuentro_test.png` de 0 KB). A las tres
+mascotas inactivas se les dejó vacío `foto_url`. El bucket pasó de
+78,49 MB (10 archivos) a 1,01 MB (6 archivos).
+
+### Pendiente — fugas de Storage menores, sin resolver
+
+- Si falla el guardado de la mascota después de subir la foto, el
+  archivo queda sin dueño en el bucket.
+- Al editar la mascota y cambiar la foto, la anterior no se borra del
+  bucket.
+
+Ninguna de las dos pierde datos ni afecta a un usuario: es solo basura
+que se acumula en Storage con el tiempo. Quedan para el Sprint 5.
+
 ## Historias con alcance reducido por el cambio de modelo
 
 - **REC05** — "Como rescatista, quiero poder donar el agradecimiento a
