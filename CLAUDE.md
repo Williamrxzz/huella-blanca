@@ -752,8 +752,9 @@ del 2026-09-21.
   mascota en estado `perdida`, el panel (`Panel.jsx`, componente
   `TextoParaCompartir`) muestra un texto de búsqueda armado con una
   plantilla (`src/lib/textoBusqueda.js`, sin llamar a la IA) con los
-  datos de la ficha y la última ubicación, con botones para compartirlo
-  por WhatsApp y copiarlo. Sin emojis (la página de WhatsApp los muestra
+  datos de la ficha y la última ubicación, en un bloque plegable con
+  botones para compartirlo (panel nativo del teléfono, con respaldo a
+  WhatsApp) o copiarlo. Sin emojis (la página de WhatsApp los muestra
   como "�"); no incluye teléfono ni el mensaje del dueño. Ver
   `TRAZABILIDAD.md`, entrada del 2026-11-04. También incluye **DUE05**, completada el 2026-10-19: era
   Parcial al cierre del Sprint 3 (2026-09-19, tag `sprint-3-entrega`,

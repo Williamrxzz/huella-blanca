@@ -633,9 +633,17 @@ compartir por WhatsApp o redes") pasa de Pendiente a **Terminada**.
   `src/pages/Panel.jsx`. `Panel.jsx` ahora también lee `ultima_lat` y
   `ultima_lng` del caso.
 - **Qué hace:** mientras la mascota tiene un caso en estado `perdida`,
-  el panel muestra el texto, con un botón "Compartir por WhatsApp"
-  (enlace `wa.me` con el texto ya cargado, en pestaña nueva) y otro
-  "Copiar texto" (portapapeles, con respaldo para navegadores viejos). El
+  el panel muestra un bloque "Texto para compartir", **plegado por
+  defecto** (título, "Ver texto" y los botones; el texto completo y su
+  explicación aparecen al tocar "Ver texto", que pasa a "Ocultar texto"),
+  con dos botones con ícono: "Compartir" y "Copiar". "Compartir" abre el
+  panel de compartir del teléfono (`navigator.share`), donde la persona
+  elige WhatsApp, Instagram, etc.; si el navegador no lo tiene (una
+  compu) o falla, abre el enlace `wa.me` con el texto ya cargado en
+  pestaña nueva; si la persona cierra el panel, no hace nada más.
+  "Copiar" usa el portapapeles (con respaldo para navegadores viejos) y
+  muestra "Copiado" 2 segundos. Ambos funcionan igual con el bloque
+  cerrado o abierto. El
   texto lleva nombre, especie y sexo ("una perra"), tamaño, raza, color,
   señas, la última ubicación conocida como enlace a Google Maps y un
   enlace a la ficha pública para avisar sin registrarse.
@@ -662,7 +670,12 @@ compartir por WhatsApp o redes") pasa de Pendiente a **Terminada**.
   "posible pérdida" a "perdida" y después se restauró tal cual estaba):
   el texto se generó bien, el enlace de WhatsApp lleva exactamente ese
   texto y abre la página de "Share on WhatsApp" con el texto correcto, y
-  "Copiar texto" deja el texto en el portapapeles. Con una mascota
+  "Copiar" deja el texto en el portapapeles. Los botones con ícono y el
+  bloque plegable se probaron en el panel real, simulando solo la
+  respuesta del caso abierto (sin escribir en la base): arranca cerrado,
+  se abre y se cierra, y "Compartir" y "Copiar" entregan el mismo texto
+  con el bloque cerrado y abierto; también los casos de panel cancelado,
+  panel que falla y navegador sin panel. Con una mascota
   descartable (borrada después): cambio de color y señas, señas "no se
   muestran" y ficha casi vacía, todos arman el texto sin errores.
 - **Límites conocidos:** (1) solo aparece con el caso en `perdida`, no
@@ -671,8 +684,9 @@ compartir por WhatsApp o redes") pasa de Pendiente a **Terminada**.
   dueño marcó al reportar, o la de la detección automática si confirmó una
   sospecha), no la del aviso más reciente de alguien que la vio; (4) no
   se probó la apertura en la app de WhatsApp de un teléfono real, solo la
-  página `api.whatsapp.com/send` a la que redirige `wa.me`; (5) no hay
-  Web Share del teléfono: para otras redes se copia el texto.
+  página `api.whatsapp.com/send` a la que redirige `wa.me`; (5) el panel
+  nativo de compartir (`navigator.share`) se probó con un simulacro en el
+  navegador de escritorio, no en un teléfono real.
 - **Conteo del backlog:** 34 terminadas, 2 parciales (IA02 y PER03), 10
   pendientes y 17 descartadas, sobre las 63. Los PDFs de Historias v4 y
   Product Backlog v3 todavía dan IA03 por Pendiente (hay que corregirlos

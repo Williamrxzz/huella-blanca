@@ -742,3 +742,45 @@ code {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+/* Botones con ícono (compartir / copiar) y confirmación de copiado. */
+.boton-accion-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.boton-accion.copiado {
+  color: #2f6b3a;
+  border-color: #b9d9bf;
+  background: #eef7ef;
+}
+
+/* Texto solo para lectores de pantalla (anuncia "Texto copiado"). */
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.texto-busqueda-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.texto-busqueda-alternar {
+  background: none;
+  border: none;
+  padding: 4px 0;
+  color: #1d5fa8;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}

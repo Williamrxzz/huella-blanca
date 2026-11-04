@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
+import { Check, Copy, Share2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
 import { armarTextoBusqueda, enlaceWhatsApp } from '../lib/textoBusqueda'
@@ -100,6 +101,7 @@ function CartelConfirmacion({ titulo, texto, onCancelar, onConfirmar, confirmand
 // actualiza solo si cambian (por ejemplo, al volver de editar la mascota).
 function TextoParaCompartir({ mascota, caso }) {
   const [copiado, setCopiado] = useState(false)
+  const [verTexto, setVerTexto] = useState(false)
   const texto = armarTextoBusqueda({ mascota, caso, origen: window.location.origin })
 
   async function copiar() {
@@ -121,20 +123,71 @@ function TextoParaCompartir({ mascota, caso }) {
     setTimeout(() => setCopiado(false), 2000)
   }
 
+  // Panel de compartir del propio teléfono (el mismo de cuando se comparte un
+  // reel): muestra WhatsApp, Instagram, Mensajes y lo que haya instalado. Donde
+  // el navegador no lo tiene (por ejemplo, una compu), el botón es un enlace
+  // directo a WhatsApp.
+  const puedeCompartir = typeof navigator.share === 'function'
+
+  async function compartir() {
+    try {
+      await navigator.share({ title: `Se perdió ${mascota.nombre}`, text: texto })
+    } catch (err) {
+      // Si la persona cierra el panel de compartir, no hay nada más que hacer.
+      if (err?.name === 'AbortError') return
+      // Cualquier otro error cae en WhatsApp, igual que si no hubiera panel.
+      window.open(enlaceWhatsApp(texto), '_blank', 'noopener,noreferrer')
+    }
+  }
+
   return (
     <div className="texto-busqueda">
-      <strong>Texto para compartir</strong>
-      <p className="ayuda">
-        Lo armamos con los datos de {mascota.nombre}. Si los cambiás, se actualiza solo.
-      </p>
-      <pre className="texto-busqueda-contenido">{texto}</pre>
-      <div className="acciones-mascota">
-        <a className="boton-accion" href={enlaceWhatsApp(texto)} target="_blank" rel="noopener noreferrer">
-          Compartir por WhatsApp
-        </a>
-        <button className="boton-accion" type="button" onClick={copiar}>Copiar texto</button>
+      <div className="texto-busqueda-cabecera">
+        <strong>Texto para compartir</strong>
+        <button
+          className="texto-busqueda-alternar"
+          type="button"
+          aria-expanded={verTexto}
+          onClick={() => setVerTexto((v) => !v)}
+        >
+          {verTexto ? 'Ocultar texto' : 'Ver texto'}
+        </button>
       </div>
-      {copiado && <p className="confirmacion">Texto copiado</p>}
+      {verTexto && (
+        <>
+          <p className="ayuda">
+            Lo armamos con los datos de {mascota.nombre}. Si los cambiás, se actualiza solo.
+          </p>
+          <pre className="texto-busqueda-contenido">{texto}</pre>
+        </>
+      )}
+      <div className="acciones-mascota">
+        {puedeCompartir ? (
+          <button className="boton-accion boton-accion-icono" type="button" onClick={compartir}>
+            <Share2 size={16} aria-hidden="true" />
+            Compartir
+          </button>
+        ) : (
+          <a
+            className="boton-accion boton-accion-icono"
+            href={enlaceWhatsApp(texto)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Share2 size={16} aria-hidden="true" />
+            Compartir
+          </a>
+        )}
+        <button
+          className={`boton-accion boton-accion-icono${copiado ? ' copiado' : ''}`}
+          type="button"
+          onClick={copiar}
+        >
+          {copiado ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
+          {copiado ? 'Copiado' : 'Copiar'}
+        </button>
+      </div>
+      <span className="solo-lectores" role="status">{copiado ? 'Texto copiado' : ''}</span>
     </div>
   )
 }
