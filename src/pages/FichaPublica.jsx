@@ -158,9 +158,14 @@ export default function FichaPublica() {
     })
 
     if (errorRegistro) {
+      const yaTieneCuenta = errorRegistro.message.includes('already registered')
+      // Si el email ya tiene cuenta, el aviso se guarda igual para reclamarlo
+      // cuando la persona inicie sesión (mismo mecanismo que con la
+      // confirmación de email pendiente): Panel.jsx lo reclama al ingresar.
+      if (yaTieneCuenta && avistamientoId) localStorage.setItem('avisoPendienteId', avistamientoId)
       setCreandoCuenta(false)
       setErrorCuenta(
-        errorRegistro.message.includes('already registered')
+        yaTieneCuenta
           ? 'Ese email ya tiene una cuenta. Iniciá sesión desde el panel para vincular tu ayuda.'
           : errorRegistro.message
       )
