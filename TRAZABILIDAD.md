@@ -604,6 +604,80 @@ mascotas inactivas se les dejó vacío `foto_url`. El bucket pasó de
 Ninguna de las dos pierde datos ni afecta a un usuario: es solo basura
 que se acumula en Storage con el tiempo. Quedan para el Sprint 5.
 
+## 2026-11-04 — Limpieza de datos de prueba: excepción a las bajas lógicas
+
+Por decisión explícita del dueño del proyecto se dejaron en producción
+solo dos mascotas, Blanca y la Doggie activa. Se borraron de la base 16
+mascotas de prueba (más 4 `VerifS4…` y 1 `VerifIA03…` creadas por las
+pruebas de punta a punta del mismo día), con sus 4 escaneos, 2 avisos y
+4 casos (las `VerifS4…`: 12 escaneos, 6 avisos y 4 casos). Las placas
+**no** se borraron, por ser inventario real de códigos QR: las de esas
+mascotas volvieron a `sin_asignar`, y las 22 que figuraban `activa` sin
+mascota también (ahora hay 2 `activa` y 45 `sin_asignar`). Se borró la
+cuenta "Rescatista de prueba" de Authentication (queda solo la del
+administrador) y los archivos de Storage que quedaron sin uso (el bucket
+pasó de 78,49 MB a 0,34 MB, con 2 archivos). Es una excepción puntual a
+la regla de que los casos, avisos y escaneos no se eliminan, justificada
+por tratarse de datos de prueba; no es un criterio para datos reales.
+Quedan 5 escaneos de septiembre sin mascota (de placas cuyas mascotas se
+habían borrado en limpiezas anteriores), que no se tocaron.
+
+## 2026-11-04 — IA03: texto de búsqueda para compartir (construida)
+
+**IA03** ("que al reportar la pérdida se genere automáticamente un texto
+de búsqueda con los datos de la ficha y la última ubicación, listo para
+compartir por WhatsApp o redes") pasa de Pendiente a **Terminada**.
+
+- **Dónde:** `src/lib/textoBusqueda.js` (`armarTextoBusqueda`,
+  `enlaceWhatsApp`) y el componente `TextoParaCompartir` de
+  `src/pages/Panel.jsx`. `Panel.jsx` ahora también lee `ultima_lat` y
+  `ultima_lng` del caso.
+- **Qué hace:** mientras la mascota tiene un caso en estado `perdida`,
+  el panel muestra el texto, con un botón "Compartir por WhatsApp"
+  (enlace `wa.me` con el texto ya cargado, en pestaña nueva) y otro
+  "Copiar texto" (portapapeles, con respaldo para navegadores viejos). El
+  texto lleva nombre, especie y sexo ("una perra"), tamaño, raza, color,
+  señas, la última ubicación conocida como enlace a Google Maps y un
+  enlace a la ficha pública para avisar sin registrarse.
+- **Es una plantilla, no una consulta a la IA.** Sale al instante, no
+  depende de ningún servicio y no manda datos de la mascota a ningún
+  lado. Si más adelante se quiere un texto redactado por el modelo, se
+  puede reemplazar `armarTextoBusqueda` sin tocar el resto.
+- **Nunca bloquea:** si falta la raza, el color, las señas, la ubicación
+  o la placa, simplemente se omite esa línea.
+- **Se actualiza solo:** se arma en cada render con los datos actuales de
+  la ficha y del caso (probado: cambiar color y señas en la edición se
+  refleja al volver al panel).
+- **Privacidad (mismas reglas que la ficha pública):** no incluye el
+  teléfono del dueño; no incluye el mensaje que dejó al reportar la
+  pérdida (PER07); omite las señas si el dueño las marcó "no se
+  muestran" (DUE05); redondea la ubicación a ≈110 m ("zona
+  aproximada"). No menciona dinero ni recompensas.
+- **Sin emojis, a propósito.** La primera versión llevaba 🐾 y 🙏. Al
+  probar el enlace de WhatsApp se vio que la página `api.whatsapp.com`
+  muestra cualquier emoji como "�" (probado con cinco emojis, en
+  escritorio y con agente de iPhone). Sin emojis, el texto llega
+  completo y correcto.
+- **Probado:** con Blanca en el panel real (se pasó su caso abierto de
+  "posible pérdida" a "perdida" y después se restauró tal cual estaba):
+  el texto se generó bien, el enlace de WhatsApp lleva exactamente ese
+  texto y abre la página de "Share on WhatsApp" con el texto correcto, y
+  "Copiar texto" deja el texto en el portapapeles. Con una mascota
+  descartable (borrada después): cambio de color y señas, señas "no se
+  muestran" y ficha casi vacía, todos arman el texto sin errores.
+- **Límites conocidos:** (1) solo aparece con el caso en `perdida`, no
+  en `posible_perdida`; (2) el texto no es editable por el dueño;
+  (3) "última ubicación" es la que quedó guardada en el caso (la que el
+  dueño marcó al reportar, o la de la detección automática si confirmó una
+  sospecha), no la del aviso más reciente de alguien que la vio; (4) no
+  se probó la apertura en la app de WhatsApp de un teléfono real, solo la
+  página `api.whatsapp.com/send` a la que redirige `wa.me`; (5) no hay
+  Web Share del teléfono: para otras redes se copia el texto.
+- **Conteo del backlog:** 34 terminadas, 2 parciales (IA02 y PER03), 10
+  pendientes y 17 descartadas, sobre las 63. Los PDFs de Historias v4 y
+  Product Backlog v3 todavía dan IA03 por Pendiente (hay que corregirlos
+  en su fuente, junto con PER03, DUE05 e IA02).
+
 ## Historias con alcance reducido por el cambio de modelo
 
 - **REC05** — "Como rescatista, quiero poder donar el agradecimiento a

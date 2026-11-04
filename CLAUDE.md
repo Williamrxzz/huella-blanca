@@ -276,7 +276,10 @@ Desde el frontend se llaman con `supabase.rpc('nombre', { parametros })`.
   blanco, amigable, domicilio en Caleta Olivia (-46.4380, -67.5280),
   radio de 1000 metros.
 - Placa `C30A45A9` vinculada a esa mascota y en estado activa.
-- Otras cuatro placas sin asignar.
+- Mascota "Doggie" (perro, placa `B3B07800`), la única otra mascota
+  que queda cargada. Desde la limpieza del 2026-11-04 son las dos
+  únicas mascotas en producción y hay 45 placas `sin_asignar`
+  (inventario de QR; ver `TRAZABILIDAD.md`, entrada del 2026-11-04).
 
 Para probar: `http://localhost:5173/m/C30A45A9`
 
@@ -739,7 +742,14 @@ del 2026-09-21.
 
 ### Estado de las 63 historias (actualizado el 2026-11-04)
 
-- **33 terminadas.** Incluye **DUE05**, completada el 2026-10-19: era
+- **34 terminadas.** Incluye **IA03**, construida el 2026-11-04: con la
+  mascota en estado `perdida`, el panel (`Panel.jsx`, componente
+  `TextoParaCompartir`) muestra un texto de búsqueda armado con una
+  plantilla (`src/lib/textoBusqueda.js`, sin llamar a la IA) con los
+  datos de la ficha y la última ubicación, con botones para compartirlo
+  por WhatsApp y copiarlo. Sin emojis (la página de WhatsApp los muestra
+  como "�"); no incluye teléfono ni el mensaje del dueño. Ver
+  `TRAZABILIDAD.md`, entrada del 2026-11-04. También incluye **DUE05**, completada el 2026-10-19: era
   Parcial al cierre del Sprint 3 (2026-09-19, tag `sprint-3-entrega`,
   commit `d9f96dc`). Señas y salud son configurables por el dueño con
   tres niveles (`publico`, `perdida` —caso `posible_perdida` o
@@ -765,28 +775,26 @@ del 2026-09-21.
   tampoco existe; pasan al Sprint 5. Los PDFs de Historias v4 y Product
   Backlog v3 todavía la dan por Terminada. Ver `TRAZABILIDAD.md`,
   entrada del 2026-10-25.
-- **11 pendientes**: DUE08, DUE11, TRA07, TRA10, PER04, PER09, REC08,
-  ADM03, ADM07, IA03, DAT05.
+- **10 pendientes**: DUE08, DUE11, TRA07, TRA10, PER04, PER09, REC08,
+  ADM03, ADM07, DAT05.
 - **17 descartadas**: REC03 a REC07, COM01 a COM03, ADM04, ADM05,
   ADM06, ADM08, ADM09, ADM10, ADM11, ADM12 y DAT04 — el detalle y el
   motivo de cada una están en `TRAZABILIDAD.md`.
 
 ### Pendiente, en este orden
 
-1. **IA03**: redactar el texto de búsqueda para compartir al reportar
-   la pérdida, con los datos de la ficha y la última ubicación.
-2. **Módulo de analítica** con Recharts — **DAT05**, del Sprint 5
+1. **Módulo de analítica** con Recharts — **DAT05**, del Sprint 5
    (no confundir con DAT02/DAT03, ya cubiertas por el esquema, ni con
    DAT01, ya construida).
-3. El resto de las pendientes (DUE08, DUE11, TRA07, TRA10, PER04,
+2. El resto de las pendientes (DUE08, DUE11, TRA07, TRA10, PER04,
    PER09, REC08, ADM03, ADM07) y la parte sin construir de **PER03**
    (alerta con la distancia y paso automático a `perdida`, junto con
    PER04) no tienen todavía un plan de trabajo asignado a un sprint
    más allá de figurar en el Sprint 5.
-4. Optimizar el bundle: Vite avisa que el JS de producción pasa los
+3. Optimizar el bundle: Vite avisa que el JS de producción pasa los
    500 KB (sobre todo por Leaflet). No es urgente, pero si se nota lento
    en el celular, dividir en chunks con `import()` dinámico.
-5. **Deuda técnica conocida, pospuesta a propósito** (ver
+4. **Deuda técnica conocida, pospuesta a propósito** (ver
    `TRAZABILIDAD.md`, entrada del 2026-09-21): los `useEffect` de
    `Panel.jsx` y `MapaAvistamientos.jsx` llaman a `cargar()`
    (que hace `setState`) directamente en el cuerpo del efecto —
