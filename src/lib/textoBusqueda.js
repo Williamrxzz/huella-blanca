@@ -41,17 +41,19 @@ export function armarTextoBusqueda({ mascota, caso, origen }) {
   if (color) lineas.push(`Color: ${color}`)
   if (senas) lineas.push(`Señas: ${senas}`)
 
-  const lat = caso?.ultima_lat
-  const lng = caso?.ultima_lng
-  if (typeof lat === 'number' && typeof lng === 'number') {
-    lineas.push('', `Última ubicación conocida (zona aproximada): https://www.google.com/maps?q=${lat.toFixed(3)},${lng.toFixed(3)}`)
-  }
-
+  // El enlace de la ficha va PRIMERO: WhatsApp arma la vista previa (foto y
+  // nombre) con el primer enlace del mensaje, y el de Maps taparía la tarjeta.
   const placa = mascota?.placas?.find((p) => p.estado === 'activa')
   if (placa?.codigo && origen) {
     lineas.push('', `Si ves a ${nombre}, avisá desde acá, sin registrarte: ${origen}/m/${placa.codigo}`)
   } else {
     lineas.push('', `Si ves a ${nombre}, por favor avisá al dueño.`)
+  }
+
+  const lat = caso?.ultima_lat
+  const lng = caso?.ultima_lng
+  if (typeof lat === 'number' && typeof lng === 'number') {
+    lineas.push('', `Última ubicación conocida (zona aproximada): https://www.google.com/maps?q=${lat.toFixed(3)},${lng.toFixed(3)}`)
   }
 
   lineas.push('', '¡Compartilo, por favor!')
