@@ -115,9 +115,11 @@ export default function AltaMascota() {
     setAvisoFotoIA(null)
     setFoto(archivo)
 
-    // IA01/IA02 solo corren al cargar una mascota nueva: al editar ya hay
+    // La verificación de la foto (IA02) corre siempre, al crear y al editar,
+    // para que no se pueda subir una imagen que no sea un animal. Las
+    // sugerencias de ficha (IA01) solo se aplican al crear: al editar ya hay
     // datos reales cargados, y no queremos que una foto nueva los pise.
-    if (!archivo || editando) return
+    if (!archivo) return
 
     setAnalizandoFoto(true)
     try {
@@ -137,12 +139,19 @@ export default function AltaMascota() {
         return
       }
 
+      if (data.categoria === 'sin_animal') {
+        setFoto(null)
+        e.target.value = ''
+        setAvisoFotoIA({ tipo: 'sin_animal', motivo: data.motivo })
+        return
+      }
+
       if (data.categoria === 'incorrecta') {
         setAvisoFotoIA({ tipo: 'advertencia', motivo: data.motivo })
         return
       }
 
-      if (data.categoria === 'apta' && data.sugerencia) {
+      if (data.categoria === 'apta' && data.sugerencia && !editando) {
         const s = data.sugerencia
         if (s.especie) setEspecie(s.especie)
         if (s.raza) setRaza(s.raza)
@@ -402,6 +411,14 @@ export default function AltaMascota() {
         {avisoFotoIA?.tipo === 'bloqueo' && (
           <p className="ayuda error">
             Esa foto no se puede usar ({avisoFotoIA.motivo || 'contenido no permitido'}). Elegí otra.
+          </p>
+        )}
+
+        {avisoFotoIA?.tipo === 'sin_animal' && (
+          <p className="ayuda error">
+            No hay un animal en la imagen
+            {avisoFotoIA.motivo ? ` (${avisoFotoIA.motivo.replace(/\.$/, '')})` : ''}.
+            {' '}Esa foto no se puede usar: elegí una foto de tu mascota.
           </p>
         )}
 

@@ -8,7 +8,7 @@ const PROMPT = `Sos un asistente que ayuda a completar la ficha de una mascota (
 Analizá la imagen y respondé ÚNICAMENTE con un JSON válido, sin texto adicional, sin explicaciones y sin bloques de código (nada de \`\`\`), con esta forma exacta:
 
 {
-  "categoria": "apta" | "incorrecta" | "inapropiada",
+  "categoria": "apta" | "sin_animal" | "incorrecta" | "inapropiada",
   "motivo": string o null,
   "sugerencia": { "especie": "perro" | "gato" | "otro", "raza": string, "tamano": "pequeno" | "mediano" | "grande", "color": string, "senas": string } o null
 }
@@ -19,7 +19,9 @@ Reglas para elegir "categoria":
 
   En "senas" describí ÚNICAMENTE rasgos físicos permanentes que sirvan para identificar a ese animal en otro momento: manchas, cicatrices, forma de las orejas o la cola, marcas particulares en el pelaje. NUNCA describas la pose, la expresión o el momento de la foto (por ejemplo "lengua afuera", "sentado", "mojado", "corriendo", "mirando a cámara") — eso no ayuda a identificarlo y no tiene que aparecer en "senas".
 
-- "incorrecta": la foto no permite identificar un animal con confianza (está borrosa, oscura, cortada, muy lejana, o no hay un animal en la imagen). Es un problema de la FOTO, no de contenido. "sugerencia" tiene que ser null. "motivo": una frase breve y neutra explicando qué falla (por ejemplo "No se distingue un animal en la imagen" o "La foto está demasiado borrosa").
+- "sin_animal": en la imagen NO hay ningún animal: muestra una persona, un objeto, un paisaje, una pantalla, un documento, un dibujo sin animal, etc. Usá esta categoría solo cuando estés seguro de que no hay ningún animal; si hay un animal pero no se ve bien, usá "incorrecta". "sugerencia" tiene que ser null. "motivo": una frase breve y neutra que diga qué se ve en lugar de un animal (por ejemplo "La foto muestra a una persona" o "La foto muestra un paisaje").
+
+- "incorrecta": SÍ hay un animal en la imagen, pero la foto no permite describirlo con confianza (está borrosa, oscura, cortada o muy lejana). Es un problema de la FOTO, no de contenido. "sugerencia" tiene que ser null. "motivo": una frase breve y neutra explicando qué falla (por ejemplo "La foto está demasiado borrosa").
 
 - "inapropiada": la imagen tiene contenido ofensivo, violento, sexual o que de cualquier forma no debería aparecer en una ficha pública, más allá de si hay o no un animal presente. "sugerencia" tiene que ser null. "motivo": una frase breve y neutra, sin describir el contenido en detalle.
 
@@ -30,7 +32,7 @@ function extraerJson(texto: string) {
   return JSON.parse(limpio)
 }
 
-const CATEGORIAS_VALIDAS = ['apta', 'incorrecta', 'inapropiada']
+const CATEGORIAS_VALIDAS = ['apta', 'sin_animal', 'incorrecta', 'inapropiada']
 const ESPECIES_VALIDAS = ['perro', 'gato', 'otro']
 const TAMANOS_VALIDOS = ['pequeno', 'mediano', 'grande']
 
