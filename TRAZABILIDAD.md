@@ -678,6 +678,70 @@ compartir por WhatsApp o redes") pasa de Pendiente a **Terminada**.
   Product Backlog v3 todavía dan IA03 por Pendiente (hay que corregirlos
   en su fuente, junto con PER03, DUE05 e IA02).
 
+## 2026-11-04 — Vista previa del enlace de la ficha (Open Graph)
+
+Trabajo sin historia asociada del backlog (mejora de IA03 y del
+compartir). Al pegar `https://…/m/CODIGO` en WhatsApp, Instagram,
+Facebook o Telegram, esas apps piden la página con un rastreador que no
+ejecuta JavaScript, así que de la ficha (una SPA de React) solo veían el
+HTML genérico: título "Huella Blanca", sin foto. Ahora ven una tarjeta con
+la foto de la mascota, un título y una descripción.
+
+- **Cómo:** `vercel.json` desvía `/m/:codigo` a `/api/og?codigo=…` **solo**
+  cuando el user-agent es un rastreador de vista previa (WhatsApp,
+  facebookexternalhit, Facebot, meta-externalagent, Twitterbot,
+  TelegramBot, Slackbot, LinkedInBot, Discordbot, Pinterest, Skype,
+  Applebot, reddit, Embedly, vkShare, Viber). Cualquier otro visitante
+  recibe la SPA de siempre. La regla general de la SPA ahora excluye
+  `/api/`. Archivos: `api/og.js` (función de Vercel), `api/_meta.js`
+  (armado de las etiquetas, testeable) y `eslint.config.js` (reglas de
+  Node para `api/`).
+- **Qué devuelve:** `og:title` "Se perdió {nombre}" si hay caso `perdida`,
+  "Posible pérdida: {nombre}" si es `posible_perdida` y el nombre solo si
+  no hay caso; `og:description` "Perra mestiza, negra con pecho blanco." y,
+  con caso abierto, "Si ves a {nombre}, avisá desde acá, sin
+  registrarte."; `og:image` la foto pública de la mascota (o el ícono de la
+  app si no tiene); `og:url`; tarjeta grande de Twitter si hay foto.
+  Código inexistente, placa sin activar o consulta fallida: vista previa
+  general, sin inventar nada.
+- **Privacidad:** solo se usa lo que `ficha_publica()` devuelve y que ya es
+  público (nombre, especie, sexo, raza, color, foto, estado del caso).
+  **Nunca** se incluyen señas, salud, teléfono, mensaje del dueño,
+  ubicación ni domicilio, así que respeta por construcción las reglas de
+  visibilidad de DUE05. Los textos se escapan contra HTML inyectado y se
+  recortan (título 90, descripción 200 caracteres). La página lleva
+  `noindex`.
+- **No cuenta escaneos:** la función solo lee con `ficha_publica()`; no
+  llama a `registrar_escaneo()`, así que un rastreador no abre una
+  sospecha de pérdida ni suma al historial (comprobado: los escaneos de
+  Blanca y Doggie no cambiaron).
+- **Probado:** (1) pruebas de la lógica: 5 estados, datos faltantes, nombre
+  y raza con código malicioso, textos larguísimos, y que no se filtre
+  ningún dato privado; (2) la lista de rastreadores acierta con 13
+  user-agents reales de rastreadores y no desvía a 6 de personas (Chrome,
+  Safari, Android, Firefox y los navegadores internos de Instagram y
+  Facebook); (3) en producción, las personas siguen recibiendo la SPA en 7
+  rutas con dos navegadores, y los archivos estáticos se siguen sirviendo;
+  (4) en producción, 8 rastreadores (WhatsApp Android e iOS, Facebook,
+  Instagram/Meta, Telegram, X, Slack, iMessage) reciben la tarjeta de
+  Blanca ("Se perdió Blanca") y la de Doggie ("Posible pérdida: Doggie");
+  la imagen responde 200, `image/jpeg`, 117 KB; la página responde en
+  ~0,2 s.
+- **No se pudo probar con el depurador de Facebook** (developers.facebook
+  .com/tools/debug): exige iniciar sesión en Facebook y su API pública no
+  respondió. Se emuló pidiendo la página con el user-agent
+  `facebookexternalhit/1.1`. Falta pasar el enlace por el depurador a mano.
+- **Límites conocidos:** (1) la foto de Blanca es **vertical** (638 × 1165
+  px) y las tarjetas son horizontales o cuadradas: las apps la recortan
+  por el centro y la cabeza podría quedar cortada; no se verificó en las
+  apps reales. La solución de fondo sería generar al subir la foto una
+  versión apaisada (1200 × 630) centrada en la cara. (2) Un rastreador que
+  no esté en la lista recibe la SPA, o sea la vista previa genérica: se
+  agrega su user-agent a `vercel.json`. (3) Las apps guardan la vista
+  previa en caché (WhatsApp y Facebook, días): un cambio de foto o de
+  estado puede tardar en verse; agregar `?v=2` al enlace fuerza una
+  lectura nueva. En el borde de Vercel la caché es de 60 segundos.
+
 ## Historias con alcance reducido por el cambio de modelo
 
 - **REC05** — "Como rescatista, quiero poder donar el agradecimiento a

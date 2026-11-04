@@ -479,7 +479,13 @@ Usuario", con siete listas, una por bloque.
   al repo de GitHub (cada push a `master` hace deploy automático a
   producción). Variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`
   cargadas en Vercel. Incluye `vercel.json` con reescritura SPA para que
-  `/m/:codigo` y `/placas` no den 404.
+  `/m/:codigo` y `/placas` no den 404. Además, una función de Vercel
+  (`api/og.js` + `api/_meta.js`): `vercel.json` desvía `/m/:codigo` a
+  `/api/og` solo cuando lo pide un rastreador de vista previa (WhatsApp,
+  Facebook, Telegram, etc.), que recibe el HTML con las etiquetas Open
+  Graph de esa mascota (título, descripción, foto); las personas siguen
+  recibiendo la SPA. Solo usa datos públicos de `ficha_publica()` y no
+  cuenta escaneos. Ver `TRAZABILIDAD.md`, entrada del 2026-11-04.
 
 ### MVP: 13 de 14 historias terminadas
 
