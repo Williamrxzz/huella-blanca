@@ -68,6 +68,7 @@ export default function FichaPublica() {
   const [creandoCuenta, setCreandoCuenta] = useState(false)
   const [errorCuenta, setErrorCuenta] = useState(null)
   const [cuentaCreada, setCuentaCreada] = useState(false)
+  const [emailYaRegistrado, setEmailYaRegistrado] = useState(false)
 
   useEffect(() => {
     async function cargar() {
@@ -176,6 +177,11 @@ export default function FichaPublica() {
       // Falta confirmar el email: todavía no hay sesión para reclamar el aviso.
       // Se guarda el id para reclamarlo cuando la persona vuelva ya logueada.
       if (avistamientoId) localStorage.setItem('avisoPendienteId', avistamientoId)
+      // Con la confirmación de email activada, Supabase no devuelve error si el
+      // email ya tiene cuenta (para no revelar qué emails existen): responde
+      // como si se hubiera creado, pero con la lista de identidades vacía. En
+      // ese caso no llega ningún email de confirmación, así que el mensaje es otro.
+      setEmailYaRegistrado(data.user?.identities?.length === 0)
       setCreandoCuenta(false)
       setCuentaCreada(true)
       return
@@ -320,7 +326,9 @@ export default function FichaPublica() {
 
           {cuentaCreada ? (
             <p className="ayuda">
-              Tu ayuda quedó registrada. Revisá tu email si hace falta confirmar la cuenta.
+              {emailYaRegistrado
+                ? 'Tu ayuda quedó registrada. Si ya tenías una cuenta con ese email, iniciá sesión y tu aviso se va a vincular solo.'
+                : 'Tu ayuda quedó registrada. Revisá tu email si hace falta confirmar la cuenta.'}
             </p>
           ) : mostrarCuenta ? (
             <form className="formulario-aviso" onSubmit={crearCuentaYReclamar}>
