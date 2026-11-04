@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
-import { iconoCasa } from '../lib/leaflet-iconos'
+import { iconoAviso, iconoCasa } from '../lib/leaflet-iconos'
 import { MapContainer, TileLayer, Marker, Circle, Popup } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
@@ -175,6 +175,11 @@ export default function MapaAvistamientos() {
 
   const conUbicacion = avistamientos.filter((a) => a.lat != null && a.lng != null)
   const sinUbicacion = avistamientos.length - conUbicacion.length
+  // La consulta viene del más nuevo al más viejo; el número cuenta al revés
+  // (1 = el primer aviso) para leer el recorrido en orden. El rojo es el aviso
+  // más reciente que tiene ubicación, o sea el que se ve en el mapa.
+  const numeroDeAviso = (a) => avistamientos.length - avistamientos.indexOf(a)
+  const idMasReciente = conUbicacion[0]?.id
 
   return (
     <main className="pagina">
@@ -249,8 +254,15 @@ export default function MapaAvistamientos() {
         </Circle>
 
         {conUbicacion.map((a) => (
-          <Marker key={a.id} position={[a.lat, a.lng]}>
+          <Marker
+            key={a.id}
+            position={[a.lat, a.lng]}
+            icon={iconoAviso(numeroDeAviso(a), a.id === idMasReciente)}
+            title={`Aviso ${numeroDeAviso(a)}`}
+          >
             <Popup>
+              <strong>Aviso {numeroDeAviso(a)}{a.id === idMasReciente ? ' (el más reciente)' : ''}</strong>
+              <br />
               <strong>{ETIQUETA_SITUACION[a.situacion] || a.situacion}</strong>
               <br />
               {formatearFecha(a.creado_en)}
@@ -266,7 +278,10 @@ export default function MapaAvistamientos() {
           {avistamientos.map((a) => (
             <li key={a.id}>
               <div className="fila-principal-avistamiento">
-                <span className="situacion-avistamiento">{ETIQUETA_SITUACION[a.situacion] || a.situacion}</span>
+                <span className="situacion-avistamiento">
+                  <span className={`numero-aviso${a.id === idMasReciente ? ' reciente' : ''}`}>{numeroDeAviso(a)}</span>
+                  {ETIQUETA_SITUACION[a.situacion] || a.situacion}
+                </span>
                 <span className="hora-avistamiento">{formatearFecha(a.creado_en)}</span>
               </div>
               {(a.mensaje || a.contacto) && (

@@ -848,3 +848,21 @@ distingue de los alfileres de quienes avisaron. El punto exacto es el centro
 del círculo. No cambia lo que se guarda ni la privacidad: el domicilio sigue
 siendo solo una coordenada que nunca se muestra en la ficha pública.
 Probado en el formulario real y en el mapa de Blanca (sin guardar nada).
+
+## 2026-11-04 — Avisos numerados en el mapa de avistamientos
+
+Mejora de interfaz, sin historia asociada. Con varios avisos, los alfileres
+iguales marean. En `MapaAvistamientos.jsx` cada aviso con ubicación es ahora
+un círculo numerado (`iconoAviso` en `src/lib/leaflet-iconos.js`): el número
+sigue el orden cronológico (1 = el primer aviso), así se lee el recorrido
+de la mascota. El más reciente con ubicación va en **rojo y más grande**; los
+demás, en gris azulado. La lista de abajo usa los mismos números y colores,
+y el popup dice "Aviso N" (más "el más reciente"). El domicilio sigue siendo
+la casa en círculo azul. El número, y no solo el color, identifica cada aviso.
+Sin librerías nuevas. Probado en el mapa de Blanca (solo lectura).
+
+**Límite conocido:** el mapa sigue arrancando centrado en el domicilio con el
+zoom de siempre, así que un aviso lejano puede quedar fuera de la vista hasta
+mover el mapa (en la prueba, solo se veía el 1 de los 3). Agrupar avisos
+cercanos en un solo círculo con un número requiere una librería nueva
+(por ejemplo `react-leaflet-cluster`), no incorporada.

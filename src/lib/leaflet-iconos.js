@@ -20,3 +20,18 @@ export const iconoCasa = L.divIcon({
   iconAnchor: [19, 19],
   popupAnchor: [0, -19],
 })
+
+// Marcador numerado para un aviso de quien la vio. El número sigue el orden
+// cronológico (1 = el primero, el más alto = el más reciente) y el más
+// reciente va en rojo y más grande, para seguir por dónde se fue moviendo la
+// mascota sin confundirlo con la casa (círculo azul) ni con los demás avisos.
+export function iconoAviso(numero, esElMasReciente) {
+  const lado = esElMasReciente ? 34 : 28
+  return L.divIcon({
+    className: `icono-aviso${esElMasReciente ? ' reciente' : ''}`,
+    html: `<span>${numero}</span>`,
+    iconSize: [lado, lado],
+    iconAnchor: [lado / 2, lado / 2],
+    popupAnchor: [0, -lado / 2],
+  })
+}
