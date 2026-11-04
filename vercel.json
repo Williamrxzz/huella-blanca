@@ -1,5 +1,16 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/m/:codigo",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|meta-externalagent|WhatsApp|Twitterbot|TelegramBot|Slackbot|Slack-ImgProxy|LinkedInBot|Discordbot|Pinterestbot|SkypeUriPreview|Applebot|redditbot|Embedly|vkShare|Viber).*"
+        }
+      ],
+      "destination": "/api/og?codigo=:codigo"
+    },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
