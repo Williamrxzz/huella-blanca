@@ -873,3 +873,81 @@ mientras la persona mueve el mapa.
 tapa al otro (en la prueba, el 2 queda detrás del 1; se ve en la lista). Agrupar
 avisos cercanos en un solo círculo con un número requiere una librería nueva
 (por ejemplo `react-leaflet-cluster`), no incorporada.
+
+## 2026-11-11 — Panel de administración: cuentas
+
+Función nueva, sin historia asociada (queda fuera de los sprints). Pantalla
+`/admin/cuentas` (`AdminCuentas.jsx`), solo lectura: lista todas las cuentas
+con nombre, email, teléfono, alta y mascotas activas, con buscador; el detalle
+de cada una muestra último ingreso, avisos dados y, por mascota, placa,
+escaneos, avisos, caso abierto y domicilio. Se apoya en dos funciones nuevas
+(`admin_listar_cuentas()` y `admin_detalle_cuenta()`, migración
+`20261111000000_admin_cuentas.sql`) que verifican `rol = 'admin'` dentro de la
+base, igual que `generar_lote_placas()`; solo `authenticated` puede ejecutarlas.
+
+**Excepción a la regla "el domicilio jamás se expone".** Por decisión del dueño
+del proyecto, el administrador ve la coordenada del domicilio (con un enlace a
+OpenStreetMap) y el teléfono de cada cuenta, para verificar que los domicilios
+sean reales. El alcance de la excepción es solo el rol `admin`, verificado en
+la base y no solo en la pantalla. La ficha pública no cambia: sigue sirviéndose
+únicamente por `ficha_publica()`, sin domicilio.
+
+Fuera de esta primera versión: estadísticas con Recharts (DAT05) y acciones de
+administración (desactivar cuentas o mascotas, cambiar roles).
+
+### 2026-11-11 — Eliminar cuentas, papelera y borrado a los 30 días
+
+Se agregó a `/admin/cuentas` "Eliminar cuenta" y una pestaña **Papelera**.
+Migraciones `20261111000001_admin_baja_cuentas.sql` y
+`20261111000002_papelera_cuentas.sql`.
+
+- **Eliminar** (`admin_eliminar_cuenta()`): baja lógica. Marca el perfil
+  (`activa = false`, `eliminada_en = now()`), desactiva sus mascotas, descarta
+  sus casos abiertos y bloquea el ingreso en Auth (`banned_until`). No se puede
+  eliminar la cuenta propia ni la de otro admin (lo rechaza la base, no solo la
+  pantalla). **Restaurar** (`admin_restaurar_cuenta()`) reactiva solo la cuenta;
+  las mascotas se reactivan aparte.
+- **Excepción a la regla de bajas lógicas.** A los 30 días en la papelera la
+  cuenta se borra **por completo**, por decisión del dueño del proyecto: si se
+  elimina es porque la persona lo pidió o incumplió las normas, y no debe
+  quedar ningún dato. Lo hace la Edge Function `purgar-cuentas`, que corre una
+  vez por día con `pg_cron` (`supabase/purgar-cuentas-cron.sql`) y exige un
+  secreto compartido (`CRON_SECRET`). Orden: fotos de Storage (desde SQL no se
+  pueden borrar), datos de la base (`purgar_cuenta()`, solo para cuentas que ya
+  están en la papelera) y por último el usuario de Auth. Si un paso falla, se
+  corta y la cuenta se reintenta al día siguiente.
+- **Qué se borra:** la cuenta, sus mascotas, los casos, escaneos y avisos de
+  esas mascotas y todas sus fotos. Los avisos que la persona dio sobre mascotas
+  de **otros** dueños quedan (son parte del caso de ese dueño) pero sin
+  `reportado_por`, contacto ni foto. Las placas de sus mascotas no se borran:
+  se desvinculan y quedan de baja, para que un collar viejo no abra la ficha de
+  otra mascota.
+- **Sin probar todavía:** la Edge Function no está desplegada ni se ejecutó el
+  borrado contra datos reales. El orden de borrado se escribió sin poder ver
+  las claves foráneas de la base; si una referencia desconocida lo rechaza, el
+  error vuelve en la respuesta de la función y la cuenta queda en la papelera
+  sin perder nada.
+
+## 2026-11-11 — Modo oscuro y botón de accesibilidad fijo
+
+Mejora transversal, sin historia. En el panel de accesibilidad se **reemplazó**
+la opción de mover el botón (arrastre y cuatro esquinas) por un interruptor de
+**Modo oscuro**. El botón queda fijo abajo a la derecha y el ícono pasó de la
+figura humana (que remitía al símbolo de discapacidad, y el panel es de ajustes
+visuales para cualquiera) a "Aa".
+
+- **Cómo funciona:** preferencia `oscuro` en `localStorage`; sin elección previa
+  parte de `prefers-color-scheme: dark`. Se aplica con `data-tema="oscuro"` en
+  `<html>` y un bloque de reglas en `index.css` (sin librerías). El **alto
+  contraste manda** sobre el modo oscuro y no se combinan (con contraste alto,
+  `data-tema` queda en `claro`).
+- **Contraste:** los 27 pares de texto y fondo del tema superan 4,5:1,
+  calculados con la fórmula de luminancia relativa de WCAG.
+- **Mapas:** solo los mosaicos de OpenStreetMap se oscurecen, con un filtro CSS
+  (`invert` + `hue-rotate`) sobre `.leaflet-tile-pane`; marcadores, círculo y
+  popups no se tocan. Es una aproximación de colores. El QR queda sobre blanco
+  para poder leerse.
+- **Probado** con Chrome (celular simulado) en inicio, login y el panel abierto,
+  y con una página de prueba para el mapa. **No se vio** con sesión iniciada:
+  ficha pública, panel del dueño, mapa de avistamientos y pantallas de
+  administración (pedían login o escriben en la base).

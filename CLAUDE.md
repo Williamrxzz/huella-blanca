@@ -31,6 +31,9 @@ propuesta las contradice, hay que descartarla:
 - **El domicilio se guarda solo como coordenada y jamás se expone.** La
   ficha pública se sirve exclusivamente por la función `ficha_publica()`;
   nunca con un SELECT directo a `mascotas` desde el navegador.
+  Única excepción: el administrador (`rol = 'admin'`) ve la coordenada y el
+  teléfono en `/admin/cuentas`, mediante funciones que verifican el rol dentro
+  de la base. Ver `TRAZABILIDAD.md`, entrada del 2026-11-11.
 - **La ficha pública no muestra teléfono ni dirección del dueño.** El
   contacto se hace mediante un botón (`tel:`/`wa.me:`) que nunca
   renderiza el número como texto en pantalla. Ese número sí viaja
@@ -57,6 +60,10 @@ propuesta las contradice, hay que descartarla:
   mascotas se desactivan (columna `activa`), no se borran; los avisos,
   casos y escaneos nunca se eliminan, porque son el historial que
   necesita el módulo de analítica (DAT).
+  Única excepción: una cuenta eliminada desde `/admin/cuentas` pasa 30 días
+  en una papelera (restaurable) y después se borra por completo, con sus
+  mascotas, fotos, casos y escaneos, sin dejar ningún dato (la persona lo pidió
+  o incumplió las normas). Ver `TRAZABILIDAD.md`, entrada del 2026-11-11.
 - **Los códigos de placa son aleatorios, no correlativos**, para que las
   fichas no puedan enumerarse probando valores consecutivos.
 - **Si el GPS falla o el permiso es denegado, se puede marcar el lugar a
