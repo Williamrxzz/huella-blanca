@@ -2,40 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { ALargeSmall, X } from 'lucide-react'
 import {
   aplicarPreferencias,
-  borrarPosicion,
   borrarPreferencias,
-  guardarPosicion,
   guardarPreferencias,
-  leerPosicion,
   leerPreferencias,
-  POSICION_PREDETERMINADA,
 } from '../lib/accesibilidad'
-
-const LADO = 48 // tamaño del botón
-const MARGEN = 14
-const UMBRAL_ARRASTRE = 6 // píxeles que hay que mover para que cuente como arrastre y no como toque
-
-const ESQUINAS = [
-  { nombre: 'Arriba izquierda', x: 0, y: 0 },
-  { nombre: 'Arriba derecha', x: 1, y: 0 },
-  { nombre: 'Abajo izquierda', x: 0, y: 1 },
-  { nombre: 'Abajo derecha', x: 1, y: 1 },
-]
-
-function aPixeles(pos) {
-  const ancho = Math.max(0, window.innerWidth - LADO - MARGEN * 2)
-  const alto = Math.max(0, window.innerHeight - LADO - MARGEN * 2)
-  return { left: MARGEN + pos.x * ancho, top: MARGEN + pos.y * alto }
-}
-
-function aFraccion(left, top) {
-  const ancho = Math.max(1, window.innerWidth - LADO - MARGEN * 2)
-  const alto = Math.max(1, window.innerHeight - LADO - MARGEN * 2)
-  return {
-    x: Math.min(1, Math.max(0, (left - MARGEN) / ancho)),
-    y: Math.min(1, Math.max(0, (top - MARGEN) / alto)),
-  }
-}
 
 const OPCIONES_TEXTO = [
   { valor: 'normal', etiqueta: 'Normal', muestra: 'A' },
@@ -48,19 +18,8 @@ const OPCIONES_TEXTO = [
 export default function BotonAccesibilidad() {
   const [abierto, setAbierto] = useState(false)
   const [prefs, setPrefs] = useState(leerPreferencias)
-  const [posicion, setPosicion] = useState(leerPosicion)
-  const [, setTamanoVentana] = useState(0)
   const botonRef = useRef(null)
   const panelRef = useRef(null)
-  const arrastre = useRef(null)
-  const huboArrastre = useRef(false)
-
-  // Si se gira el teléfono o cambia el tamaño de la ventana, se recalcula el lugar.
-  useEffect(() => {
-    const alCambiar = () => setTamanoVentana((n) => n + 1)
-    window.addEventListener('resize', alCambiar)
-    return () => window.removeEventListener('resize', alCambiar)
-  }, [])
 
   useEffect(() => {
     aplicarPreferencias(prefs)
@@ -94,62 +53,7 @@ export default function BotonAccesibilidad() {
 
   function restablecer() {
     borrarPreferencias()
-    borrarPosicion()
     setPrefs(leerPreferencias())
-    setPosicion(POSICION_PREDETERMINADA)
-  }
-
-  function moverA(nueva) {
-    setPosicion(nueva)
-    guardarPosicion(nueva)
-  }
-
-  // Arrastrar con el dedo o el mouse. Un movimiento corto sigue siendo un toque.
-  function alPresionar(e) {
-    if (e.button !== undefined && e.button !== 0) return
-    const { left, top } = aPixeles(posicion)
-    arrastre.current = { x0: e.clientX, y0: e.clientY, left0: left, top0: top, moviendo: false }
-    huboArrastre.current = false
-    e.currentTarget.setPointerCapture?.(e.pointerId)
-  }
-
-  function alMover(e) {
-    const a = arrastre.current
-    if (!a) return
-    const dx = e.clientX - a.x0
-    const dy = e.clientY - a.y0
-    if (!a.moviendo && Math.hypot(dx, dy) < UMBRAL_ARRASTRE) return
-    a.moviendo = true
-    huboArrastre.current = true
-    setPosicion(aFraccion(a.left0 + dx, a.top0 + dy))
-  }
-
-  function alSoltar() {
-    const a = arrastre.current
-    arrastre.current = null
-    if (a?.moviendo) guardarPosicion(posicion)
-  }
-
-  function alTocar() {
-    // Si recién se arrastró, soltar el dedo no debe abrir ni cerrar el panel.
-    if (huboArrastre.current) {
-      huboArrastre.current = false
-      return
-    }
-    setAbierto((v) => !v)
-  }
-
-  const lugar = aPixeles(posicion)
-  const abreHaciaArriba = posicion.y > 0.5
-  const alineadoALaDerecha = posicion.x > 0.5
-  // El panel se acomoda junto al botón pero siempre dentro de la pantalla.
-  const anchoPanel = Math.min(300, window.innerWidth - MARGEN * 2)
-  const izquierdaIdeal = alineadoALaDerecha ? lugar.left + LADO - anchoPanel : lugar.left
-  const estiloPanel = {
-    left: Math.min(Math.max(MARGEN, izquierdaIdeal), window.innerWidth - anchoPanel - MARGEN),
-    ...(abreHaciaArriba
-      ? { bottom: window.innerHeight - lugar.top + 8, maxHeight: Math.max(160, lugar.top - 8 - MARGEN) }
-      : { top: lugar.top + LADO + 8, maxHeight: Math.max(160, window.innerHeight - lugar.top - LADO - 8 - MARGEN) }),
   }
 
   return (
@@ -161,12 +65,7 @@ export default function BotonAccesibilidad() {
         aria-label="Accesibilidad"
         aria-expanded={abierto}
         aria-controls="panel-accesibilidad"
-        style={{ left: lugar.left, top: lugar.top }}
-        onPointerDown={alPresionar}
-        onPointerMove={alMover}
-        onPointerUp={alSoltar}
-        onPointerCancel={alSoltar}
-        onClick={alTocar}
+        onClick={() => setAbierto((v) => !v)}
       >
         <ALargeSmall size={28} aria-hidden="true" />
       </button>
@@ -178,7 +77,6 @@ export default function BotonAccesibilidad() {
           className="accesibilidad-panel"
           role="dialog"
           aria-label="Opciones de accesibilidad"
-          style={estiloPanel}
         >
           <div className="accesibilidad-cabecera">
             <strong>Accesibilidad</strong>
@@ -217,6 +115,18 @@ export default function BotonAccesibilidad() {
             <input
               type="checkbox"
               role="switch"
+              checked={prefs.oscuro}
+              onChange={(e) => cambiar({ oscuro: e.target.checked })}
+            />
+            <span>Modo oscuro</span>
+          </label>
+          {prefs.oscuro && prefs.contraste && (
+            <p className="accesibilidad-nota">El alto contraste usa fondo blanco: apagalo para ver el modo oscuro.</p>
+          )}
+          <label className="accesibilidad-opcion">
+            <input
+              type="checkbox"
+              role="switch"
               checked={prefs.contraste}
               onChange={(e) => cambiar({ contraste: e.target.checked })}
             />
@@ -240,24 +150,6 @@ export default function BotonAccesibilidad() {
             />
             <span>Subrayar enlaces y botones</span>
           </label>
-
-          <fieldset className="accesibilidad-grupo">
-            <legend>Lugar del botón</legend>
-            <p className="accesibilidad-nota">Podés arrastrarlo o elegir una esquina.</p>
-            <div className="accesibilidad-esquinas">
-              {ESQUINAS.map((e) => (
-                <button
-                  key={e.nombre}
-                  type="button"
-                  className="accesibilidad-esquina"
-                  aria-pressed={Math.abs(posicion.x - e.x) < 0.02 && Math.abs(posicion.y - e.y) < 0.02}
-                  onClick={() => moverA({ x: e.x, y: e.y })}
-                >
-                  {e.nombre}
-                </button>
-              ))}
-            </div>
-          </fieldset>
 
           <button className="accesibilidad-restablecer" type="button" onClick={restablecer}>
             Restablecer

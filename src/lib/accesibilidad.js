@@ -12,6 +12,7 @@ const PREDETERMINADAS = {
   contraste: false,
   sinAnimaciones: false,
   subrayado: false,
+  oscuro: false,
 }
 
 function sistemaPide(consulta) {
@@ -40,6 +41,8 @@ export function leerPreferencias() {
         ? guardadas.sinAnimaciones
         : sistemaPide('(prefers-reduced-motion: reduce)'),
     subrayado: typeof guardadas.subrayado === 'boolean' ? guardadas.subrayado : PREDETERMINADAS.subrayado,
+    oscuro:
+      typeof guardadas.oscuro === 'boolean' ? guardadas.oscuro : sistemaPide('(prefers-color-scheme: dark)'),
   }
 }
 
@@ -49,6 +52,8 @@ export function aplicarPreferencias(prefs) {
   raiz.dataset.contraste = prefs.contraste ? 'alto' : 'normal'
   raiz.dataset.animaciones = prefs.sinAnimaciones ? 'reducidas' : 'normales'
   raiz.dataset.subrayado = prefs.subrayado ? 'si' : 'no'
+  // El alto contraste (negro sobre blanco) manda sobre el modo oscuro: no se combinan.
+  raiz.dataset.tema = prefs.oscuro && !prefs.contraste ? 'oscuro' : 'claro'
 }
 
 export function guardarPreferencias(prefs) {
@@ -62,40 +67,6 @@ export function guardarPreferencias(prefs) {
 export function borrarPreferencias() {
   try {
     localStorage.removeItem(CLAVE)
-  } catch {
-    // nada que borrar
-  }
-}
-
-// Posición del botón flotante, como fracción (0 a 1) del espacio disponible en
-// pantalla: así sigue en un lugar razonable si se gira el teléfono. Por
-// defecto, abajo a la derecha.
-const CLAVE_POSICION = 'accesibilidad-posicion'
-export const POSICION_PREDETERMINADA = { x: 1, y: 1 }
-
-export function leerPosicion() {
-  try {
-    const p = JSON.parse(localStorage.getItem(CLAVE_POSICION) || 'null')
-    if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) {
-      return { x: Math.min(1, Math.max(0, p.x)), y: Math.min(1, Math.max(0, p.y)) }
-    }
-  } catch {
-    // se usa la posición por defecto
-  }
-  return POSICION_PREDETERMINADA
-}
-
-export function guardarPosicion(posicion) {
-  try {
-    localStorage.setItem(CLAVE_POSICION, JSON.stringify(posicion))
-  } catch {
-    // sin almacenamiento: vale mientras la pantalla esté abierta
-  }
-}
-
-export function borrarPosicion() {
-  try {
-    localStorage.removeItem(CLAVE_POSICION)
   } catch {
     // nada que borrar
   }
