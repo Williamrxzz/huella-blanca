@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Accessibility, X } from 'lucide-react'
+import { ALargeSmall, X } from 'lucide-react'
 import {
   aplicarPreferencias,
   borrarPosicion,
@@ -168,7 +168,7 @@ export default function BotonAccesibilidad() {
         onPointerCancel={alSoltar}
         onClick={alTocar}
       >
-        <Accessibility size={26} aria-hidden="true" />
+        <ALargeSmall size={28} aria-hidden="true" />
       </button>
 
       {abierto && (
