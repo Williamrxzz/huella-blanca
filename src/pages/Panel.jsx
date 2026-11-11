@@ -487,7 +487,10 @@ export default function Panel() {
       <Link className="enlace-discreto" to="/perfil">Tu perfil</Link>
       <Link className="enlace-discreto" to="/mi-historial">Tu colaboración</Link>
       {esAdmin && (
-        <Link className="enlace-discreto" to="/admin/placas">Panel de administración</Link>
+        <>
+          <Link className="enlace-discreto" to="/admin/cuentas">Administración: cuentas</Link>
+          <Link className="enlace-discreto" to="/admin/placas">Administración: placas</Link>
+        </>
       )}
       <button className="boton secundario" onClick={cerrarSesion}>Cerrar sesión</button>
     </main>
