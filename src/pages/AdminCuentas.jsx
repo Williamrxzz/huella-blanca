@@ -191,7 +191,7 @@ export default function AdminCuentas() {
         <ul className="lista-mascotas">
           {visibles.map((c) => (
             <li key={c.id}>
-              <div>
+              <div className="admin-cuenta">
                 <span className="nombre">
                   {c.nombre || 'Sin nombre'}{c.rol === 'admin' ? ' (admin)' : ''}
                 </span>

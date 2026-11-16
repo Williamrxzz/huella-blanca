@@ -1146,3 +1146,9 @@ html[data-contraste="alto"] .accesibilidad-tamano[aria-pressed="true"] { backgro
   padding: 0.5rem 0;
   border-bottom: 1px solid #f1f1f1;
 }
+
+/* Cada cuenta ocupa todo el ancho, así los botones no cambian de tamaño según el texto. */
+.lista-mascotas li > .admin-cuenta {
+  flex: 1;
+  min-width: 0;
+}
