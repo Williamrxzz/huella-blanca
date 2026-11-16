@@ -1001,3 +1001,27 @@ bajas lógicas (ver sección 2 de CLAUDE.md).
   Supabase.** Se comprobó aparte: el archivo desaparece de `storage.objects` al
   instante y la URL pública responde `200` unos 30-60 s y después `400`. La
   base volvió exactamente a su estado anterior (`usuarios_auth` incluido).
+
+## 2026-11-16 — DAT05: estadísticas del administrador (Recharts)
+
+Primera versión del módulo de analítica, en `/admin/estadisticas` (solo
+`rol = 'admin'`; el resto es rebotado al panel).
+
+- **Base:** función `admin_estadisticas()` (migración
+  `20261116000000_admin_estadisticas.sql`). Verifica el rol dentro de la
+  función y devuelve solo conteos agregados: nunca coordenadas ni datos
+  personales. Solo `authenticated`, revocada a `anon`. Los días se cuentan en
+  hora de Buenos Aires.
+- **Pantalla:** 8 tarjetas de totales (cuentas, mascotas activas, placas
+  activas y sin asignar, escaneos, avisos, casos abiertos, reencuentros), dos
+  gráficos de área (escaneos y avisos por día, últimos 30) y uno de barras
+  (casos por estado). Cada gráfico tiene "Ver como tabla". Color de serie
+  único, tomado de la paleta validada del skill de visualización, con valores
+  propios para modo oscuro.
+- **Dependencia nueva:** `recharts`.
+- **Prueba (10 de 10):** usuario común rebotado y función rechazada (400
+  `no_autorizado`); el admin ve tarjetas y tres gráficos SVG; los totales
+  coinciden con la base; sin scroll horizontal en 390 px; modo oscuro; tablas
+  desplegables. Base restaurada tras la prueba.
+- **Alcance:** DAT05 queda como primera versión. Pendiente de decidir si se
+  agregan más métricas (altas de cuentas por semana, distancia de los escaneos).

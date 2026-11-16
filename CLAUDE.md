@@ -109,9 +109,9 @@ Ya instalado y funcionando:
   `supabase functions deploy` — solo para `supabase functions serve`
   en local, que no se usó.
 
-Pendiente de incorporar:
-- Recharts (gráficos del panel de analítica)
-- IA03 (texto de búsqueda al reportar la pérdida) — en el backlog, no descartada.
+- Recharts — gráficos de `/admin/estadisticas` (DAT05).
+
+Pendiente de incorporar: nada por ahora.
 
 Infraestructura:
 - Supabase (PostgreSQL + Auth + Storage + Edge Functions)
@@ -304,7 +304,7 @@ El sistema cubre los cinco componentes que exige la cátedra:
 2. Panel web de administración → la misma app, con acceso por rol
 3. API/backend → Supabase (API REST automática + Edge Functions)
 4. Base de datos → PostgreSQL
-5. Módulo de analítica → vistas SQL mostradas con Recharts (pendiente)
+5. Módulo de analítica → función SQL `admin_estadisticas()` mostrada con Recharts en `/admin/estadisticas` (primera versión hecha el 2026-11-16, ver `TRAZABILIDAD.md`)
 
 ### Documentos ya entregados
 
@@ -756,7 +756,7 @@ del 2026-09-21.
 
 ### Estado de las 63 historias (actualizado el 2026-11-04)
 
-- **34 terminadas.** Incluye **IA03**, construida el 2026-11-04: con la
+- **35 terminadas** (la 35ª es DAT05, primera versión, 2026-11-16). Incluye **IA03**, construida el 2026-11-04: con la
   mascota en estado `perdida`, el panel (`Panel.jsx`, componente
   `TextoParaCompartir`) muestra un texto de búsqueda armado con una
   plantilla (`src/lib/textoBusqueda.js`, sin llamar a la IA) con los
@@ -790,17 +790,16 @@ del 2026-09-21.
   tampoco existe; pasan al Sprint 5. Los PDFs de Historias v4 y Product
   Backlog v3 todavía la dan por Terminada. Ver `TRAZABILIDAD.md`,
   entrada del 2026-10-25.
-- **10 pendientes**: DUE08, DUE11, TRA07, TRA10, PER04, PER09, REC08,
-  ADM03, ADM07, DAT05.
+- **9 pendientes**: DUE08, DUE11, TRA07, TRA10, PER04, PER09, REC08,
+  ADM03, ADM07.
 - **17 descartadas**: REC03 a REC07, COM01 a COM03, ADM04, ADM05,
   ADM06, ADM08, ADM09, ADM10, ADM11, ADM12 y DAT04 — el detalle y el
   motivo de cada una están en `TRAZABILIDAD.md`.
 
 ### Pendiente, en este orden
 
-1. **Módulo de analítica** con Recharts — **DAT05**, del Sprint 5
-   (no confundir con DAT02/DAT03, ya cubiertas por el esquema, ni con
-   DAT01, ya construida).
+1. **DAT05** (analítica con Recharts): primera versión hecha el
+   2026-11-16; queda decidir si se suman más métricas.
 2. El resto de las pendientes (DUE08, DUE11, TRA07, TRA10, PER04,
    PER09, REC08, ADM03, ADM07) y la parte sin construir de **PER03**
    (alerta con la distancia y paso automático a `perdida`, junto con

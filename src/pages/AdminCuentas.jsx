@@ -171,7 +171,7 @@ export default function AdminCuentas() {
       <Encabezado />
       <h1>Cuentas</h1>
       <p className="ayuda">
-        {cuentas.length} cuentas registradas. <Link to="/admin/placas">Inventario de placas</Link>
+        {cuentas.length} cuentas registradas. <Link to="/admin/estadisticas">Estadísticas</Link> · <Link to="/admin/placas">Inventario de placas</Link>
       </p>
 
       <input

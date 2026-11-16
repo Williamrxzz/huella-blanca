@@ -1152,3 +1152,32 @@ html[data-contraste="alto"] .accesibilidad-tamano[aria-pressed="true"] { backgro
   flex: 1;
   min-width: 0;
 }
+
+/* Estadísticas del administrador (/admin/estadisticas) */
+:root {
+  --viz-serie: #2a78d6;
+  --viz-superficie: #ffffff;
+  --viz-grilla: #e4e3df;
+  --viz-texto: #52514e;
+  --viz-texto-fuerte: #0b0b0b;
+}
+html[data-tema="oscuro"] {
+  --viz-serie: #3987e5;
+  --viz-superficie: #1c1f23;
+  --viz-grilla: #34383d;
+  --viz-texto: #c3c2b7;
+  --viz-texto-fuerte: #f0efec;
+}
+.admin-tarjetas { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 14px 0; }
+.admin-tarjeta {
+  display: flex; flex-direction: column; gap: 2px; padding: 10px 12px;
+  border: 1px solid var(--viz-grilla); border-radius: 10px; background: var(--viz-superficie);
+}
+.admin-tarjeta-valor { font-size: 1.6rem; font-weight: 700; color: var(--viz-texto-fuerte); line-height: 1.1; }
+.admin-grafico { margin: 22px 0; }
+.admin-grafico h2 { margin: 0 0 2px; font-size: 1.05rem; }
+.admin-grafico-lienzo { width: 100%; height: 220px; margin-top: 8px; }
+.admin-tabla { margin-top: 6px; font-size: 0.85rem; }
+.admin-tabla summary { cursor: pointer; color: var(--viz-texto); }
+.admin-tabla table { width: 100%; border-collapse: collapse; margin-top: 6px; max-height: 240px; display: block; overflow-y: auto; }
+.admin-tabla th, .admin-tabla td { text-align: left; padding: 3px 8px; border-bottom: 1px solid var(--viz-grilla); }
