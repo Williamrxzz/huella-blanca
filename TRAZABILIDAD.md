@@ -987,6 +987,17 @@ bajas lógicas (ver sección 2 de CLAUDE.md).
   prueba reveló un defecto real del diseño de la papelera: el bloqueo usaba
   `banned_until = 'infinity'`, que el servidor de Auth no sabe leer, y el usuario
   de Auth no se podía borrar (`Database error loading user`), con lo que habría
-  quedado huérfano. Sin papelera ni bloqueo, el defecto desaparece. **Falta
-  repetir la prueba contra la función nueva** una vez aplicada la migración y
-  desplegada la función.
+  quedado huérfano. Sin papelera ni bloqueo, el defecto desaparece.
+- **Prueba de la función nueva (2026-11-16), 25 de 28 verificaciones en verde**,
+  con una sesión real de un administrador de prueba (creado y borrado para ese
+  fin, igual que las cuentas A, B y D): lista y detalle de cuentas para el admin y
+  rechazo para un usuario común (400); `eliminar-cuenta` rechaza a un usuario
+  común (403), la cuenta propia, a otro admin, un id inexistente (404) y un id
+  inválido (400), sin tocar nada; y al eliminar a A borra el usuario de Auth, el
+  perfil, la mascota, los casos, escaneos y avisos de A, deja la placa de baja,
+  anonimiza el aviso que A dejó sobre la mascota de B y no toca a B. Las 3
+  verificaciones restantes eran las fotos de A, que seguían respondiendo `200`
+  en su URL pública: **no es un fallo del borrado sino el caché del CDN de
+  Supabase.** Se comprobó aparte: el archivo desaparece de `storage.objects` al
+  instante y la URL pública responde `200` unos 30-60 s y después `400`. La
+  base volvió exactamente a su estado anterior (`usuarios_auth` incluido).
