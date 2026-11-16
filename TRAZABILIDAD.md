@@ -951,3 +951,42 @@ visuales para cualquiera) a "Aa".
   y con una página de prueba para el mapa. **No se vio** con sesión iniciada:
   ficha pública, panel del dueño, mapa de avistamientos y pantallas de
   administración (pedían login o escriben en la base).
+
+## 2026-11-16 — Eliminar cuentas: borrado inmediato (reemplaza la papelera)
+
+Se simplifica lo del 2026-11-11 ("Eliminar cuentas, papelera y borrado a los 30
+días"): **eso queda sin efecto**. Eliminar una cuenta desde `/admin/cuentas` la
+borra **al instante y para siempre**, con una confirmación en pantalla. Se
+quitaron la papelera, "Restaurar", el bloqueo de ingreso, el cron y la Edge
+Function programada `purgar-cuentas`; por decisión del dueño del proyecto, que
+consideró excesivo el diseño anterior. Sigue siendo una excepción a la regla de
+bajas lógicas (ver sección 2 de CLAUDE.md).
+
+- **Cómo funciona:** la pantalla llama a la Edge Function `eliminar-cuenta`
+  (`supabase/functions/eliminar-cuenta`), que verifica con la sesión de quien
+  llama que sea administrador (no alcanza con la pantalla), rechaza la cuenta
+  propia y las de otros administradores, y borra en este orden: fotos de Storage
+  (desde SQL no se pueden borrar), datos de la base (`purgar_cuenta()`, solo
+  `service_role`) y el usuario de Auth. Si un paso falla se corta y la pantalla
+  avisa.
+- **Qué se borra:** la cuenta, sus mascotas, los casos, escaneos y avisos de esas
+  mascotas y todas sus fotos. Los avisos que la persona dio sobre mascotas de
+  **otros** dueños quedan (son parte del caso de ese dueño) pero sin
+  `reportado_por`, contacto ni foto. Las placas de sus mascotas no se borran: se
+  desvinculan y quedan de baja, para que un collar viejo no abra la ficha de otra.
+- **Migración** `20261111000003_borrado_inmediato_de_cuentas.sql`: quita el cron,
+  desbloquea a los usuarios bloqueados, elimina `admin_eliminar_cuenta()` y
+  `admin_restaurar_cuenta()`, quita `perfiles.activa` y `perfiles.eliminada_en` y
+  deja `purgar_cuenta()` sin la exigencia de papelera.
+- **Qué se probó y qué se encontró.** Se probó el borrado de punta a punta contra
+  producción con dos cuentas de prueba creadas y borradas para ese fin (A, la que
+  se borra, y B, de control), con mascotas, placa, escaneos, casos, avisos y 4
+  fotos. Pasaron: el borrado de datos y de fotos de Storage, la desvinculación de
+  la placa, la anonimización del aviso de A sobre la mascota de B, que B y sus
+  datos quedaran intactos, y que un usuario común no puede eliminar cuentas. La
+  prueba reveló un defecto real del diseño de la papelera: el bloqueo usaba
+  `banned_until = 'infinity'`, que el servidor de Auth no sabe leer, y el usuario
+  de Auth no se podía borrar (`Database error loading user`), con lo que habría
+  quedado huérfano. Sin papelera ni bloqueo, el defecto desaparece. **Falta
+  repetir la prueba contra la función nueva** una vez aplicada la migración y
+  desplegada la función.

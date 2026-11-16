@@ -60,10 +60,11 @@ propuesta las contradice, hay que descartarla:
   mascotas se desactivan (columna `activa`), no se borran; los avisos,
   casos y escaneos nunca se eliminan, porque son el historial que
   necesita el módulo de analítica (DAT).
-  Única excepción: una cuenta eliminada desde `/admin/cuentas` pasa 30 días
-  en una papelera (restaurable) y después se borra por completo, con sus
-  mascotas, fotos, casos y escaneos, sin dejar ningún dato (la persona lo pidió
-  o incumplió las normas). Ver `TRAZABILIDAD.md`, entrada del 2026-11-11.
+  Única excepción: una cuenta eliminada desde `/admin/cuentas` se borra al
+  instante y por completo, con sus mascotas, fotos, casos y escaneos, sin dejar
+  ningún dato (la persona lo pidió o incumplió las normas). No hay papelera ni
+  forma de deshacerlo; la pantalla pide confirmación. Ver `TRAZABILIDAD.md`,
+  entrada del 2026-11-16.
 - **Los códigos de placa son aleatorios, no correlativos**, para que las
   fichas no puedan enumerarse probando valores consecutivos.
 - **Si el GPS falla o el permiso es denegado, se puede marcar el lugar a

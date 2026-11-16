@@ -56,14 +56,6 @@ function DetalleCuenta({ detalle }) {
   )
 }
 
-const DIAS_EN_PAPELERA = 30
-
-function diasRestantes(eliminadaEn) {
-  if (!eliminadaEn) return DIAS_EN_PAPELERA
-  const transcurridos = (Date.now() - new Date(eliminadaEn).getTime()) / 86400000
-  return Math.max(0, Math.ceil(DIAS_EN_PAPELERA - transcurridos))
-}
-
 const ERRORES_BAJA = {
   cuenta_propia: 'No podés eliminar tu propia cuenta.',
   cuenta_admin: 'No se puede eliminar una cuenta de administrador.',
@@ -80,9 +72,8 @@ export default function AdminCuentas() {
   const [abierta, setAbierta] = useState(null)
   const [detalle, setDetalle] = useState(null)
   const [cargandoDetalle, setCargandoDetalle] = useState(false)
-  const [procesando, setProcesando] = useState(null)
+  const [eliminando, setEliminando] = useState(null)
   const [miId, setMiId] = useState(null)
-  const [vista, setVista] = useState('cuentas')
 
   useEffect(() => {
     async function iniciar() {
@@ -131,26 +122,32 @@ export default function AdminCuentas() {
     setDetalle(data)
   }
 
-  async function cambiarEstado(cuenta, eliminar) {
+  async function eliminar(cuenta) {
     const nombre = cuenta.nombre || cuenta.email || 'esta cuenta'
-    if (eliminar) {
-      const confirmado = window.confirm(
-        `¿Eliminar la cuenta de ${nombre}?\n\nVa a la papelera y no podrá volver a ingresar. Tenés ${DIAS_EN_PAPELERA} días para restaurarla; después se borra definitivamente, con sus mascotas, fotos, casos y escaneos, y no se puede recuperar.`,
-      )
-      if (!confirmado) return
+    const confirmado = window.confirm(
+      `¿Eliminar definitivamente la cuenta de ${nombre}?\n\nSe borran su cuenta, sus mascotas, fotos, casos, escaneos y avisos. No se puede deshacer.`,
+    )
+    if (!confirmado) return
+
+    setEliminando(cuenta.id)
+    setError(null)
+    const { data, error: errorFn } = await supabase.functions.invoke('eliminar-cuenta', {
+      body: { id: cuenta.id },
+    })
+
+    // Cuando la función responde con un error HTTP, el código viene en el cuerpo de la respuesta.
+    let codigo = data?.ok === false ? data.error : null
+    if (errorFn) {
+      try {
+        codigo = (await errorFn.context.json())?.error
+      } catch {
+        codigo = 'desconocido'
+      }
     }
 
-    setProcesando(cuenta.id)
-    setError(null)
-    const { data, error: errorRpc } = await supabase.rpc(
-      eliminar ? 'admin_eliminar_cuenta' : 'admin_restaurar_cuenta',
-      { p_id: cuenta.id },
-    )
-
-    if (errorRpc || data?.ok === false) {
-      const codigo = errorRpc?.message || data?.error
-      setError(ERRORES_BAJA[codigo] || 'No pudimos completar la acción.')
-      setProcesando(null)
+    if (codigo) {
+      setError(ERRORES_BAJA[codigo] || 'No pudimos eliminar la cuenta. Probá de nuevo.')
+      setEliminando(null)
       return
     }
 
@@ -158,49 +155,24 @@ export default function AdminCuentas() {
     setCuentas(lista || [])
     setAbierta(null)
     setDetalle(null)
-    setProcesando(null)
+    setEliminando(null)
   }
 
   if (verificando) return <main className="pagina"><p>Cargando…</p></main>
 
-  const enPapelera = vista === 'papelera'
-  const cantidadPapelera = cuentas.filter((c) => c.activa === false).length
   const texto = busqueda.trim().toLowerCase()
   const visibles = cuentas.filter((c) =>
-    (c.activa === false) === enPapelera &&
-    (!texto ||
-    [c.nombre, c.email, c.telefono].some((v) => (v || '').toLowerCase().includes(texto))),
+    !texto ||
+    [c.nombre, c.email, c.telefono].some((v) => (v || '').toLowerCase().includes(texto)),
   )
 
   return (
     <main className="pagina">
       <Encabezado />
-      <h1>{enPapelera ? 'Papelera' : 'Cuentas'}</h1>
+      <h1>Cuentas</h1>
       <p className="ayuda">
-        {enPapelera
-          ? `Las cuentas se borran definitivamente a los ${DIAS_EN_PAPELERA} días. Mientras tanto se pueden restaurar.`
-          : `${cuentas.length - cantidadPapelera} cuentas registradas.`}{' '}
-        <Link to="/admin/placas">Inventario de placas</Link>
+        {cuentas.length} cuentas registradas. <Link to="/admin/placas">Inventario de placas</Link>
       </p>
-
-      <div className="admin-pestanas" role="group" aria-label="Vista">
-        <button
-          className={`boton-accion${enPapelera ? '' : ' activo'}`}
-          type="button"
-          aria-pressed={!enPapelera}
-          onClick={() => { setVista('cuentas'); setAbierta(null); setDetalle(null) }}
-        >
-          Cuentas
-        </button>
-        <button
-          className={`boton-accion${enPapelera ? ' activo' : ''}`}
-          type="button"
-          aria-pressed={enPapelera}
-          onClick={() => { setVista('papelera'); setAbierta(null); setDetalle(null) }}
-        >
-          Papelera ({cantidadPapelera})
-        </button>
-      </div>
 
       <input
         className="entrada"
@@ -214,7 +186,7 @@ export default function AdminCuentas() {
       {error && <p className="ayuda error" role="alert">{error}</p>}
 
       {visibles.length === 0 ? (
-        <p className="ayuda">{enPapelera ? 'La papelera está vacía.' : 'No hay cuentas que coincidan.'}</p>
+        <p className="ayuda">No hay cuentas que coincidan.</p>
       ) : (
         <ul className="lista-mascotas">
           {visibles.map((c) => (
@@ -225,15 +197,8 @@ export default function AdminCuentas() {
                 </span>
                 <span className="ayuda">{c.email || 'Sin email'} · {c.telefono || 'Sin teléfono'}</span>
                 <span className="ayuda">
-                  Alta: {formatearFecha(c.creado_en)}
-                  {enPapelera ? '' : ` · Mascotas activas: ${c.mascotas_activas}`}
+                  Alta: {formatearFecha(c.creado_en)} · Mascotas activas: {c.mascotas_activas}
                 </span>
-                {enPapelera && (
-                  <span className="ayuda error">
-                    Eliminada el {formatearFecha(c.eliminada_en)}. Se borra definitivamente en{' '}
-                    {diasRestantes(c.eliminada_en)} {diasRestantes(c.eliminada_en) === 1 ? 'día' : 'días'}.
-                  </span>
-                )}
                 <button
                   className="boton-accion"
                   type="button"
@@ -244,12 +209,12 @@ export default function AdminCuentas() {
                 </button>
                 {c.rol !== 'admin' && c.id !== miId && (
                   <button
-                    className="boton-accion"
+                    className="boton-accion peligro"
                     type="button"
-                    disabled={procesando === c.id}
-                    onClick={() => cambiarEstado(c, c.activa !== false)}
+                    disabled={eliminando === c.id}
+                    onClick={() => eliminar(c)}
                   >
-                    {procesando === c.id ? 'Procesando…' : c.activa === false ? 'Restaurar cuenta' : 'Eliminar cuenta'}
+                    {eliminando === c.id ? 'Eliminando…' : 'Eliminar cuenta'}
                   </button>
                 )}
                 {abierta === c.id && cargandoDetalle && <p className="ayuda">Cargando…</p>}
