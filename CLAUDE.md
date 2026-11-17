@@ -797,15 +797,17 @@ del 2026-09-21.
 
 ### Estado de las 63 historias (actualizado el 2026-11-04)
 
-- **38 terminadas** (DAT05 primera versión, PER04 y PER03 completas el 2026-11-16, IA02 completa el 2026-11-17 — ver `TRAZABILIDAD.md`). Incluye **IA03**, construida el 2026-11-04: con la
-  mascota en estado `perdida`, el panel (`Panel.jsx`, componente
-  `TextoParaCompartir`) muestra un texto de búsqueda armado con una
-  plantilla (`src/lib/textoBusqueda.js`, sin llamar a la IA) con los
-  datos de la ficha y la última ubicación, en un bloque plegable con
-  botones para compartirlo (panel nativo del teléfono, con respaldo a
-  WhatsApp) o copiarlo. Sin emojis (la página de WhatsApp los muestra
-  como "�"); no incluye teléfono ni el mensaje del dueño. Ver
-  `TRAZABILIDAD.md`, entrada del 2026-11-04. También incluye **DUE05**, completada el 2026-10-19: era
+- **38 terminadas** (DAT05 primera versión, PER04 y PER03 completas el 2026-11-16, IA02 completa el 2026-11-17 — ver `TRAZABILIDAD.md`). Incluye **IA03**, construida el 2026-11-04 y
+  rediseñada el 2026-11-17: con la mascota en `perdida`, el panel y la
+  pantalla de avisos ofrecen "Compartir búsqueda", una hoja
+  (`src/components/CompartirBusqueda.jsx`) con un **afiche** PNG
+  (`src/lib/afiche.js`: foto, nombre, descripción, señas públicas, QR y
+  enlace de la ficha, dibujado en canvas, sin servicios externos) para
+  WhatsApp/estados/Instagram, y un **mensaje editable** armado con la
+  plantilla de `src/lib/textoBusqueda.js` (sin llamar a la IA). Sin
+  emojis (la página de WhatsApp los muestra como "�"); nunca incluye
+  teléfono, domicilio ni el mensaje privado del dueño. Ver
+  `TRAZABILIDAD.md`, entradas del 2026-11-04 y 2026-11-17. También incluye **DUE05**, completada el 2026-10-19: era
   Parcial al cierre del Sprint 3 (2026-09-19, tag `sprint-3-entrega`,
   commit `d9f96dc`). Señas y salud son configurables por el dueño con
   tres niveles (`publico`, `perdida` —caso `posible_perdida` o

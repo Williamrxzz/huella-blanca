@@ -5,6 +5,8 @@ import { MapContainer, TileLayer, Marker, Circle, Popup, useMap } from 'react-le
 import { supabase } from '../lib/supabase'
 import { borrarFoto, fotoAJpegBase64, subirFoto, verificarFoto } from '../lib/fotos'
 import Encabezado from '../components/Encabezado'
+import CompartirBusqueda from '../components/CompartirBusqueda'
+import { Megaphone } from 'lucide-react'
 
 const ETIQUETA_SITUACION = {
   conmigo: 'Está con esta persona',
@@ -144,6 +146,7 @@ export default function MapaAvistamientos() {
   const [errorCierre, setErrorCierre] = useState(null)
   const [error, setError] = useState(null)
   const [mostrarFormularioVolvio, setMostrarFormularioVolvio] = useState(false)
+  const [compartiendo, setCompartiendo] = useState(false)
 
   async function cargar() {
     const { data: { session } } = await supabase.auth.getSession()
@@ -154,7 +157,7 @@ export default function MapaAvistamientos() {
 
     const { data: datosMascota, error: errorMascota } = await supabase
       .from('mascotas')
-      .select('*')
+      .select('*, placas(codigo, estado)')
       .eq('id', id)
       .single()
 
@@ -172,7 +175,7 @@ export default function MapaAvistamientos() {
 
     const { data: casoAbierto } = await supabase
       .from('casos_perdida')
-      .select('id, estado')
+      .select('id, estado, origen, ultima_lat, ultima_lng, iniciado_en')
       .eq('mascota_id', id)
       .in('estado', ['perdida', 'posible_perdida'])
       .maybeSingle()
@@ -269,10 +272,25 @@ export default function MapaAvistamientos() {
         </div>
       )}
 
+      {caso?.estado === 'perdida' && (
+        <button className="boton" type="button" onClick={() => setCompartiendo(true)}>
+          <Megaphone size={18} aria-hidden="true" />
+          Compartir la búsqueda
+        </button>
+      )}
       {caso && (
-        <button className="boton" type="button" onClick={() => setMostrarFormularioVolvio(true)} disabled={cerrando}>
+        <button
+          className={caso.estado === 'perdida' ? 'boton secundario' : 'boton'}
+          type="button"
+          onClick={() => setMostrarFormularioVolvio(true)}
+          disabled={cerrando}
+        >
           {cerrando ? 'Cerrando…' : `${mascota.nombre} volvió a casa`}
         </button>
+      )}
+
+      {compartiendo && (
+        <CompartirBusqueda mascota={mascota} caso={caso} onCerrar={() => setCompartiendo(false)} />
       )}
 
       {errorCierre && <p className="ayuda error" role="alert">{errorCierre}</p>}

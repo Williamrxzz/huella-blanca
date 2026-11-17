@@ -1238,3 +1238,46 @@ Verificado con capturas en claro y oscuro de inicio, login, panel (con una
 mascota en posible pérdida y otra normal), diálogo de eliminar, edición, mapa,
 QR y ficha pública; y con las pruebas de interfaz existentes (cuentas de
 administración y estadísticas), que siguen pasando.
+
+## 2026-11-17 — IA03 rediseñada: hoja "Compartir la búsqueda" con afiche
+
+Pedido del dueño del proyecto: el bloque "Texto para compartir" del panel no
+era útil ni cómodo (un `<pre>` plegable con dos botones, metido en la tarjeta
+de la mascota). Se reemplazó por lo que la gente realmente reenvía cuando se
+pierde una mascota: **una imagen** (afiche) para WhatsApp, estados e
+Instagram, más un mensaje editable con el enlace de la ficha.
+
+- **Entrada:** con la mascota en `perdida`, la tarjeta del panel muestra la
+  etiqueta "Perdida, en búsqueda" junto a sus datos y, como acción destacada,
+  "Compartir búsqueda" (ámbar, megáfono). La pantalla de avisos
+  (`MapaAvistamientos.jsx`) tiene el mismo botón, como primario, arriba de
+  "volvió a casa" (que pasa a secundario mientras dure la búsqueda).
+- **Hoja** (`src/components/CompartirBusqueda.jsx`, hoja inferior con cierre
+  por X, Escape o tocando afuera):
+  - **Afiche** (`src/lib/afiche.js`): PNG 1080×1350 (4:5, el formato que
+    WhatsApp e Instagram muestran completo) dibujado en un canvas del
+    navegador: banda roja "SE PERDIÓ", foto (recorte centrado; si no carga,
+    recuadro con la huella), nombre, descripción (especie/sexo, raza, tamaño,
+    color), señas si son públicas (DUE05), QR de la placa, enlace de la ficha
+    con "avisá sin registrarte" y "Perdida desde el …". Sin teléfono, sin
+    domicilio, sin el mensaje privado del dueño. La foto de Storage se carga
+    con `crossOrigin='anonymous'` (el bucket responde
+    `Access-Control-Allow-Origin: *`), así el canvas no queda "contaminado" y
+    se puede exportar. "Compartir afiche" usa `navigator.share` con el
+    archivo y el texto como pie; donde no hay panel de compartir (compu), lo
+    descarga.
+  - **Mensaje:** el texto de `textoBusqueda.js` (sin cambios) en una vista
+    previa que, al tocarla, se vuelve un `textarea` editable, con
+    "Restablecer". La plantilla propone, la persona corrige. Botones
+    "Compartir texto" (o "Abrir en WhatsApp" sin `navigator.share`) y
+    "Copiar texto".
+- Se eliminaron `TextoParaCompartir` y sus estilos (`.texto-busqueda*`).
+  `Panel.jsx` y `MapaAvistamientos.jsx` ahora traen `iniciado_en` del caso
+  (para la fecha del afiche) y el mapa trae también las placas (para el QR).
+- **Verificado** con Chrome real: la hoja abre desde el panel, el afiche se
+  genera (1080×1350) con la foto real de una mascota cargada desde Storage,
+  se guardó el PNG a disco y se revisó a ojo en claro y oscuro (una primera
+  versión recortaba la foto desde arriba y dejaba al animal afuera, y la
+  fecha se pisaba con la firma: corregido). La vista previa pasa a edición y
+  la hoja se cierra. Sin probar en teléfono: el panel nativo de compartir con
+  archivo (`navigator.share` con `files`), que headless no tiene.

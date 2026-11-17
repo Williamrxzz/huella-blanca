@@ -653,8 +653,7 @@ textarea.entrada { resize: vertical; font-family: inherit; }
 
 /* En la grilla, los dos botones de una fila miden siempre lo mismo aunque
    uno necesite dos líneas (los <button> no se estiran solos en grid). */
-.acciones-mascota .boton-accion,
-.acciones-mascota .estado-caso { height: 100%; }
+.acciones-mascota .boton-accion { height: 100%; }
 
 .boton-accion:disabled {
   opacity: 0.6;
@@ -676,17 +675,17 @@ textarea.entrada { resize: vertical; font-family: inherit; }
 }
 .boton-accion.peligro:hover { background: #fbeeee; }
 
+/* Etiqueta de estado de la mascota perdida, junto a sus datos. */
 .estado-caso {
   box-sizing: border-box;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 44px;
-  text-align: center;
-  border-radius: 10px;
-  padding: 8px 10px;
-  font-size: calc(13px * var(--escala-texto));
+  align-self: flex-start;
+  gap: 5px;
+  margin: 2px 0;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: calc(12.5px * var(--escala-texto));
   font-weight: 600;
   background: #fdecec;
   color: #8c2f2f;
@@ -823,28 +822,7 @@ code {
   font-size: calc(13px * var(--escala-texto));
 }
 
-/* IA03: texto de búsqueda para compartir cuando la mascota está perdida. */
-.texto-busqueda {
-  background: #eef3f8;
-  border-radius: 10px;
-  padding: 12px 14px;
-  margin-top: 10px;
-}
 
-.texto-busqueda .ayuda { margin: 2px 0 8px; }
-
-.texto-busqueda-contenido {
-  margin: 0 0 10px;
-  padding: 10px 12px;
-  background: #fff;
-  border: 1px solid #d8e0e8;
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: calc(13px * var(--escala-texto));
-  line-height: 1.45;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
 
 /* Botones con ícono (compartir / copiar) y confirmación de copiado. */
 .boton-accion-icono {
@@ -870,24 +848,98 @@ code {
   white-space: nowrap;
 }
 
-.texto-busqueda-cabecera {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-}
 
-.texto-busqueda-alternar {
-  background: none;
-  border: none;
-  padding: 4px 0;
-  color: #1d5fa8;
-  font-size: calc(13px * var(--escala-texto));
-  text-decoration: underline;
+
+
+/* IA03: hoja "Compartir la búsqueda" (afiche + mensaje). */
+.superposicion:has(.hoja-compartir) { align-items: flex-end; padding: 0; }
+.hoja-compartir {
+  background: #fff;
+  color: #1f1f1f;
+  width: 100%;
+  max-width: 480px;
+  max-height: 92dvh;
+  overflow-y: auto;
+  border-radius: 20px 20px 0 0;
+  padding: 16px 20px 28px;
+  box-sizing: border-box;
+}
+.hoja-compartir-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hoja-compartir h2 { margin: 6px 0 4px; font-size: calc(19px * var(--escala-texto)); }
+.hoja-compartir > .ayuda { margin: 0 0 14px; }
+.hoja-compartir-cerrar {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: #efede9;
+  color: #1f1f1f;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
-
+.hoja-compartir-bloque { margin-top: 18px; }
+.hoja-compartir-bloque h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: calc(14px * var(--escala-texto));
+  color: #5c5a55;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.afiche-vista {
+  margin: 0 auto 10px;
+  width: min(100%, 260px);
+  aspect-ratio: 4 / 5;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+  background: #efede9;
+}
+.afiche-vista img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.afiche-vista-vacia {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5c5a55;
+  font-size: calc(14px * var(--escala-texto));
+}
+.hoja-compartir-previa {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  padding: 10px 12px;
+  margin: 0 0 8px;
+  background: #f6f5f3;
+  border: 1px dashed #cfccc6;
+  border-radius: 10px;
+  cursor: text;
+  font: inherit;
+  color: inherit;
+}
+.hoja-compartir-previa pre {
+  margin: 0;
+  font-family: inherit;
+  font-size: calc(13.5px * var(--escala-texto));
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.hoja-compartir-previa .ayuda { display: block; margin: 8px 0 0; }
+.hoja-compartir-texto { margin: 0 0 8px; font-size: calc(14px * var(--escala-texto)); line-height: 1.45; }
+.hoja-compartir-texto-acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.hoja-compartir .acciones-mascota { margin-top: 0; }
 
 /* ---------- Accesibilidad (botón flotante y preferencias) ---------- */
 
@@ -1104,7 +1156,6 @@ html[data-tema="oscuro"] .datos li { background: #262a30; }
 html[data-tema="oscuro"] .datos li.chip-hembra { background: #4a2636; }
 html[data-tema="oscuro"] .datos li.chip-macho { background: #1f3550; }
 html[data-tema="oscuro"] .caracter,
-html[data-tema="oscuro"] .texto-busqueda { background: #1c2a38; }
 html[data-tema="oscuro"] .caracter p { color: #b8c6d4; }
 
 html[data-tema="oscuro"] .etiqueta-estado-placa-sin_asignar { background: #2b2e33; color: #b0b4ba; }
@@ -1140,8 +1191,12 @@ html[data-tema="oscuro"] .boton-accion.alerta:hover { background: #4a3817; }
 html[data-tema="oscuro"] .boton-accion.peligro { background: transparent; color: #f08a8a; }
 html[data-tema="oscuro"] .boton-accion.peligro:hover { background: #2a1a1a; }
 html[data-tema="oscuro"] .boton-accion.copiado { color: #8fd19e; background: #1c3322; }
-html[data-tema="oscuro"] .texto-busqueda-alternar { color: #8ab8e6; }
-html[data-tema="oscuro"] .texto-busqueda-contenido { background: #1c1f24; border-color: #33404d; }
+html[data-tema="oscuro"] .hoja-compartir { background: #1c1f24; color: #e8e8e6; }
+html[data-tema="oscuro"] .hoja-compartir-cerrar { background: #2c3037; color: #e8e8e6; }
+html[data-tema="oscuro"] .hoja-compartir-bloque h3 { color: #a9adb3; }
+html[data-tema="oscuro"] .afiche-vista,
+html[data-tema="oscuro"] .afiche-vista-vacia { background: #262a30; color: #a9adb3; }
+html[data-tema="oscuro"] .hoja-compartir-previa { background: #121417; border-color: #3a3f47; color: #e8e8e6; }
 
 html[data-tema="oscuro"] .tarjeta-confirmacion { background: #1c1f24; }
 html[data-tema="oscuro"] .lista-mascotas li,

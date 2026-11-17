@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
-import { Check, ChevronRight, Copy, House, LogOut, MapPin, Pencil, QrCode, Share2, Trash2, TriangleAlert } from 'lucide-react'
+import { ChevronRight, House, LogOut, MapPin, Megaphone, Pencil, QrCode, Trash2, TriangleAlert } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
 import AvisosPush from '../components/AvisosPush'
-import { armarTextoBusqueda, enlaceWhatsApp } from '../lib/textoBusqueda'
+import CompartirBusqueda from '../components/CompartirBusqueda'
 
 const ERRORES_VINCULAR = {
   placa_no_encontrada: 'No existe una placa con ese código',
@@ -100,105 +100,13 @@ function CartelConfirmacion({ titulo, texto, onCancelar, onConfirmar, confirmand
 // IA03: texto listo para compartir mientras la mascota está perdida. Se arma en
 // cada render con los datos actuales de la ficha y del caso, así que se
 // actualiza solo si cambian (por ejemplo, al volver de editar la mascota).
-function TextoParaCompartir({ mascota, caso }) {
-  const [copiado, setCopiado] = useState(false)
-  const [verTexto, setVerTexto] = useState(false)
-  const texto = armarTextoBusqueda({ mascota, caso, origen: window.location.origin })
-
-  async function copiar() {
-    try {
-      await navigator.clipboard.writeText(texto)
-    } catch {
-      // Navegadores sin portapapeles moderno (o sin permiso): se copia con un
-      // campo temporal.
-      const campo = document.createElement('textarea')
-      campo.value = texto
-      campo.style.position = 'fixed'
-      campo.style.opacity = '0'
-      document.body.appendChild(campo)
-      campo.select()
-      try { document.execCommand('copy') } catch { /* no hay nada más que intentar */ }
-      document.body.removeChild(campo)
-    }
-    setCopiado(true)
-    setTimeout(() => setCopiado(false), 2000)
-  }
-
-  // Panel de compartir del propio teléfono (el mismo de cuando se comparte un
-  // reel): muestra WhatsApp, Instagram, Mensajes y lo que haya instalado. Donde
-  // el navegador no lo tiene (por ejemplo, una compu), el botón es un enlace
-  // directo a WhatsApp.
-  const puedeCompartir = typeof navigator.share === 'function'
-
-  async function compartir() {
-    try {
-      await navigator.share({ title: `Se perdió ${mascota.nombre}`, text: texto })
-    } catch (err) {
-      // Si la persona cierra el panel de compartir, no hay nada más que hacer.
-      if (err?.name === 'AbortError') return
-      // Cualquier otro error cae en WhatsApp, igual que si no hubiera panel.
-      window.open(enlaceWhatsApp(texto), '_blank', 'noopener,noreferrer')
-    }
-  }
-
-  return (
-    <div className="texto-busqueda">
-      <div className="texto-busqueda-cabecera">
-        <strong>Texto para compartir</strong>
-        <button
-          className="texto-busqueda-alternar"
-          type="button"
-          aria-expanded={verTexto}
-          onClick={() => setVerTexto((v) => !v)}
-        >
-          {verTexto ? 'Ocultar texto' : 'Ver texto'}
-        </button>
-      </div>
-      {verTexto && (
-        <>
-          <p className="ayuda">
-            Lo armamos con los datos de {mascota.nombre}. Si los cambiás, se actualiza solo.
-          </p>
-          <pre className="texto-busqueda-contenido">{texto}</pre>
-        </>
-      )}
-      <div className="acciones-mascota">
-        {puedeCompartir ? (
-          <button className="boton-accion boton-accion-icono" type="button" onClick={compartir}>
-            <Share2 size={16} aria-hidden="true" />
-            Compartir
-          </button>
-        ) : (
-          <a
-            className="boton-accion boton-accion-icono"
-            href={enlaceWhatsApp(texto)}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Share2 size={16} aria-hidden="true" />
-            Compartir
-          </a>
-        )}
-        <button
-          className={`boton-accion boton-accion-icono${copiado ? ' copiado' : ''}`}
-          type="button"
-          onClick={copiar}
-        >
-          {copiado ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
-          {copiado ? 'Copiado' : 'Copiar'}
-        </button>
-      </div>
-      <span className="solo-lectores" role="status">{copiado ? 'Texto copiado' : ''}</span>
-    </div>
-  )
-}
-
 function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizado }) {
   const [codigo, setCodigo] = useState('')
   const [vinculando, setVinculando] = useState(false)
   const [eliminando, setEliminando] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
   const [mostrandoFormularioPerdida, setMostrandoFormularioPerdida] = useState(false)
+  const [compartiendo, setCompartiendo] = useState(false)
   const [marcando, setMarcando] = useState(false)
   const [descartando, setDescartando] = useState(false)
   const [error, setError] = useState(null)
@@ -284,6 +192,13 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
         <span className="nombre">{mascota.nombre}</span>
         <span className="ayuda">{mascota.especie}{mascota.raza ? ` · ${mascota.raza}` : ''}</span>
 
+        {caso?.estado === 'perdida' && (
+          <span className="estado-caso">
+            <TriangleAlert size={14} aria-hidden="true" />
+            Perdida, en búsqueda
+          </span>
+        )}
+
         {placaActiva ? (
           <span className="ayuda">Placa: {placaActiva.codigo}</span>
         ) : (
@@ -325,10 +240,10 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
             </button>
           )}
           {caso?.estado === 'perdida' && (
-            <span className="estado-caso">
-              <TriangleAlert size={16} aria-hidden="true" />
-              Perdida, buscando
-            </span>
+            <button className="boton-accion alerta" type="button" onClick={() => setCompartiendo(true)}>
+              <Megaphone size={17} aria-hidden="true" />
+              Compartir búsqueda
+            </button>
           )}
 
           <Link className="boton-accion" to={`/mascotas/${mascota.id}/mapa`}>
@@ -355,7 +270,6 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
         {error && <p className="ayuda error" role="alert">{error}</p>}
         {errorCaso && <p className="ayuda error" role="alert">{errorCaso}</p>}
 
-        {caso?.estado === 'perdida' && <TextoParaCompartir mascota={mascota} caso={caso} />}
       </div>
 
       {confirmando && (
@@ -366,6 +280,10 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
           onConfirmar={eliminar}
           confirmando={eliminando}
         />
+      )}
+
+      {compartiendo && (
+        <CompartirBusqueda mascota={mascota} caso={caso} onCerrar={() => setCompartiendo(false)} />
       )}
 
       {mostrandoFormularioPerdida && (
@@ -442,7 +360,7 @@ export default function Panel() {
 
     const { data: casosAbiertos } = await supabase
       .from('casos_perdida')
-      .select('id, mascota_id, estado, origen, ultima_lat, ultima_lng')
+      .select('id, mascota_id, estado, origen, ultima_lat, ultima_lng, iniciado_en')
       .in('estado', ['perdida', 'posible_perdida'])
 
     const casosPorMascota = {}
