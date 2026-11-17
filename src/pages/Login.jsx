@@ -1,12 +1,10 @@
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
 
 export default function Login() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const placaPendiente = searchParams.get('placa')
   const [email, setEmail] = useState('')
   const [contrasena, setContrasena] = useState('')
   const [error, setError] = useState(null)
@@ -24,7 +22,7 @@ export default function Login() {
 
     setEnviando(false)
     if (error) setError('Email o contraseña incorrectos')
-    else navigate(placaPendiente ? `/mascotas/nueva?placa=${placaPendiente}` : '/panel')
+    else navigate('/panel')
   }
 
   return (
@@ -64,12 +62,7 @@ export default function Login() {
 
       <Link className="enlace-discreto" to="/recuperar">¿Olvidaste tu contraseña?</Link>
 
-      <Link
-        className="enlace-discreto"
-        to={placaPendiente ? `/registro?placa=${placaPendiente}` : '/registro'}
-      >
-        Crear una cuenta
-      </Link>
+      <Link className="enlace-discreto" to="/registro">Crear una cuenta</Link>
     </main>
   )
 }

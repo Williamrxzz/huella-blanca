@@ -21,6 +21,7 @@ const PRUEBAS = [
   { archivo: 'notificaciones.mjs', que: 'Notificaciones al dueño (PER04, PER03)' },
   { archivo: 'limite-push.mjs', que: 'Límite de frecuencia de los push' },
   { archivo: 'eliminar-cuenta.py', que: 'Eliminar cuentas desde /admin/cuentas' },
+  { archivo: 'placas.mjs', que: 'Placas: QR automático, placas sin mascota no reconocidas (ADM01 retirada)', servidor: 'dev' },
   { archivo: 'recuperar-contrasena.mjs', que: 'Recuperar la contraseña por email', servidor: 'dev' },
   { archivo: 'telefono.mjs', que: 'Teléfono en formato internacional (TRA05)', servidor: 'dev' },
   { archivo: 'ficha-avisos.mjs', que: 'Mensaje del dueño, aviso sin ubicación, reclamo (PER07, TRA11, TRA09)', servidor: 'dev' },

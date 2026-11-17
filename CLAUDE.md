@@ -213,13 +213,13 @@ aparte), salud, visibilidad_senas y visibilidad_salud ('publico' |
 activa, creado_en.
 
 `placas` — id, codigo (único, aleatorio), mascota_id (FK, puede ser
-nulo), estado ('sin_asignar' | 'activa' | 'baja'), creado_en. Al cargar
-una mascota se genera y vincula el código al instante (`generar_placa`,
-sin costo ni espera — la fricción en el registro es el mayor riesgo del
-producto). Si el dueño consigue después una chapita física resistente
-con un código propio (por ejemplo de una veterinaria adherida), se
-vincula a mano desde el panel (`vincular_placa`) — pero nunca es un
-requisito para empezar a usar la app.
+nulo), estado ('activa' | 'baja'; 'sin_asignar' sigue permitido por el
+check pero ya no se usa), creado_en. Al cargar una mascota se genera y
+vincula el código al instante (`generar_placa`, sin costo ni espera — la
+fricción en el registro es el mayor riesgo del producto). Si eso falló,
+el panel ofrece "Crear su código QR". Las placas por lote (generadas en
+blanco por el administrador y activadas al escanearlas) se retiraron el
+2026-11-17 (ADM01, ver sección 7): las 45 que había pasaron a `baja`.
 
 `casos_perdida` — id, mascota_id, estado ('posible_perdida' | 'perdida'
 | 'cerrada' | 'descartada'), origen ('manual' | 'automatico'), mensaje,
@@ -295,12 +295,11 @@ sesión o el rol adentro). El detalle exacto está en
   **únicamente** cuando la mascota tiene un caso de pérdida abierto
   (`perdida` o `posible_perdida`) y el dueño tiene teléfono cargado; en
   cualquier otro caso esos dos campos vienen en `null` — así el número
-  no viaja al navegador en un escaneo normal (TRA05). Distingue dos
-  casos de "no encontrada" (ADM01): si el código no existe en `placas`,
-  devuelve `{"encontrada": false}` sin más; si la placa existe pero no
-  tiene mascota vinculada (`sin_asignar`, generada por lote y todavía
-  no activada), devuelve `{"encontrada": false, "sin_activar": true}`,
-  sin exponer nada de una mascota que no existe.
+  no viaja al navegador en un escaneo normal (TRA05). Si el código no
+  existe o la placa no tiene mascota (dada de baja, o de una cuenta
+  eliminada), devuelve `{"encontrada": false}` sin más. Hasta el
+  2026-11-17 una placa sin mascota respondía `sin_activar` e invitaba a
+  "activarla", lo que permitía quedarse con la placa de un collar ajeno.
 - `registrar_escaneo(p_codigo, p_lat, p_lng)` → registra el escaneo,
   con o sin ubicación. Si hay ubicación, calcula la distancia al
   domicilio y, si supera `radio_metros` y el modo paseo no está activo
@@ -321,18 +320,8 @@ sesión o el rol adentro). El detalle exacto está en
   caracteres, crea la placa en estado `activa` vinculada a esa mascota y
   devuelve el código. Valida que la mascota sea del dueño autenticado.
   Solo ejecutable por `authenticated` (no por `anon`).
-- `vincular_placa(p_codigo text, p_mascota_id uuid)` → vincula una placa
-  ya existente en estado `sin_asignar` a una mascota propia. Devuelve
-  `{"ok": true}` o `{"ok": false, "error": "..."}` (`placa_no_encontrada`,
-  `placa_ya_asignada`, `mascota_no_encontrada`). Solo `authenticated`.
-- `generar_lote_placas(p_cantidad int)` → ADM01. Verifica **dentro de
-  la función** que quien llama tenga `rol = 'admin'` en `perfiles` (no
-  alcanza con proteger la pantalla); genera `p_cantidad` placas nuevas
-  en estado `sin_asignar` sin mascota, con la misma lógica de código
-  aleatorio que `generar_placa()` (y el mismo manejo de colisión).
-  Tope de 50 por lote. Devuelve `{"codigos": [...]}`. Revocada de
-  `public`, solo `authenticated` (el chequeo de rol igual la bloquea
-  para cualquiera que no sea admin).
+- `vincular_placa()` y `generar_lote_placas()`: **eliminadas** el
+  2026-11-17 junto con el circuito de placas por lote (ADM01 retirada).
 - `historial_colaboracion()` → JSON con los avisos dados y los
   reencuentros (con el mensaje/foto de agradecimiento del dueño, si
   los dejó) de la persona autenticada. Nunca devuelve domicilio ni
@@ -366,8 +355,8 @@ Desde el frontend se llaman con `supabase.rpc('nombre', { parametros })`.
 - Placa `C30A45A9` vinculada a esa mascota y en estado activa.
 - Mascota "Doggie" (perro, placa `B3B07800`), la única otra mascota
   que queda cargada. Desde la limpieza del 2026-11-04 son las dos
-  únicas mascotas en producción y hay 45 placas `sin_asignar`
-  (inventario de QR; ver `TRAZABILIDAD.md`, entrada del 2026-11-04).
+  únicas mascotas en producción. Las 45 placas `sin_asignar` del
+  inventario por lote pasaron a `baja` el 2026-11-17.
 
 Para probar: `http://localhost:5173/m/C30A45A9` (ojo: es la ficha real
 de Blanca y cada visita sin sesión cuenta como escaneo). Para mostrar la
@@ -542,8 +531,8 @@ Usuario", con siete listas, una por bloque.
 - `src/pages/Panel.jsx` — lista **todas** las mascotas activas del
   dueño logueado sin límite (**DUE06**, ya estaba hecho: no hay
   `.limit()` en la consulta) — foto, nombre, especie/raza y el código
-  de placa si ya tiene una activa. Si una mascota no tiene placa,
-  muestra un formulario para vincular una existente (`vincular_placa`).
+  de placa si ya tiene una activa. Si una mascota quedó sin código
+  (falló al crearla), ofrece "Crear su código QR" (`generar_placa`).
   Cada mascota tiene enlaces para editar, ver el mapa de avistamientos,
   y eliminar (borrado lógico). Además (**PER01**) un botón que cambia
   según el caso abierto que tenga esa mascota: "Marcar como perdida" si
@@ -610,7 +599,7 @@ Usuario", con siete listas, una por bloque.
   recibiendo la SPA. Solo usa datos públicos de `ficha_publica()` y no
   cuenta escaneos. Ver `TRAZABILIDAD.md`, entrada del 2026-11-04.
 
-### MVP: 14 de 14 historias terminadas
+### MVP: 14 de 14 historias terminadas (ADM01 retirada después, el 2026-11-17)
 
 **PER04 — notificación inmediata al dueño** fue la última: quedó
 construida el 2026-11-16 con Web Push (ver "Notificaciones push" más
@@ -770,7 +759,17 @@ uno de base:
   funciona, sin mostrar el número → cerrar el caso → un escaneo
   posterior ya no muestra el botón. Funcionó correctamente.
 
-### ADM01: terminada (2026-09-21)
+### ADM01: terminada (2026-09-21), retirada el 2026-11-17
+
+**Retirada del alcance el 2026-11-17** (ver `TRAZABILIDAD.md`): no existe
+un canal para imprimir y repartir placas en blanco antes de que el dueño
+se registre (se retiró con los comercios en septiembre), las 45 generadas
+nunca se usaron y el formulario "vincular placa" confundía al dueño. Cada
+mascota tiene su QR automático. Se quitaron `/admin/placas`, el estado
+"placa no activada", el `?placa=` de registro/login/alta y las funciones
+`generar_lote_placas()` y `vincular_placa()`. Si algún día hay placas
+grabadas para repartir, el circuito está en el historial de git. Lo que
+sigue describe cómo funcionaba:
 
 Circuito completo de generación de lotes y activación — ver
 `generar_lote_placas()` en la sección 5 y el detalle en
@@ -888,7 +887,7 @@ del 2026-09-21.
 
 ### Estado de las 63 historias (actualizado el 2026-11-04)
 
-- **38 terminadas** (DAT05 primera versión, PER04 y PER03 completas el 2026-11-16, IA02 completa el 2026-11-17 — ver `TRAZABILIDAD.md`). Incluye **IA03**, construida el 2026-11-04 y
+- **37 terminadas** (ADM01 se retiró el 2026-11-17 después de terminada; DAT05 primera versión, PER04 y PER03 completas el 2026-11-16, IA02 completa el 2026-11-17 — ver `TRAZABILIDAD.md`). Incluye **IA03**, construida el 2026-11-04 y
   rediseñada el 2026-11-17: con la mascota en `perdida`, el panel y la
   pantalla de avisos ofrecen "Compartir búsqueda", una hoja
   (`src/components/CompartirBusqueda.jsx`) con un **afiche** PNG
@@ -916,9 +915,10 @@ del 2026-09-21.
   PER04 (ver "Notificaciones push" más abajo).
 - **8 pendientes**: DUE08, DUE11, TRA07, TRA10, PER09, REC08, ADM03,
   ADM07.
-- **17 descartadas**: REC03 a REC07, COM01 a COM03, ADM04, ADM05,
-  ADM06, ADM08, ADM09, ADM10, ADM11, ADM12 y DAT04 — el detalle y el
-  motivo de cada una están en `TRAZABILIDAD.md`.
+- **18 descartadas o retiradas**: REC03 a REC07, COM01 a COM03, ADM04,
+  ADM05, ADM06, ADM08, ADM09, ADM10, ADM11, ADM12, DAT04 y ADM01 (esta
+  última construida, entregada en el MVP y retirada el 2026-11-17) — el
+  detalle y el motivo de cada una están en `TRAZABILIDAD.md`.
 
 ### Notificaciones push (PER04 + PER03 completas, 2026-11-16)
 

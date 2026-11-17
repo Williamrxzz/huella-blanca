@@ -110,7 +110,7 @@ export default function AdminEstadisticas() {
       <Encabezado volver="/panel" />
       <h1>Estadísticas</h1>
       <p className="ayuda">
-        <Link to="/admin/cuentas">Cuentas</Link> · <Link to="/admin/placas">Inventario de placas</Link>
+        <Link to="/admin/cuentas">Cuentas</Link>
       </p>
 
       {error && <p className="ayuda error" role="alert">{error}</p>}
@@ -121,7 +121,6 @@ export default function AdminEstadisticas() {
             <Tarjeta valor={t.cuentas} titulo="Cuentas" />
             <Tarjeta valor={t.mascotas_activas} titulo="Mascotas activas" />
             <Tarjeta valor={t.placas_activas} titulo="Placas activas" />
-            <Tarjeta valor={t.placas_sin_asignar} titulo="Placas sin asignar" />
             <Tarjeta valor={t.escaneos} titulo="Escaneos" />
             <Tarjeta valor={t.avisos} titulo="Avisos recibidos" />
             <Tarjeta valor={t.casos_abiertos} titulo="Casos abiertos" />

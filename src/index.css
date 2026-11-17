@@ -338,35 +338,10 @@ h2 { font-size: calc(18px * var(--escala-texto)); margin: 28px 0 8px; }
   margin: 0 0 8px;
 }
 
-.etiqueta-estado-placa {
-  display: inline-block;
-  align-self: flex-start;
-  margin-top: 4px;
-  padding: 3px 9px;
-  border-radius: 999px;
-  font-size: calc(12px * var(--escala-texto));
-  font-weight: 600;
-}
 
-.etiqueta-estado-placa-sin_asignar {
-  background: #ececea;
-  color: #6f6e6a;
-}
 
-.etiqueta-estado-placa-activa {
-  background: #eaf4ec;
-  color: #2f6b3c;
-}
 
-.etiqueta-estado-placa-perdida {
-  background: #fdecec;
-  color: #8c2f2f;
-}
 
-.etiqueta-estado-placa-baja {
-  background: #f3ece0;
-  color: #8a5a12;
-}
 
 .contacto-dueno {
   display: flex;
@@ -594,24 +569,8 @@ textarea.entrada { resize: vertical; font-family: inherit; }
   border-bottom: 1px solid #e8e6e2;
 }
 
-.vincular-placa {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 6px;
-}
 
-.vincular-placa .entrada {
-  margin: 0;
-  padding: 8px 10px;
-  font-size: calc(14px * var(--escala-texto));
-}
 
-.vincular-placa .boton {
-  min-height: 44px;
-  font-size: calc(15px * var(--escala-texto));
-  margin-top: 0;
-}
 
 .lista-mascotas li > div {
   display: flex;
@@ -1179,10 +1138,6 @@ html[data-tema="oscuro"] .datos li.chip-macho { background: #1f3550; }
 html[data-tema="oscuro"] .caracter,
 html[data-tema="oscuro"] .caracter p { color: #b8c6d4; }
 
-html[data-tema="oscuro"] .etiqueta-estado-placa-sin_asignar { background: #2b2e33; color: #b0b4ba; }
-html[data-tema="oscuro"] .etiqueta-estado-placa-activa { background: #1c3322; color: #8fd19e; }
-html[data-tema="oscuro"] .etiqueta-estado-placa-perdida { background: #3d1a1a; color: #f2a8a8; }
-html[data-tema="oscuro"] .etiqueta-estado-placa-baja { background: #3a2c12; color: #f0c981; }
 
 html[data-tema="oscuro"] .boton:disabled { background: #3a3f47; color: #a9adb3; }
 html[data-tema="oscuro"] .boton.secundario { background: #1c2d3f; color: #a9cdf0; }
@@ -1262,7 +1217,6 @@ html[data-contraste="alto"] .caracter p,
 html[data-contraste="alto"] .campo-archivo,
 html[data-contraste="alto"] .hora-avistamiento,
 html[data-contraste="alto"] .detalle-avistamiento,
-html[data-contraste="alto"] .etiqueta-estado-placa-sin_asignar { color: #000; }
 html[data-contraste="alto"] input,
 html[data-contraste="alto"] select,
 html[data-contraste="alto"] textarea { border: 2px solid #000; color: #000; background: #fff; }

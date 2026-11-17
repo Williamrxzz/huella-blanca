@@ -1772,3 +1772,49 @@ Migración `20261117000009_limpieza_permisos.sql`.
 - Con esto quedan atendidos todos los hallazgos de la revisión del
   2026-11-17, salvo la deuda conocida de `set-state-in-effect` en
   `Panel.jsx` y `MapaAvistamientos.jsx`.
+
+## 2026-11-17 — ADM01 retirada: placas por lote
+
+Decisión del dueño del proyecto ("la generación de placas me parece
+absurda"), que delegó la solución en la revisión de ingeniería.
+
+- **Qué había.** Además del QR automático de cada mascota (`generar_placa`
+  al cargarla), existía el circuito de ADM01 (terminada el 2026-09-21): el
+  administrador generaba placas en blanco por lote (`/admin/placas`,
+  `generar_lote_placas`), quien recibía una la escaneaba, veía "Esta placa
+  todavía no está activada" y, registrándose, la vinculaba a su mascota
+  (`vincular_placa`). El panel además ofrecía "Vincular placa" escribiendo
+  un código a mano.
+- **Por qué se retira.** Ese modelo (placa grabada que se compra y se activa
+  al escanearla) es el habitual en el mercado, pero solo tiene sentido si
+  alguien imprime y reparte placas antes de que el dueño se registre. Ese
+  canal no existe: se retiró en septiembre junto con los comercios
+  adheridos. Las 45 placas generadas nunca se usaron, y el formulario
+  "Vincular placa" le pedía al dueño un código que no tenía. Mismo criterio
+  que el retiro de los comercios: no mantener alcance que depende de algo
+  que no existe.
+- **Bug encontrado al revisarlo.** Cuando el administrador elimina una
+  cuenta, sus placas quedan de baja y sin mascota; `ficha_publica()`
+  respondía `sin_activar` para cualquier placa sin mascota, así que quien
+  escaneara ese collar veía "Activar esta placa" y podía quedarse con ella.
+- **Cambios** (migración `20261117000011_retirar_placas_por_lote.sql`):
+  - Las 45 placas `sin_asignar` pasaron a `baja` (bajas lógicas: no se
+    borran); el valor por defecto de `placas.estado` es `activa`.
+  - `generar_lote_placas()` y `vincular_placa()` eliminadas;
+    `admin_estadisticas()` ya no cuenta placas sin asignar.
+  - `ficha_publica()`: una placa sin mascota responde `{"encontrada": false}`
+    ("Placa no reconocida"), sin ofrecer activarla.
+  - Frontend: se quitaron `AdminPlacas.jsx` y su ruta, los enlaces de
+    administración a placas, la tarjeta "Placas sin asignar", la pantalla
+    "placa no activada" de la ficha, el `?placa=` de registro, login y alta
+    de mascota, y el formulario "Vincular placa" del panel, que se reemplazó
+    por "Crear su código QR" para una mascota que haya quedado sin código
+    (si falló al crearla).
+- **Verificado**: `tests/e2e/placas.mjs` (12/12: placa de baja → "Placa no
+  reconocida" sin botón de activar y sin contar escaneo; funciones retiradas
+  → 404; no quedan placas sin asignar; el panel ya no ofrece vincular y crea
+  el código de una mascota sin QR, cuya ficha funciona). `estadisticas.mjs`
+  se actualizó (dos enlaces de administración, sin "sin asignar").
+- Si algún día hay placas grabadas para repartir, el circuito está en el
+  historial de git (migraciones de septiembre, `AdminPlacas.jsx`) y descrito
+  en la entrada del 2026-09-21.

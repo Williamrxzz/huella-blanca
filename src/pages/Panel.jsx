@@ -8,12 +8,6 @@ import Encabezado from '../components/Encabezado'
 import AvisosPush from '../components/AvisosPush'
 import CompartirBusqueda from '../components/CompartirBusqueda'
 
-const ERRORES_VINCULAR = {
-  placa_no_encontrada: 'No existe una placa con ese código',
-  placa_ya_asignada: 'Esa placa ya está asignada a otra mascota',
-  mascota_no_encontrada: 'No pudimos identificar la mascota',
-}
-
 function SelectorMapa({ onSeleccionar }) {
   useMapEvents({
     click(e) {
@@ -101,9 +95,8 @@ function CartelConfirmacion({ titulo, texto, onCancelar, onConfirmar, confirmand
 // IA03: texto listo para compartir mientras la mascota está perdida. Se arma en
 // cada render con los datos actuales de la ficha y del caso, así que se
 // actualiza solo si cambian (por ejemplo, al volver de editar la mascota).
-function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizado }) {
-  const [codigo, setCodigo] = useState('')
-  const [vinculando, setVinculando] = useState(false)
+function FilaMascota({ mascota, caso, onCodigoCreado, onEliminada, onCasoActualizado }) {
+  const [generando, setGenerando] = useState(false)
   const [eliminando, setEliminando] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
   const [mostrandoFormularioPerdida, setMostrandoFormularioPerdida] = useState(false)
@@ -150,25 +143,15 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
     else onCasoActualizado()
   }
 
-  async function vincular(e) {
-    e.preventDefault()
-    setVinculando(true)
+  // El código QR se crea solo al cargar la mascota (AltaMascota). Si en ese
+  // momento falló (por ejemplo, sin conexión), se puede crear desde acá.
+  async function crearCodigo() {
+    setGenerando(true)
     setError(null)
-
-    const { data, error: errorRpc } = await supabase.rpc('vincular_placa', {
-      p_codigo: codigo.trim().toUpperCase(),
-      p_mascota_id: mascota.id,
-    })
-
-    setVinculando(false)
-
-    if (errorRpc || !data?.ok) {
-      setError(ERRORES_VINCULAR[data?.error] || 'No pudimos vincular la placa')
-      return
-    }
-
-    setCodigo('')
-    onVinculada()
+    const { error: errorRpc } = await supabase.rpc('generar_placa', { p_mascota_id: mascota.id })
+    setGenerando(false)
+    if (errorRpc) setError('No pudimos crear el código. Probá de nuevo en un momento.')
+    else onCodigoCreado()
   }
 
   async function eliminar() {
@@ -200,23 +183,11 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
           </span>
         )}
 
-        {placaActiva ? (
-          <span className="ayuda">Placa: {placaActiva.codigo}</span>
-        ) : (
-          <form className="vincular-placa" onSubmit={vincular}>
-            <input
-              className="entrada"
-              type="text"
-              placeholder="Código de la placa"
-              aria-label={`Código de la placa para ${mascota.nombre}`}
-              value={codigo}
-              onChange={(e) => setCodigo(e.target.value)}
-              required
-            />
-            <button className="boton secundario" type="submit" disabled={vinculando}>
-              {vinculando ? 'Vinculando…' : 'Vincular placa'}
-            </button>
-          </form>
+        {!placaActiva && (
+          <button className="boton secundario" type="button" onClick={crearCodigo} disabled={generando}>
+            <QrCode size={18} aria-hidden="true" />
+            {generando ? 'Creando…' : 'Crear su código QR'}
+          </button>
         )}
 
         <div className="acciones-mascota">
@@ -358,12 +329,8 @@ export default function Panel() {
       }
     }
 
-    const placaPendiente = localStorage.getItem('placaPendiente')
-    if (placaPendiente) {
-      localStorage.removeItem('placaPendiente')
-      navigate(`/mascotas/nueva?placa=${placaPendiente}`)
-      return
-    }
+    // Restos del circuito de placas por lote, retirado el 2026-11-17.
+    localStorage.removeItem('placaPendiente')
 
     const { data } = await supabase
       .from('mascotas')
@@ -442,7 +409,7 @@ export default function Panel() {
               key={m.id}
               mascota={m}
               caso={casos[m.id] || null}
-              onVinculada={cargar}
+              onCodigoCreado={cargar}
               onEliminada={cargar}
               onCasoActualizado={cargar}
             />
@@ -459,7 +426,6 @@ export default function Panel() {
           <>
             <Link to="/admin/estadisticas">Estadísticas (administración)<ChevronRight size={18} aria-hidden="true" /></Link>
             <Link to="/admin/cuentas">Cuentas (administración)<ChevronRight size={18} aria-hidden="true" /></Link>
-            <Link to="/admin/placas">Placas (administración)<ChevronRight size={18} aria-hidden="true" /></Link>
           </>
         )}
       </nav>

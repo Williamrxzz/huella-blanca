@@ -29,8 +29,8 @@ try {
 
   r = await api('POST', '/rest/v1/rpc/admin_listar_cuentas', {}, {}, token)
   check('admin_listar_cuentas como usuario común → no_autorizado', r.s >= 400 && /no_autorizado/.test(JSON.stringify(r.j)), r.s)
-  r = await api('POST', '/rest/v1/rpc/generar_lote_placas', { p_cantidad: 1 }, {}, token)
-  check('generar_lote_placas como usuario común → no_autorizado', r.s >= 400 && /no_autorizado/.test(JSON.stringify(r.j)), r.s)
+  r = await api('POST', '/rest/v1/rpc/admin_estadisticas', {}, {}, token)
+  check('admin_estadisticas como usuario común → no_autorizado', r.s >= 400 && /no_autorizado/.test(JSON.stringify(r.j)), r.s)
 
   // Trigger de respaldo: aunque alguien vuelva a otorgar el privilegio de
   // columna por error, un usuario común no puede quedar como admin. Se prueba

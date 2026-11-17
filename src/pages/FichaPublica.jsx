@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from 'react-leaflet'
 import { Phone } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -46,11 +46,9 @@ function SelectorMapa({ onSeleccionar }) {
 // (src/lib/fichaEjemplo.js); no lee ni escribe nada en la base.
 export default function FichaPublica({ demo = false }) {
   const { codigo } = useParams()
-  const navigate = useNavigate()
   const [ficha, setFicha] = useState(demo ? FICHA_EJEMPLO : null)
   const [cargando, setCargando] = useState(!demo)
   const [error, setError] = useState(null)
-  const [activando, setActivando] = useState(false)
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [buscandoUbicacion, setBuscandoUbicacion] = useState(false)
@@ -98,13 +96,6 @@ export default function FichaPublica({ demo = false }) {
     }
     registrarEscaneo()
   }, [codigo, demo])
-
-  async function activarPlaca() {
-    setActivando(true)
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session) navigate(`/mascotas/nueva?placa=${codigo}`)
-    else navigate(`/registro?placa=${codigo}`)
-  }
 
   async function abrirFormulario() {
     setMostrarFormulario(true)
@@ -225,18 +216,6 @@ export default function FichaPublica({ demo = false }) {
       <Encabezado />
       <h1>Ocurrió un problema</h1>
       <p className="ayuda">{error}</p>
-    </main>
-  )
-
-  if (ficha?.sin_activar) return (
-    <main className="pagina">
-      <Encabezado />
-      <h1>Esta placa todavía no está activada</h1>
-      <p>Para usarla, primero hay que cargar los datos de la mascota que la va a llevar.</p>
-      <button className="boton" onClick={activarPlaca} disabled={activando}>
-        {activando ? 'Un momento…' : 'Activar esta placa'}
-      </button>
-      <p className="ayuda">Código: {codigo}</p>
     </main>
   )
 

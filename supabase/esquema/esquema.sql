@@ -118,7 +118,7 @@ create table public.placas (
   id uuid default gen_random_uuid() not null,
   codigo text not null,
   mascota_id uuid,
-  estado text default 'sin_asignar'::text not null,
+  estado text default 'activa'::text not null,
   creado_en timestamp with time zone default now() not null
 );
 
@@ -286,7 +286,6 @@ begin
       'cuentas', (select count(*) from public.perfiles),
       'mascotas_activas', (select count(*) from public.mascotas where activa),
       'placas_activas', (select count(*) from public.placas where estado = 'activa'),
-      'placas_sin_asignar', (select count(*) from public.placas where estado = 'sin_asignar'),
       'escaneos', (select count(*) from public.escaneos),
       'avisos', (select count(*) from public.avistamientos),
       'casos_abiertos', (select count(*) from public.casos_perdida
@@ -569,8 +568,11 @@ begin
     return json_build_object('encontrada', false);
   end if;
 
+  -- Placa sin mascota (dada de baja, o de una cuenta eliminada): no se
+  -- reconoce. Antes respondía "sin activar" e invitaba a activarla, lo que
+  -- permitía quedarse con la placa de un collar ajeno.
   if v_placa.mascota_id is null then
-    return json_build_object('encontrada', false, 'sin_activar', true);
+    return json_build_object('encontrada', false);
   end if;
 
   select m.* into v_mascota
@@ -625,45 +627,6 @@ end;
 $function$;
 revoke all on function public.ficha_publica(text) from public, anon, authenticated;
 grant execute on function public.ficha_publica(text) to public, anon, authenticated, service_role;
-
-CREATE OR REPLACE FUNCTION public.generar_lote_placas(p_cantidad integer)
- RETURNS json
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-declare
-  v_codigo text;
-  v_existe boolean;
-  v_codigos text[] := '{}';
-  i int;
-begin
-  if not exists (select 1 from perfiles where id = auth.uid() and rol = 'admin') then
-    raise exception 'no_autorizado';
-  end if;
-
-  if p_cantidad is null or p_cantidad < 1 or p_cantidad > 50 then
-    raise exception 'cantidad_invalida';
-  end if;
-
-  for i in 1..p_cantidad loop
-    loop
-      v_codigo := upper(substr(md5(random()::text || clock_timestamp()::text), 1, 8));
-      select exists(select 1 from placas where codigo = v_codigo) into v_existe;
-      exit when not v_existe;
-    end loop;
-
-    insert into placas (codigo, mascota_id, estado)
-    values (v_codigo, null, 'sin_asignar');
-
-    v_codigos := array_append(v_codigos, v_codigo);
-  end loop;
-
-  return json_build_object('codigos', to_jsonb(v_codigos));
-end;
-$function$;
-revoke all on function public.generar_lote_placas(integer) from public, anon, authenticated;
-grant execute on function public.generar_lote_placas(integer) to authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION public.generar_placa(p_mascota_id uuid)
  RETURNS text
@@ -1176,44 +1139,6 @@ AS $function$
 $function$;
 revoke all on function public.rutas_fotos_cuenta(uuid) from public, anon, authenticated;
 grant execute on function public.rutas_fotos_cuenta(uuid) to service_role;
-
-CREATE OR REPLACE FUNCTION public.vincular_placa(p_codigo text, p_mascota_id uuid)
- RETURNS json
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-declare
-  v_placa   placas%rowtype;
-  v_mascota mascotas%rowtype;
-begin
-  if auth.uid() is null then
-    return json_build_object('ok', false, 'error', 'no_autenticado');
-  end if;
-
-  select * into v_mascota from mascotas where id = p_mascota_id and dueno_id = auth.uid();
-  if not found then
-    return json_build_object('ok', false, 'error', 'mascota_no_encontrada');
-  end if;
-
-  select * into v_placa from placas where codigo = p_codigo;
-  if not found then
-    return json_build_object('ok', false, 'error', 'placa_no_encontrada');
-  end if;
-
-  if v_placa.estado <> 'sin_asignar' then
-    return json_build_object('ok', false, 'error', 'placa_ya_asignada');
-  end if;
-
-  update placas
-  set mascota_id = p_mascota_id, estado = 'activa'
-  where id = v_placa.id;
-
-  return json_build_object('ok', true);
-end;
-$function$;
-revoke all on function public.vincular_placa(text,uuid) from public, anon, authenticated;
-grant execute on function public.vincular_placa(text,uuid) to authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
 -- Triggers
