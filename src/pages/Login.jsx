@@ -29,7 +29,7 @@ export default function Login() {
 
   return (
     <main className="pagina">
-      <Encabezado />
+      <Encabezado volver="/" />
       <h1>Ingresar</h1>
       <p className="ayuda">Accedé para gestionar la búsqueda de tu mascota.</p>
 

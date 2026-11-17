@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { QRCodeCanvas } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
@@ -127,7 +127,7 @@ export default function GeneradorQR() {
 
   return (
     <main className="pagina">
-      <Encabezado />
+      <Encabezado volver="/panel" />
       <h1>{esMascotaNueva ? '¡Mascota cargada!' : 'Código QR'}</h1>
 
       {sinAcceso && (
@@ -159,7 +159,6 @@ export default function GeneradorQR() {
         </>
       )}
 
-      <Link className="boton secundario" to="/panel">Volver a mis mascotas</Link>
     </main>
   )
 }

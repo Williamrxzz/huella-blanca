@@ -50,7 +50,7 @@ export default function HistorialColaboracion() {
 
   return (
     <main className="pagina">
-      <Encabezado />
+      <Encabezado volver="/panel" />
       <h1>Tu colaboración</h1>
       <p className="ayuda">Cada aviso y cada reencuentro en el que ayudaste queda registrado acá.</p>
 

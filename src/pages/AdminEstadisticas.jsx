@@ -107,7 +107,7 @@ export default function AdminEstadisticas() {
 
   return (
     <main className="pagina">
-      <Encabezado />
+      <Encabezado volver="/panel" />
       <h1>Estadísticas</h1>
       <p className="ayuda">
         <Link to="/admin/cuentas">Cuentas</Link> · <Link to="/admin/placas">Inventario de placas</Link>

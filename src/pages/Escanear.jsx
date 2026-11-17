@@ -82,7 +82,7 @@ export default function Escanear() {
 
   return (
     <main className="pagina">
-      <Encabezado />
+      <Encabezado volver="/" />
       <h1>Escanear QR</h1>
       <p className="ayuda">Apuntá la cámara al código QR de la placa.</p>
 
@@ -95,7 +95,7 @@ export default function Escanear() {
       )}
       <canvas ref={canvasRef} className="oculto" />
 
-      <Link className="boton secundario" to="/">Cancelar</Link>
+      <Link className="boton terciario" to="/">Cancelar</Link>
     </main>
   )
 }

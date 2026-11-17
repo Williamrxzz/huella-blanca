@@ -132,6 +132,16 @@ Infraestructura:
 Sin librerías de UI por ahora: los estilos son CSS propio en
 `src/index.css`. No agregar Tailwind ni shadcn/ui sin consultar.
 
+**Sistema de botones (desde el 2026-11-17, ver `TRAZABILIDAD.md`):** tres
+niveles de énfasis, como Material 3. `.boton` primario (relleno, uno por
+pantalla), `.boton.secundario` tonal (fondo suave) y `.boton.terciario` solo
+texto (cancelar, cerrar sesión). Dentro de una tarjeta, `.boton-accion` en
+grilla de 2 columnas con ícono de `lucide-react`; `.alerta` para la acción
+destacada (marcar como perdida) y `.peligro` para lo destructivo, que va
+como texto a lo ancho y nunca compite. Mínimo táctil 44 px en todo. El
+"volver" va en la cabecera (`<Encabezado volver="/ruta" />`), no como botón
+al pie. Íconos: `lucide-react`, nunca emojis.
+
 ---
 
 ## 4. Entorno de trabajo

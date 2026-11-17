@@ -1190,3 +1190,51 @@ las cuentas de prueba, borradas después y con el script corregido.
 
 **Costo:** una llamada a Haiku por foto elegida (igual que antes); una
 segunda solo si el pase falta o no coincide.
+
+## 2026-11-17 — Sistema de botones y navegación (revisión de diseño)
+
+Pedido del dueño del proyecto: los botones se veían desparejos y no se
+entendía para qué servía cada uno. Se revisaron las pantallas con capturas
+reales (claro y oscuro, 390 px) y se contrastaron con las guías de Material 3
+y de Apple y con apps de uso masivo. Hallazgos:
+- Sin jerarquía: cinco botones del mismo peso por mascota; el más visible era
+  **Eliminar** (ancho completo, rojo), la acción más rara y más peligrosa.
+- Alturas desparejas: el botón crecía con el texto ("Marcar como perdida" en
+  dos líneas estiraba al de al lado); `.boton-accion` medía 34 px, por debajo
+  del mínimo táctil de 44 px (Apple) / 48 dp (Material).
+- Tres vocabularios conviviendo (`.boton` radio 12 / texto 16, `.boton-accion`
+  radio 8 / texto 13, enlaces grises sueltos como navegación).
+- Navegación como botones gigantes al pie ("Volver al panel", "Volver a mis
+  mascotas") y "Cerrar sesión" con el mismo peso que "Cargar mascota".
+- Sin íconos: nada se entendía sin leer.
+- **Bug:** el botón flotante de accesibilidad tapaba "La vi acá" en la ficha
+  pública, el botón más importante de la app.
+
+Cambios (`src/index.css`, `Encabezado.jsx`, `Panel.jsx` y las pantallas que
+tenían "volver" al pie):
+- **Tres niveles de énfasis**, como Material 3: `.boton` primario (relleno,
+  uno por pantalla), `.boton.secundario` tonal (fondo suave, sin borde) y
+  `.boton.terciario` solo texto (cancelar, cerrar sesión, salir). Altura fija
+  de 48 px, tipografía 600, foco visible uniforme.
+- **Acciones de tarjeta** (`.boton-accion`): grilla de 2 columnas, 44 px
+  mínimo, tonales, con ícono (lucide). Orden por importancia: primero lo que
+  cambia el estado ("Se perdió" / "Sí, se perdió" en ámbar, "Está conmigo"),
+  después consulta ("Avisos", "Editar", "Código QR"), y al final "Eliminar
+  mascota" como texto rojo, a lo ancho, sin competir. Los dos botones de una
+  fila miden siempre lo mismo (`height: 100%`; los `<button>` no se estiran
+  solos en grid, medido en el DOM antes de corregir).
+- **Volver en la cabecera** (`<Encabezado volver="/panel" />`): círculo tonal
+  con chevron a la izquierda del logo. Se quitaron los botones "Volver…" del
+  pie de Avistamientos, Código QR y Perfil.
+- **Lista de navegación** en el panel (`.lista-enlaces`): filas con flecha
+  ("Tu perfil", "Tu colaboración", administración) en vez de enlaces grises.
+  "Cerrar sesión" pasa a terciario con ícono.
+- Diálogos: "Cancelar" como terciario, la acción como primario/peligro.
+- **Botón de accesibilidad arriba a la derecha**, donde no tapa ninguna acción
+  principal; el panel se abre debajo.
+- Modo oscuro y alto contraste actualizados para todas las variantes.
+
+Verificado con capturas en claro y oscuro de inicio, login, panel (con una
+mascota en posible pérdida y otra normal), diálogo de eliminar, edición, mapa,
+QR y ficha pública; y con las pruebas de interfaz existentes (cuentas de
+administración y estadísticas), que siguen pasando.

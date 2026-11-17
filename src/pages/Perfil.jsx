@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
 
@@ -57,7 +57,7 @@ export default function Perfil() {
 
   return (
     <main className="pagina">
-      <Encabezado />
+      <Encabezado volver="/panel" />
       <h1>Tu perfil</h1>
       <p className="ayuda">
         El teléfono es el que usa quien encuentra a tu mascota para contactarte — nunca se
@@ -93,7 +93,6 @@ export default function Perfil() {
         </button>
       </form>
 
-      <Link className="enlace-discreto" to="/panel">Volver al panel</Link>
     </main>
   )
 }

@@ -11,13 +11,30 @@ body { margin: 0; }
 .pagina {
   max-width: 420px;
   margin: 0 auto;
-  padding: 24px 20px 84px; /* deja lugar al botón flotante de accesibilidad */
+  padding: 24px 20px 40px;
 }
 
 .encabezado {
-  display: inline-flex;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 12px;
 }
+
+.encabezado-logo-enlace { display: inline-flex; }
+
+/* Botón de volver: círculo tonal de 40 px, a la izquierda del logo. */
+.encabezado-volver {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #eceae6;
+  color: #1f1f1f;
+}
+.encabezado-volver:hover { background: #e1dfda; }
 
 .encabezado-logo {
   width: 40px;
@@ -166,7 +183,7 @@ h2 { font-size: calc(18px * var(--escala-texto)); margin: 28px 0 8px; }
   flex: 1 1 auto;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 16px 20px 48px;
+  padding: 16px 20px 40px;
 }
 
 .alerta {
@@ -356,27 +373,67 @@ h2 { font-size: calc(18px * var(--escala-texto)); margin: 28px 0 8px; }
   font-size: calc(13px * var(--escala-texto));
 }
 
+/* Sistema de botones (2026-11-17). Tres niveles de énfasis, como en Material
+   3 y las guías de Apple:
+   - .boton            → primario: relleno, uno por pantalla (la acción que
+                         la persona vino a hacer).
+   - .boton.secundario → tonal: fondo suave sin borde, para la alternativa.
+   - .boton.terciario  → solo texto: cancelar, cerrar sesión, salir.
+   Altura fija (48 px) para que los botones de una misma fila midan igual sin
+   importar el texto, y mínimo táctil de 44 px en todo lo que se toca. */
 .boton {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
   width: 100%;
-  text-align: center;
-  padding: 14px;
+  min-height: 48px;
+  padding: 10px 16px;
   border: 0;
   border-radius: 12px;
   background: #2e5c8a;
   color: #fff;
+  font: inherit;
   font-size: calc(16px * var(--escala-texto));
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
   text-decoration: none;
   cursor: pointer;
+  transition: background-color 0.15s, transform 0.08s;
 }
-
-.boton:disabled { background: #b9c3ce; cursor: default; }
+.boton:hover { background: #28517a; }
+.boton:active { transform: scale(0.985); }
+.boton:disabled { background: #b9c3ce; color: #fff; cursor: default; transform: none; }
 
 .boton.secundario {
+  background: #e4edf6;
+  color: #1f4a73;
+  margin-top: 10px;
+}
+.boton.secundario:hover { background: #d6e4f1; }
+.boton.secundario:disabled { background: #eceae6; color: #8d8b86; }
+
+.boton.terciario {
   background: transparent;
   color: #2e5c8a;
-  border: 1px solid #2e5c8a;
-  margin-top: 12px;
+  min-height: 44px;
+  margin-top: 6px;
+  font-weight: 500;
+}
+.boton.terciario:hover { background: #eef3f8; }
+.boton.terciario:disabled { background: transparent; color: #8d8b86; }
+
+.boton svg { flex: 0 0 auto; }
+
+/* Foco visible, igual para todo lo que se toca (teclado y lectores). */
+.boton:focus-visible,
+.boton-accion:focus-visible,
+.encabezado-volver:focus-visible,
+.lista-enlaces a:focus-visible {
+  outline: 3px solid #8ab8e6;
+  outline-offset: 2px;
 }
 
 .entrada {
@@ -530,9 +587,8 @@ textarea.entrada { resize: vertical; font-family: inherit; }
 }
 
 .vincular-placa .boton {
-  padding: 8px 10px;
-  font-size: calc(14px * var(--escala-texto));
-  width: auto;
+  min-height: 44px;
+  font-size: calc(15px * var(--escala-texto));
   margin-top: 0;
 }
 
@@ -561,51 +617,74 @@ textarea.entrada { resize: vertical; font-family: inherit; }
 }
 
 .acciones-mascota {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-top: 10px;
 }
 
+/* Acciones de una tarjeta: tonales, con ícono, todas de la misma altura.
+   .alerta es la acción destacada de la tarjeta (marcar como perdida);
+   .peligro es solo texto y ocupa la fila entera, para que lo destructivo no
+   compita con el resto. */
 .boton-accion {
-  flex: 1 1 calc(50% - 4px);
-  min-width: 84px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   box-sizing: border-box;
-  text-align: center;
-  border: 1px solid #d8d6d1;
-  background: #fff;
+  min-height: 44px;
+  padding: 8px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: #efede9;
   color: #1f1f1f;
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: calc(13px * var(--escala-texto));
-  line-height: 1.25;
+  font: inherit;
+  font-size: calc(14px * var(--escala-texto));
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
   text-decoration: none;
   cursor: pointer;
+  transition: background-color 0.15s;
 }
+.boton-accion:hover { background: #e5e2dd; }
+.boton-accion svg { flex: 0 0 auto; }
+
+/* En la grilla, los dos botones de una fila miden siempre lo mismo aunque
+   uno necesite dos líneas (los <button> no se estiran solos en grid). */
+.acciones-mascota .boton-accion,
+.acciones-mascota .estado-caso { height: 100%; }
 
 .boton-accion:disabled {
   opacity: 0.6;
   cursor: default;
 }
 
-.boton-accion.peligro {
-  color: #8c2f2f;
-  border-color: #e6b4b4;
-}
-
 .boton-accion.alerta {
-  color: #8a5a12;
-  border-color: #eccf9a;
+  background: #fbe8c3;
+  color: #6b4408;
+  font-weight: 600;
 }
+.boton-accion.alerta:hover { background: #f6dca6; }
+
+.boton-accion.peligro {
+  grid-column: 1 / -1;
+  background: transparent;
+  color: #8c2f2f;
+  min-height: 40px;
+}
+.boton-accion.peligro:hover { background: #fbeeee; }
 
 .estado-caso {
-  flex: 1 1 calc(50% - 4px);
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  min-height: 44px;
   text-align: center;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 8px 10px;
   font-size: calc(13px * var(--escala-texto));
   font-weight: 600;
@@ -653,6 +732,29 @@ textarea.entrada { resize: vertical; font-family: inherit; }
 .boton.peligro {
   background: #8c2f2f;
 }
+.boton.peligro:hover { background: #7a2727; }
+
+/* Lista de navegación del panel: filas con flecha, como el menú de ajustes de
+   cualquier app, en vez de enlaces grises sueltos. */
+.lista-enlaces {
+  margin: 20px 0 4px;
+  border-top: 1px solid #e8e6e2;
+}
+.lista-enlaces a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 48px;
+  padding: 10px 2px;
+  border-bottom: 1px solid #e8e6e2;
+  color: #1f1f1f;
+  font-size: calc(15px * var(--escala-texto));
+  text-decoration: none;
+}
+.lista-enlaces a svg { color: #8d8b86; flex: 0 0 auto; }
+.lista-enlaces a:hover { background: #f6f5f3; }
+.lista-enlaces .ayuda { display: block; margin: 0; }
 
 .lista-avistamientos {
   list-style: none;
@@ -793,9 +895,11 @@ html[data-texto="grande"] { --escala-texto: 1.2; }
 html[data-texto="muy-grande"] { --escala-texto: 1.4; }
 
 .accesibilidad-boton {
+  /* Arriba a la derecha: abajo tapaba el botón principal de cada pantalla
+     ("La vi acá" en la ficha pública, "Cargar mascota" en el panel). */
   position: fixed;
   right: 14px;
-  bottom: 14px;
+  top: 14px;
   z-index: 1500;
   width: 48px;
   height: 48px;
@@ -821,7 +925,7 @@ html[data-texto="muy-grande"] { --escala-texto: 1.4; }
 .accesibilidad-panel {
   position: fixed;
   right: 14px;
-  bottom: 74px;
+  top: 74px;
   z-index: 1500;
   width: min(300px, calc(100vw - 28px));
   max-height: calc(100dvh - 90px);
@@ -1009,8 +1113,18 @@ html[data-tema="oscuro"] .etiqueta-estado-placa-perdida { background: #3d1a1a; c
 html[data-tema="oscuro"] .etiqueta-estado-placa-baja { background: #3a2c12; color: #f0c981; }
 
 html[data-tema="oscuro"] .boton:disabled { background: #3a3f47; color: #a9adb3; }
-html[data-tema="oscuro"] .boton.secundario { color: #8ab8e6; border-color: #8ab8e6; }
+html[data-tema="oscuro"] .boton.secundario { background: #1c2d3f; color: #a9cdf0; }
+html[data-tema="oscuro"] .boton.secundario:hover { background: #24394f; }
+html[data-tema="oscuro"] .boton.secundario:disabled { background: #262a30; color: #8d9096; }
+html[data-tema="oscuro"] .boton.terciario { background: transparent; color: #8ab8e6; }
+html[data-tema="oscuro"] .boton.terciario:hover { background: #1c2129; }
 html[data-tema="oscuro"] .boton.peligro { background: #a33a3a; }
+html[data-tema="oscuro"] .encabezado-volver { background: #262a30; color: #e8e8e6; }
+html[data-tema="oscuro"] .encabezado-volver:hover { background: #32373e; }
+html[data-tema="oscuro"] .lista-enlaces,
+html[data-tema="oscuro"] .lista-enlaces a { border-color: #2c3037; color: #e8e8e6; }
+html[data-tema="oscuro"] .lista-enlaces a:hover { background: #1c1f24; }
+html[data-tema="oscuro"] .lista-enlaces a svg { color: #8d9096; }
 html[data-tema="oscuro"] .entrada,
 html[data-tema="oscuro"] input,
 html[data-tema="oscuro"] select,
@@ -1019,10 +1133,13 @@ html[data-tema="oscuro"] .accesibilidad-opcion input { background: #6b7078; }
 html[data-tema="oscuro"] .accesibilidad-opcion input:checked { background: #2e5c8a; }
 html[data-tema="oscuro"] ::placeholder { color: #8d9299; }
 
-html[data-tema="oscuro"] .boton-accion { background: #1c1f24; color: #e8e8e6; border-color: #3a3f47; }
-html[data-tema="oscuro"] .boton-accion.peligro { color: #f08a8a; border-color: #7a3333; }
-html[data-tema="oscuro"] .boton-accion.alerta { color: #f0c981; border-color: #6b4f1f; }
-html[data-tema="oscuro"] .boton-accion.copiado { color: #8fd19e; border-color: #2f5c3a; background: #1c3322; }
+html[data-tema="oscuro"] .boton-accion { background: #262a30; color: #e8e8e6; }
+html[data-tema="oscuro"] .boton-accion:hover { background: #32373e; }
+html[data-tema="oscuro"] .boton-accion.alerta { background: #3a2c12; color: #f0c981; }
+html[data-tema="oscuro"] .boton-accion.alerta:hover { background: #4a3817; }
+html[data-tema="oscuro"] .boton-accion.peligro { background: transparent; color: #f08a8a; }
+html[data-tema="oscuro"] .boton-accion.peligro:hover { background: #2a1a1a; }
+html[data-tema="oscuro"] .boton-accion.copiado { color: #8fd19e; background: #1c3322; }
 html[data-tema="oscuro"] .texto-busqueda-alternar { color: #8ab8e6; }
 html[data-tema="oscuro"] .texto-busqueda-contenido { background: #1c1f24; border-color: #33404d; }
 
@@ -1075,8 +1192,15 @@ html[data-contraste="alto"] select,
 html[data-contraste="alto"] textarea { border: 2px solid #000; color: #000; background: #fff; }
 html[data-contraste="alto"] a { color: #0b3d91; }
 html[data-contraste="alto"] .boton,
-html[data-contraste="alto"] .boton-accion { border: 2px solid #000; }
-html[data-contraste="alto"] .boton:not(.secundario) { background: #0b3d91; color: #fff; }
+html[data-contraste="alto"] .boton-accion,
+html[data-contraste="alto"] .encabezado-volver { border: 2px solid #000; }
+html[data-contraste="alto"] .boton:not(.secundario):not(.terciario) { background: #0b3d91; color: #fff; }
+html[data-contraste="alto"] .boton.secundario,
+html[data-contraste="alto"] .boton.terciario,
+html[data-contraste="alto"] .boton-accion,
+html[data-contraste="alto"] .encabezado-volver { background: #fff; color: #000; }
+html[data-contraste="alto"] .boton-accion.peligro { color: #8c0000; }
+html[data-contraste="alto"] .lista-enlaces a { color: #000; border-color: #000; }
 html[data-contraste="alto"] :focus-visible { outline: 3px solid #000; outline-offset: 2px; box-shadow: 0 0 0 5px #ffd400; }
 html[data-contraste="alto"] .accesibilidad-boton { background: #000; border-color: #ffd400; color: #ffd400; }
 html[data-contraste="alto"] .accesibilidad-panel { border: 2px solid #000; }

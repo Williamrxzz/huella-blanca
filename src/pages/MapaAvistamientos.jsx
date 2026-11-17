@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams, Link } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { iconoAviso, iconoCasa } from '../lib/leaflet-iconos'
 import { MapContainer, TileLayer, Marker, Circle, Popup, useMap } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
@@ -102,7 +102,7 @@ function FormularioReencuentro({ mascota, onCancelar, onConfirmar, enviando }) {
         )}
 
         <div className="acciones-tarjeta">
-          <button className="boton secundario" type="button" onClick={onCancelar} disabled={enviando}>
+          <button className="boton terciario" type="button" onClick={onCancelar} disabled={enviando}>
             Cancelar
           </button>
           <button
@@ -241,7 +241,6 @@ export default function MapaAvistamientos() {
     <main className="pagina">
       <h1>Ocurrió un problema</h1>
       <p className="ayuda">{error}</p>
-      <Link className="boton secundario" to="/panel">Volver al panel</Link>
     </main>
   )
 
@@ -255,7 +254,7 @@ export default function MapaAvistamientos() {
 
   return (
     <main className="pagina">
-      <Encabezado />
+      <Encabezado volver="/panel" />
       <h1>Avistamientos de {mascota.nombre}</h1>
 
       {caso && (
@@ -374,7 +373,6 @@ export default function MapaAvistamientos() {
         </ul>
       )}
 
-      <Link className="boton secundario" to="/panel">Volver al panel</Link>
     </main>
   )
 }

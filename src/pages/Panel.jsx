@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
-import { Check, Copy, Share2 } from 'lucide-react'
+import { Check, ChevronRight, Copy, House, LogOut, MapPin, Pencil, QrCode, Share2, Trash2, TriangleAlert } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
 import AvisosPush from '../components/AvisosPush'
@@ -66,7 +66,7 @@ function FormularioPerdida({ mascota, onCancelar, onConfirmar, enviando }) {
         />
 
         <div className="acciones-tarjeta">
-          <button className="boton secundario" type="button" onClick={onCancelar}>
+          <button className="boton terciario" type="button" onClick={onCancelar}>
             Cancelar
           </button>
           <button className="boton" type="button" onClick={confirmar} disabled={enviando}>
@@ -85,7 +85,7 @@ function CartelConfirmacion({ titulo, texto, onCancelar, onConfirmar, confirmand
         <h2 id="titulo-confirmacion">{titulo}</h2>
         <p className="ayuda">{texto}</p>
         <div className="acciones-tarjeta">
-          <button className="boton secundario" type="button" onClick={onCancelar}>
+          <button className="boton terciario" type="button" onClick={onCancelar}>
             Cancelar
           </button>
           <button className="boton peligro" type="button" onClick={onConfirmar} disabled={confirmando}>
@@ -304,33 +304,51 @@ function FilaMascota({ mascota, caso, onVinculada, onEliminada, onCasoActualizad
         )}
 
         <div className="acciones-mascota">
-          <Link className="boton-accion" to={`/mascotas/${mascota.id}/editar`}>Editar</Link>
-          <Link className="boton-accion" to={`/mascotas/${mascota.id}/mapa`}>Mapa</Link>
-          {placaActiva && (
-            <Link className="boton-accion" to={`/placas?codigo=${placaActiva.codigo}`}>Ver QR</Link>
-          )}
-
+          {/* Primero lo que cambia el estado de la mascota (perdida / conmigo),
+              después las acciones de consulta, y al final, solo texto, eliminar. */}
           {!caso && (
             <button className="boton-accion alerta" type="button" onClick={() => setMostrandoFormularioPerdida(true)}>
-              Marcar como perdida
+              <TriangleAlert size={17} aria-hidden="true" />
+              Se perdió
             </button>
           )}
           {caso?.estado === 'posible_perdida' && (
             <button className="boton-accion alerta" type="button" onClick={() => setMostrandoFormularioPerdida(true)}>
-              Confirmar pérdida
+              <TriangleAlert size={17} aria-hidden="true" />
+              Sí, se perdió
             </button>
           )}
           {caso?.estado === 'posible_perdida' && caso?.origen === 'automatico' && (
             <button className="boton-accion" type="button" onClick={descartarSospecha} disabled={descartando}>
-              {descartando ? 'Descartando…' : 'No, está conmigo'}
+              <House size={17} aria-hidden="true" />
+              {descartando ? 'Descartando…' : 'Está conmigo'}
             </button>
           )}
           {caso?.estado === 'perdida' && (
-            <span className="estado-caso">Perdida — buscando</span>
+            <span className="estado-caso">
+              <TriangleAlert size={16} aria-hidden="true" />
+              Perdida, buscando
+            </span>
+          )}
+
+          <Link className="boton-accion" to={`/mascotas/${mascota.id}/mapa`}>
+            <MapPin size={17} aria-hidden="true" />
+            Avisos
+          </Link>
+          <Link className="boton-accion" to={`/mascotas/${mascota.id}/editar`}>
+            <Pencil size={17} aria-hidden="true" />
+            Editar
+          </Link>
+          {placaActiva && (
+            <Link className="boton-accion" to={`/placas?codigo=${placaActiva.codigo}`}>
+              <QrCode size={17} aria-hidden="true" />
+              Código QR
+            </Link>
           )}
 
           <button className="boton-accion peligro" type="button" onClick={() => setConfirmando(true)}>
-            Eliminar
+            <Trash2 size={16} aria-hidden="true" />
+            Eliminar mascota
           </button>
         </div>
 
@@ -490,16 +508,23 @@ export default function Panel() {
       )}
 
       <Link className="boton" to="/mascotas/nueva">Cargar mascota</Link>
-      <Link className="enlace-discreto" to="/perfil">Tu perfil</Link>
-      <Link className="enlace-discreto" to="/mi-historial">Tu colaboración</Link>
-      {esAdmin && (
-        <>
-          <Link className="enlace-discreto" to="/admin/estadisticas">Administración: estadísticas</Link>
-          <Link className="enlace-discreto" to="/admin/cuentas">Administración: cuentas</Link>
-          <Link className="enlace-discreto" to="/admin/placas">Administración: placas</Link>
-        </>
-      )}
-      <button className="boton secundario" onClick={cerrarSesion}>Cerrar sesión</button>
+
+      <nav className="lista-enlaces" aria-label="Más opciones">
+        <Link to="/perfil">Tu perfil<ChevronRight size={18} aria-hidden="true" /></Link>
+        <Link to="/mi-historial">Tu colaboración<ChevronRight size={18} aria-hidden="true" /></Link>
+        {esAdmin && (
+          <>
+            <Link to="/admin/estadisticas">Estadísticas (administración)<ChevronRight size={18} aria-hidden="true" /></Link>
+            <Link to="/admin/cuentas">Cuentas (administración)<ChevronRight size={18} aria-hidden="true" /></Link>
+            <Link to="/admin/placas">Placas (administración)<ChevronRight size={18} aria-hidden="true" /></Link>
+          </>
+        )}
+      </nav>
+
+      <button className="boton terciario" onClick={cerrarSesion}>
+        <LogOut size={18} aria-hidden="true" />
+        Cerrar sesión
+      </button>
     </main>
   )
 }

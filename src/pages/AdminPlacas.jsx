@@ -129,7 +129,7 @@ export default function AdminPlacas() {
 
   return (
     <main className="pagina">
-      <Encabezado />
+      <Encabezado volver="/panel" />
       <h1>Inventario de placas</h1>
       <p className="ayuda">Estado de cada placa generada, para controlar cuántas están libres, activas o perdidas.</p>
 

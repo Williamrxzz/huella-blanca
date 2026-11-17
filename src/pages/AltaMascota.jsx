@@ -362,7 +362,7 @@ export default function AltaMascota() {
 
   return (
     <main className="pagina">
-      <Encabezado />
+      <Encabezado volver="/panel" />
       <h1>{editando ? 'Editar mascota' : 'Cargar mascota'}</h1>
 
       {placaAActivar && (
