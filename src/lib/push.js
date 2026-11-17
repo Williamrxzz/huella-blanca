@@ -20,7 +20,8 @@ export function pushSoportado() {
 
 // En iPhone/iPad el push solo funciona con la app agregada a la pantalla de inicio.
 export function esIosSinInstalar() {
-  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent)
+  // El iPad en modo escritorio se presenta como Mac, pero con pantalla táctil.
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Mac/.test(navigator.userAgent) && navigator.maxTouchPoints > 1)
   const instalada = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true
   return ios && !instalada
 }

@@ -20,8 +20,8 @@ export default function AvisosPush({ perfilId }) {
     return () => { vigente = false }
   }, [])
 
-  if (estado === 'cargando' || estado === 'no_soportado') return null
-
+  // En iPhone/iPad sin la app instalada el navegador no tiene PushManager: se
+  // explica cómo instalarla en vez de no mostrar nada.
   if (esIosSinInstalar()) {
     return (
       <div className="avisos-push">
@@ -32,6 +32,8 @@ export default function AvisosPush({ perfilId }) {
       </div>
     )
   }
+
+  if (estado === 'cargando' || estado === 'no_soportado') return null
 
   async function alternar() {
     setOcupado(true)
