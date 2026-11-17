@@ -4,14 +4,16 @@ Hay dos niveles.
 
 ## Unitarias — `npm test`
 
-Lógica pura, sin red ni base de datos. Tardan menos de un segundo y se pueden
-correr siempre. Usan el runner que trae Node (`node:test`), sin dependencias.
+Sin red ni base de datos real. Tardan un par de segundos y se pueden correr
+siempre. Usan el runner que trae Node (`node:test`); la del esquema usa PGlite
+(PostgreSQL en WebAssembly), única dependencia de desarrollo de las pruebas.
 
 | Archivo | Qué protege |
 |---|---|
 | `unit/telefono.test.mjs` | TRA05: el teléfono se guarda en formato internacional (E.164); si no, los botones de llamar y WhatsApp de la ficha marcan un número inexistente. |
 | `unit/codigoQR.test.mjs` | `/escanear` solo sigue links de la propia app; un QR con `javascript:` o `data:` se rechaza. |
 | `unit/textoBusqueda.test.mjs` | IA03: el texto para compartir no incluye teléfono, domicilio ni el mensaje privado del dueño; señas solo si son públicas; ubicación redondeada. |
+| `unit/esquema.test.mjs` | `supabase/esquema/esquema.sql` reconstruye la base en un PostgreSQL vacío (PGlite, en memoria) y un recorrido de humo funciona: ficha sin domicilio, escaneo lejos de casa que abre el caso y avisa, contacto solo con caso abierto, `rol` protegido, teléfono E.164. |
 
 ## De punta a punta — `PRUEBAS_EN_PRODUCCION=si npm run test:e2e`
 

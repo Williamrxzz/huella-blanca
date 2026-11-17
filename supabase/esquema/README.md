@@ -46,4 +46,6 @@ El 2026-11-17 se ejecutó `esquema.sql` completo en un PostgreSQL 17 vacío
 22 funciones, 5 triggers y 22 políticas, y un recorrido de humo (alta de dueño,
 mascota y placa; ficha pública sin domicilio; escaneo lejos de casa que abre el
 caso y encola la notificación; contacto solo con caso abierto; check del
-teléfono; `rol` no escribible por `authenticated`) pasó 15/15.
+teléfono; `rol` no escribible por `authenticated`) pasó 15/15. Esa verificación
+quedó como prueba automática: `tests/unit/esquema.test.mjs`, dentro de
+`npm test`.

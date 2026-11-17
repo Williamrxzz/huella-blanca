@@ -1652,9 +1652,10 @@ se crearon a mano en el editor SQL y no estaban escritos en ningún archivo.
   pública sin domicilio ni teléfono; escaneo lejos de casa que abre la posible
   pérdida y, por los triggers, encola la notificación; contacto solo con caso
   abierto; check del teléfono E.164; `rol` no escribible por
-  `authenticated`). Esa prueba de reconstrucción no quedó en el repositorio
-  porque necesita PGlite como dependencia de desarrollo, a decidir por el
-  dueño del proyecto.
+  `authenticated`). Con el visto bueno del dueño del proyecto, esa prueba
+  quedó en `npm test` (`tests/unit/esquema.test.mjs`, PGlite como dependencia
+  de desarrollo, unos 1,3 s): se comprobó que falla si se borra del esquema
+  el check del teléfono.
 - El archivo muestra tal cual algunas cosas ya señaladas en la revisión y
   todavía sin corregir: funciones de administración ejecutables por `anon`
   (las protege el chequeo de rol interno), políticas duplicadas en `placas` y
