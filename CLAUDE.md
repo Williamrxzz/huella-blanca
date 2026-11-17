@@ -825,9 +825,8 @@ posible pérdida (con la distancia), escaneo de una mascota con caso
 abierto, cualquier avistamiento (situación y distancia a la casa), y el
 paso automático a `perdida` por falta de respuesta. Un escaneo normal
 cerca de casa no avisa. Detalle, decisiones y pruebas en
-`TRAZABILIDAD.md`, entrada del 2026-11-16. Pendiente: probar en un
-teléfono real; el trabajo de pg_cron quedó pausado hasta decidir qué
-hacer con el caso viejo de Blanca (ver esa entrada).
+`TRAZABILIDAD.md`, entrada del 2026-11-16. Probado en el teléfono del
+dueño del proyecto (2026-11-17); el trabajo de pg_cron está activo.
 
 ### Pendiente, en este orden
 

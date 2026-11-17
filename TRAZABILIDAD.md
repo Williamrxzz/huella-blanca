@@ -1094,10 +1094,13 @@ No bloquea nada: el panel funciona igual sin activar los avisos.
   desde el 11/11, más vieja que las 24 h). Se revirtió en el acto (caso de
   vuelta a `posible_perdida`, notificación borrada, 4 escaneos huérfanos de
   la mascota de prueba eliminados) y el script ahora omite ese paso si hay
-  casos reales elegibles. **El cron quedó pausado** (`cron.unschedule`)
-  hasta decidir qué hacer con ese caso viejo: al reactivarlo, lo pasaría a
-  `perdida` en el primer ciclo. Para reactivar:
-  `select cron.schedule('escalar-casos-sin-respuesta', '*/15 * * * *', $$select public.escalar_casos_sin_respuesta()$$);`
+  casos reales elegibles. El cron quedó pausado (`cron.unschedule`) hasta
+  decidir qué hacer con ese caso viejo. **Resuelto el 2026-11-17:** al ir a
+  descartarlo, el caso ya estaba en `perdida`, confirmado por el dueño desde
+  el panel durante su prueba del push (dos escaneos de Blanca esa madrugada,
+  el segundo con el aviso entregado). No se tocó: es su decisión. Cron
+  reactivado con `cron.schedule('escalar-casos-sin-respuesta', '*/15 * * * *',
+  ...)`; en ese momento no había ningún caso elegible para escalar.
 - Bug encontrado y corregido antes de commitear: `Panel.jsx` solo guardaba
   `perfilId` en la rama del perfil diferido, así que la tarjeta no aparecía
   para ningún dueño con perfil ya creado.
