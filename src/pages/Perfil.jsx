@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
+import CampoTelefono from '../components/CampoTelefono'
+import { normalizarTelefono, telefonoLegible } from '../lib/telefono'
 
 export default function Perfil() {
   const navigate = useNavigate()
@@ -11,6 +13,7 @@ export default function Perfil() {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState(null)
   const [guardado, setGuardado] = useState(false)
+  const [intentoGuardar, setIntentoGuardar] = useState(false)
 
   useEffect(() => {
     async function cargar() {
@@ -28,7 +31,7 @@ export default function Perfil() {
 
       if (errorPerfil) setError('No pudimos cargar tu perfil: ' + errorPerfil.message)
       setNombre(perfil?.nombre || '')
-      setTelefono(perfil?.telefono || '')
+      setTelefono(telefonoLegible(perfil?.telefono) || '')
       setCargando(false)
     }
     cargar()
@@ -36,6 +39,9 @@ export default function Perfil() {
 
   async function guardar(e) {
     e.preventDefault()
+    setIntentoGuardar(true)
+    const tel = normalizarTelefono(telefono)
+    if (!tel.ok) return
     setGuardando(true)
     setError(null)
     setGuardado(false)
@@ -44,13 +50,17 @@ export default function Perfil() {
 
     const { error: errorUpdate } = await supabase
       .from('perfiles')
-      .update({ nombre: nombre.trim(), telefono: telefono.trim() || null })
+      .update({ nombre: nombre.trim(), telefono: tel.valor })
       .eq('id', session.user.id)
 
     setGuardando(false)
 
     if (errorUpdate) setError('No pudimos guardar los cambios: ' + errorUpdate.message)
-    else setGuardado(true)
+    else {
+      setGuardado(true)
+      setIntentoGuardar(false)
+      setTelefono(telefonoLegible(tel.valor))
+    }
   }
 
   if (cargando) return <main className="pagina"><p>Cargando…</p></main>
@@ -75,14 +85,10 @@ export default function Perfil() {
           autoComplete="name"
           required
         />
-        <input
-          className="entrada"
-          type="tel"
-          placeholder="Teléfono (opcional)"
-          aria-label="Teléfono (opcional)"
-          value={telefono}
-          onChange={(e) => setTelefono(e.target.value)}
-          autoComplete="tel"
+        <CampoTelefono
+          valor={telefono}
+          onCambio={(v) => { setTelefono(v); setGuardado(false) }}
+          mostrarError={intentoGuardar}
         />
 
         {error && <p className="ayuda error" role="alert">{error}</p>}

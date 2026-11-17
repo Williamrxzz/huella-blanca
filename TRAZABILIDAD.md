@@ -1378,3 +1378,49 @@ Otros dos hallazgos de la revisión completa del proyecto.
   filas) y la prueba completa de IA02 de punta a punta en Chrome, 37/37
   (actualizada: el caso "sin sesión clasifica pero no da pase" ahora espera
   401). La base y Storage quedaron como estaban.
+
+## 2026-11-17 — TRA05: el botón de contacto llamaba a un número inexistente
+
+Hallazgo de la revisión completa del proyecto; bug funcional no
+documentado hasta ahora.
+
+- **Qué pasaba.** `/registro` y `/perfil` guardaban el teléfono como texto
+  libre, y `ficha_publica()` arma los botones con `'tel:+' || dígitos` y
+  `'https://wa.me/' || dígitos`. Un dueño que escribe su celular como se usa
+  en Argentina ("297 412 3456", "0297 15 4123456") terminaba con
+  `tel:+2974123456`: un número de otro país. **Le pasaba a la cuenta real
+  del dueño del proyecto**, con Blanca en `perdida`: el botón de llamar y el
+  de WhatsApp de su ficha pública no funcionaban. La cuenta de prueba tenía
+  `+54` sin el `9`, que WhatsApp necesita para celulares argentinos. La
+  prueba en vivo del 2026-09-19 no lo detectó porque usó un número cargado a
+  mano por SQL en formato internacional.
+- **Corrección.**
+  - `src/lib/telefono.js` (`normalizarTelefono`): asume Argentina salvo que
+    empiece con `+`/`00` y otro código de país; saca el `0` del código de
+    área y el `15` (si se puede saber dónde está sin adivinar), agrega
+    `+54 9` y exige 10 dígitos. Sin código de área, o sin forma de saberlo,
+    no guarda: lo dice. Se asume celular (siempre el `9`): el contacto es
+    para llamar o escribir por WhatsApp al dueño. Limitación aceptada: un
+    teléfono fijo argentino quedaría mal; el campo pide "Celular".
+  - `src/components/CampoTelefono.jsx`, usado en `Registro.jsx` y
+    `Perfil.jsx`: mientras se escribe muestra "Se va a guardar como
+    +54 9 2974123456" o qué le falta; el error en rojo aparece recién al
+    intentar guardar. Sigue siendo opcional.
+  - `Panel.jsx` (perfil diferido): normaliza el teléfono que quedó en
+    `user_metadata` desde el registro; si no se puede, crea el perfil sin
+    teléfono (el panel ya invita a cargarlo) en vez de fallar.
+  - Base: los dos teléfonos existentes se convirtieron (copia de los valores
+    anteriores guardada fuera del repositorio) y el check
+    `perfiles_telefono_e164` (migración
+    `20261117000004_telefono_e164.sql`) rechaza cualquier otro formato que
+    llegue por la API.
+- **Verificado.** 26 casos de la función (con y sin `+54`, `9`, `0`, `15`,
+  `00`, Buenos Aires, Córdoba, códigos de área de 4 dígitos, otros países,
+  números incompletos o imposibles). Con Chrome real y cuentas temporales,
+  16/16: `/perfil` guarda en E.164 y muestra el número legible; sin código
+  de área no guarda y explica; otro país se respeta; vacío lo borra; la API
+  directa con un número sin formato da 400 por el check; `/registro` con
+  número inválido no crea la cuenta; perfil diferido con "0297 15 ..." queda
+  normalizado y con un número imposible queda sin teléfono. La ficha pública
+  de Blanca devuelve ahora `tel:+549…` y `wa.me/549…`. La base quedó como
+  estaba. Falta tocar el botón desde un teléfono real.

@@ -1391,3 +1391,11 @@ html[data-tema="oscuro"] .avisos-push.activo { background: #14301c; border-color
   background: #f1efec;
 }
 html[data-tema="oscuro"] .enlace-leido { background: #24282e; }
+
+/* Campo con su texto de ayuda pegado (teléfono en Registro y Perfil). */
+.campo-con-ayuda {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.campo-con-ayuda .ayuda { margin: 0 0 0 4px; }

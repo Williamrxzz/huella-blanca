@@ -192,6 +192,11 @@ volver a ejecutar los scripts de esquema. La URL del proyecto es
 
 `perfiles` — extiende `auth.users`. Campos: id (PK, referencia a
 auth.users), nombre, telefono, rol ('usuario' | 'admin'), creado_en.
+`telefono` va siempre en formato internacional E.164 (`+5492974123456`):
+lo normaliza `src/lib/telefono.js` al guardar (saca el 0 y el 15, agrega
+`+54 9`) y el check `perfiles_telefono_e164` rechaza cualquier otro
+formato. Desde el 2026-11-17; antes se guardaba el texto tal cual y el
+botón de contacto de la ficha llamaba a un número inexistente.
 
 `mascotas` — id, dueno_id (FK a perfiles), nombre, especie ('perro' |
 'gato' | 'otro'), sexo ('macho' | 'hembra', nullable — las mascotas

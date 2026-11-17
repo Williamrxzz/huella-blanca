@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
+import CampoTelefono from '../components/CampoTelefono'
+import { normalizarTelefono } from '../lib/telefono'
 
 export default function Registro() {
   const navigate = useNavigate()
@@ -14,16 +16,23 @@ export default function Registro() {
   const [error, setError] = useState(null)
   const [enviando, setEnviando] = useState(false)
   const [revisarEmail, setRevisarEmail] = useState(false)
+  const [intentoEnviar, setIntentoEnviar] = useState(false)
 
   async function crearCuenta(e) {
     e.preventDefault()
+    setIntentoEnviar(true)
+    // TRA05: el teléfono se guarda ya en formato internacional; uno que no se
+    // pueda marcar no se guarda (el campo dice qué le falta). Es opcional:
+    // vacío, pasa.
+    const tel = normalizarTelefono(telefono)
+    if (!tel.ok) return
     setEnviando(true)
     setError(null)
 
     const { data, error: errorRegistro } = await supabase.auth.signUp({
       email,
       password: contrasena,
-      options: { data: { nombre, telefono: telefono.trim() || null } },
+      options: { data: { nombre, telefono: tel.valor } },
     })
 
     if (errorRegistro) {
@@ -48,7 +57,7 @@ export default function Registro() {
 
     const { error: errorPerfil } = await supabase
       .from('perfiles')
-      .insert({ id: data.user.id, nombre, telefono: telefono.trim() || null })
+      .insert({ id: data.user.id, nombre, telefono: tel.valor })
 
     setEnviando(false)
 
@@ -98,15 +107,7 @@ export default function Registro() {
           autoComplete="email"
           required
         />
-        <input
-          className="entrada"
-          type="tel"
-          placeholder="Teléfono (opcional)"
-          aria-label="Teléfono (opcional)"
-          value={telefono}
-          onChange={(e) => setTelefono(e.target.value)}
-          autoComplete="tel"
-        />
+        <CampoTelefono valor={telefono} onCambio={setTelefono} mostrarError={intentoEnviar} />
         <p className="ayuda">
           Para que quien encuentre a tu mascota pueda contactarte. Nunca se muestra en pantalla;
           si no lo cargás ahora, podés hacerlo después desde tu perfil.

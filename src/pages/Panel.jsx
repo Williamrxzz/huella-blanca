@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import { ChevronRight, House, LogOut, MapPin, Megaphone, Pencil, QrCode, Trash2, TriangleAlert } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { normalizarTelefono } from '../lib/telefono'
 import Encabezado from '../components/Encabezado'
 import AvisosPush from '../components/AvisosPush'
 import CompartirBusqueda from '../components/CompartirBusqueda'
@@ -326,7 +327,11 @@ export default function Panel() {
     if (!perfilExistente) {
       // Si el registro pidió confirmar el email, la fila en "perfiles" queda
       // pendiente hasta este primer ingreso ya logueado.
-      const telefonoInicial = session.user.user_metadata?.telefono || null
+      // Cuentas registradas antes del 2026-11-17 pueden traer el teléfono sin
+      // normalizar: se normaliza, y si no se puede, se deja vacío (el panel
+      // invita a cargarlo en /perfil) en vez de que falle el alta del perfil.
+      const telNormalizado = normalizarTelefono(session.user.user_metadata?.telefono)
+      const telefonoInicial = telNormalizado.ok ? telNormalizado.valor : null
       await supabase.from('perfiles').insert({
         id: session.user.id,
         nombre: session.user.user_metadata?.nombre || '',
