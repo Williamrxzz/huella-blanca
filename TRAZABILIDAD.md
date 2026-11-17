@@ -1424,3 +1424,54 @@ documentado hasta ahora.
   normalizado y con un número imposible queda sin teléfono. La ficha pública
   de Blanca devuelve ahora `tel:+549…` y `wa.me/549…`. La base quedó como
   estaba. Falta tocar el botón desde un teléfono real.
+
+## 2026-11-17 — PER07, TRA11 y TRA09: tres huecos de la ficha pública
+
+Hallazgos de la revisión completa del proyecto, corregidos juntos porque
+tocan la misma pantalla y las mismas funciones.
+
+**PER07: el mensaje del dueño no se mostraba.** El formulario de "Se perdió"
+pide un mensaje para quien la encuentre, se guarda en
+`casos_perdida.mensaje` y `ficha_publica()` lo devuelve como
+`mensaje_perdida`, pero `FichaPublica.jsx` no lo usaba en ningún lado: el
+dueño escribía algo que nadie iba a leer. La entrada del 2026-09-19 dice que
+se "reemplazó por un subtítulo", pero el campo siguió en el formulario. Se
+muestra ahora dentro de la alerta, como "Mensaje de su familia", tal cual lo
+escribió (saltos de línea respetados; React lo trata como texto, no como
+HTML). Sigue siendo privado por construcción: solo sale con un caso abierto.
+
+**TRA11: no se podía avisar sin marcar el mapa.** La historia pide marcar el
+lugar a mano *o escribir una referencia*; la pantalla exigía el punto. Ahora,
+sin punto, el campo de texto pasa a "¿Dónde la viste? Calle, esquina, algo
+que haya cerca…" y alcanza con eso; sin punto ni texto, explica qué falta.
+Al revisar la función apareció un bug que esto habría destapado:
+`registrar_avistamiento()` hacía siempre `update casos_perdida set
+ultima_lat = p_lat`, así que un aviso sin coordenadas **borraba la última
+ubicación del caso** (la zona que muestra la ficha pública). Corregido en la
+migración `20261117000005_aviso_sin_ubicacion_y_reclamo.sql`: solo actualiza
+con coordenadas, y sin coordenadas exige el texto (la base aplica la misma
+regla que la pantalla).
+
+**TRA09/REC09: el reclamo del aviso se perdía en silencio.**
+`reclamar_avistamiento()` solo aceptaba avisos de menos de 1 hora, pero el
+proyecto exige confirmar el email antes de dar sesión; `Panel.jsx` borraba el
+id de `localStorage` sin mirar el resultado. Quien confirmaba al día
+siguiente perdía el reconocimiento y nadie se enteraba. Ahora la ventana es
+de 7 días (el id es un UUID que solo conoce el navegador que mandó el aviso),
+la función devuelve el nombre de la mascota y el panel confirma "Tu aviso
+sobre {nombre} quedó registrado en tu cuenta", con enlace a "Mi historial".
+Si falla la conexión, el id queda para el próximo ingreso. El reclamo
+inmediato de `FichaPublica.jsx` (cuenta con sesión al instante) también mira
+el resultado. Se revocó la ejecución a `anon` (la documentación ya decía
+"solo `authenticated`").
+
+**Verificado** con una mascota y placa temporales (nada tocó a Blanca ni
+mandó avisos al dueño real), 21/21: por API, sin punto ni texto →
+`falta_lugar`; sin punto con texto → guardado como `manual` sin coordenadas y
+**sin borrar** la última ubicación; con punto → la actualiza; reclamo sin
+sesión → 401; de hace 8 días → `no_reclamable`. En Chrome con la ubicación
+denegada: la ficha muestra el mensaje de la familia con su salto de línea y
+sin interpretar HTML; el formulario ofrece mapa o texto, sin nada explica
+qué falta, con texto se envía. En el panel, un aviso de hace 2 días se
+asocia a la cuenta, se confirma con el nombre de la mascota y no se puede
+reclamar dos veces. La base quedó como estaba.

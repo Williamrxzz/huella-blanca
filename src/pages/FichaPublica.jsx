@@ -121,8 +121,10 @@ export default function FichaPublica() {
     e.preventDefault()
     setErrorEnvio(null)
 
-    if (!ubicacion) {
-      setErrorEnvio('Marcá en el mapa dónde la viste.')
+    // TRA11: el aviso nunca depende del GPS ni del mapa. Sin punto marcado,
+    // alcanza con describir el lugar en el texto (la base exige lo mismo).
+    if (!ubicacion && !mensaje.trim()) {
+      setErrorEnvio('Marcá en el mapa dónde la viste, o contanos el lugar en el texto (calle, esquina, algo que haya cerca).')
       return
     }
 
@@ -130,8 +132,8 @@ export default function FichaPublica() {
 
     const { data, error } = await supabase.rpc('registrar_avistamiento', {
       p_codigo: codigo,
-      p_lat: ubicacion.lat,
-      p_lng: ubicacion.lng,
+      p_lat: ubicacion?.lat ?? null,
+      p_lng: ubicacion?.lng ?? null,
       p_origen: origenUbicacion || 'manual',
       p_situacion: situacion,
       p_mensaje: mensaje.trim() || null,
@@ -139,8 +141,10 @@ export default function FichaPublica() {
     })
 
     setEnviando(false)
-    if (error) {
-      setErrorEnvio(error.message)
+    if (error || data?.ok === false) {
+      setErrorEnvio(data?.motivo === 'falta_lugar'
+        ? 'Marcá en el mapa dónde la viste, o contanos el lugar en el texto.'
+        : 'No pudimos enviar el aviso. Revisá tu conexión y probá de nuevo.')
       return
     }
     setAvistamientoId(data?.avistamiento_id || null)
@@ -190,7 +194,9 @@ export default function FichaPublica() {
     await supabase.from('perfiles').insert({ id: data.user.id, nombre: nombreCuenta })
 
     if (avistamientoId) {
-      await supabase.rpc('reclamar_avistamiento', { p_avistamiento_id: avistamientoId })
+      const { data: reclamo, error: errorReclamo } = await supabase.rpc('reclamar_avistamiento', { p_avistamiento_id: avistamientoId })
+      // Si falló por la conexión, queda pendiente: Panel.jsx lo reintenta.
+      if (errorReclamo || !reclamo?.ok) localStorage.setItem('avisoPendienteId', avistamientoId)
     }
 
     setCreandoCuenta(false)
@@ -252,6 +258,12 @@ export default function FichaPublica() {
                 ? 'El dueño confirmó que no está en su casa. Si la ves, avisale.'
                 : 'Se detectó un escaneo lejos de su domicilio y el dueño todavía no lo confirmó.'}
             </p>
+            {ficha.mensaje_perdida && (
+              <blockquote className="alerta-mensaje">
+                <span>Mensaje de su familia</span>
+                {ficha.mensaje_perdida}
+              </blockquote>
+            )}
           </div>
         </div>
       )}
@@ -394,7 +406,7 @@ export default function FichaPublica() {
               <p className="ayuda">
                 {ubicacion
                   ? 'Ubicación obtenida. Tocá el mapa si querés corregir el punto exacto.'
-                  : 'No pudimos obtener tu ubicación automáticamente. Tocá el mapa para marcar dónde la viste.'}
+                  : 'No pudimos obtener tu ubicación. Tocá el mapa para marcar dónde la viste, o contanos el lugar más abajo.'}
               </p>
               <MapContainer
                 key={`${centroMapa.lat}-${centroMapa.lng}`}
@@ -437,8 +449,10 @@ export default function FichaPublica() {
 
           <textarea
             className="entrada"
-            placeholder="Contanos más (opcional)"
-            aria-label="Contanos más"
+            placeholder={ubicacion
+              ? 'Contanos más (opcional)'
+              : '¿Dónde la viste? Calle, esquina, algo que haya cerca…'}
+            aria-label={ubicacion ? 'Contanos más' : 'Dónde la viste'}
             value={mensaje}
             onChange={(e) => setMensaje(e.target.value)}
             rows={3}

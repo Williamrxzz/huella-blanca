@@ -292,6 +292,10 @@ cuando la mascota del caso pertenece al dueño autenticado.
   2026-09-21.
 - `registrar_avistamiento(p_codigo, p_lat, p_lng, p_origen, p_situacion,
   p_mensaje, p_contacto)` → registra el aviso; funciona con o sin cuenta.
+  Acepta el aviso sin coordenadas (TRA11) siempre que traiga un texto que
+  describa el lugar (si no, `{"ok": false, "motivo": "falta_lugar"}`); en
+  ese caso no toca la última ubicación del caso (antes la pisaba con
+  NULL). Desde el 2026-11-17.
 - `distancia_metros(lat1, lng1, lat2, lng2)` → fórmula de Haversine.
 - `generar_placa(p_mascota_id uuid)` → genera un código aleatorio de 8
   caracteres, crea la placa en estado `activa` vinculada a esa mascota y
@@ -315,9 +319,12 @@ cuando la mascota del caso pertenece al dueño autenticado.
   coordenadas de la mascota. Solo `authenticated`.
 - `reclamar_avistamiento(p_avistamiento_id uuid)` → asocia a la cuenta
   recién creada un aviso que se había hecho sin sesión (TRA09/REC09),
-  dentro de una ventana de 1 hora. Se llama desde `Panel.jsx` al
-  primer ingreso logueado, leyendo el id guardado en `localStorage`.
-  Solo `authenticated`.
+  dentro de una ventana de 7 días (era 1 hora hasta el 2026-11-17: quien
+  confirmaba el email al día siguiente perdía el reconocimiento). Devuelve
+  el nombre de la mascota. Se llama desde `Panel.jsx` al primer ingreso
+  logueado, leyendo el id guardado en `localStorage`, y el panel confirma
+  "Tu aviso sobre {nombre} quedó registrado"; si falla la conexión, el id
+  queda para el próximo ingreso. Solo `authenticated`.
 
 Desde el frontend se llaman con `supabase.rpc('nombre', { parametros })`.
 
@@ -439,13 +446,19 @@ Usuario", con siete listas, una por bloque.
   `ultima_lat`/`ultima_lng` cargados (**PER07**), muestra un subtítulo
   ("Última ubicación donde se encontraba {nombre}") y un mapa con una
   zona aproximada de 100 m en lugar de un punto exacto, para no revelar
-  el domicilio del dueño. Además muestra el botón "La vi acá" (TRA11):
+  el domicilio del dueño. El mensaje que el dueño deja al reportar la
+  pérdida (`mensaje_perdida`) se muestra dentro de la alerta como
+  "Mensaje de su familia" (hasta el 2026-11-17 se pedía y no se mostraba
+  en ningún lado). Además muestra el botón "La vi acá" (TRA11):
   pide ubicación con `navigator.geolocation` (con límite propio de 8 s,
   porque algunos navegadores no respetan el timeout de la API si el
   permiso de Localización del sistema operativo está desactivado) y,
   la tenga o no, siempre muestra un mapa de Leaflet para marcar o
   corregir el punto exacto tocándolo — si no hay ubicación automática,
-  el mapa arranca centrado en Caleta Olivia. Llama a
+  el mapa arranca centrado en Caleta Olivia. Si no hay punto marcado, el
+  aviso se puede enviar igual describiendo el lugar en el texto (el campo
+  cambia a "¿Dónde la viste?"); sin punto y sin texto, explica qué falta.
+  Llama a
   `registrar_avistamiento`, que ya venía con los dos radio buttons de
   situación, "La vi pasar" / "Está conmigo" (**TRA06**, ya estaba
   hecho). Probado con y sin permiso concedido.
@@ -454,7 +467,7 @@ Usuario", con siete listas, una por bloque.
   aviso ya quedó guardado antes de mostrar esta oferta. Si Supabase
   exige confirmar el email, todavía no hay sesión en ese momento: el
   `avistamiento_id` se guarda en `localStorage` (`avisoPendienteId`) y
-  se reclama con `reclamar_avistamiento` (ventana de 1 hora) apenas la
+  se reclama con `reclamar_avistamiento` (ventana de 7 días) apenas la
   persona entra logueada al panel.
 - `src/pages/GeneradorQR.jsx` — genera y descarga el QR de una placa,
   apuntando siempre al dominio desde el que se sirve la app

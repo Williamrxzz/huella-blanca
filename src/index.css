@@ -216,6 +216,27 @@ h2 { font-size: calc(18px * var(--escala-texto)); margin: 28px 0 8px; }
   opacity: 0.85;
 }
 
+/* PER07: el mensaje que dejó el dueño al reportar la pérdida, dentro de la
+   alerta. Hereda el color de la alerta; el texto es del dueño, va tal cual. */
+.alerta .alerta-mensaje {
+  margin: 10px 0 0;
+  padding: 8px 0 0 12px;
+  border-left: 3px solid currentColor;
+  font-size: calc(15px * var(--escala-texto));
+  line-height: 1.45;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.alerta .alerta-mensaje span {
+  display: block;
+  font-size: calc(12px * var(--escala-texto));
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.8;
+  margin-bottom: 2px;
+}
+
 .alerta.posible {
   background: #fdf3e2;
   border: 1px solid #eccf9a;

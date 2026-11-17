@@ -308,6 +308,7 @@ export default function Panel() {
   const [perfilId, setPerfilId] = useState(null)
   const [telefono, setTelefono] = useState(null)
   const [avisoTelefonoCerrado, setAvisoTelefonoCerrado] = useState(false)
+  const [avisoReclamado, setAvisoReclamado] = useState(null) // nombre de la mascota
 
   async function cargar() {
     const { data: { session } } = await supabase.auth.getSession()
@@ -344,10 +345,17 @@ export default function Panel() {
       setTelefono(perfilExistente.telefono)
     }
 
+    // TRA09/REC09: un aviso hecho antes de tener cuenta. Se mira el resultado:
+    // si se asoció, se confirma en pantalla; si ya no se puede (vencido, ya
+    // reclamado), se descarta; si falló la conexión, queda para el próximo
+    // ingreso en vez de perderse en silencio.
     const avisoPendienteId = localStorage.getItem('avisoPendienteId')
     if (avisoPendienteId) {
-      await supabase.rpc('reclamar_avistamiento', { p_avistamiento_id: avisoPendienteId })
-      localStorage.removeItem('avisoPendienteId')
+      const { data: reclamo, error: errorReclamo } = await supabase.rpc('reclamar_avistamiento', { p_avistamiento_id: avisoPendienteId })
+      if (!errorReclamo) {
+        localStorage.removeItem('avisoPendienteId')
+        if (reclamo?.ok) setAvisoReclamado(reclamo.mascota || 'la mascota')
+      }
     }
 
     const placaPendiente = localStorage.getItem('placaPendiente')
@@ -395,6 +403,18 @@ export default function Panel() {
       <h1>Mis mascotas</h1>
 
       {perfilId && mascotas.length > 0 && <AvisosPush perfilId={perfilId} />}
+
+      {avisoReclamado && (
+        <div className="aviso-telefono" role="status">
+          <p>Tu aviso sobre {avisoReclamado} quedó registrado en tu cuenta. ¡Gracias por ayudar!</p>
+          <div className="acciones-aviso">
+            <Link className="boton-accion" to="/mi-historial">Ver mi historial</Link>
+            <button className="boton-accion" type="button" onClick={() => setAvisoReclamado(null)} aria-label="Cerrar aviso">
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
 
       {mascotas.length > 0 && !telefono && !avisoTelefonoCerrado && (
         <div className="aviso-telefono">
