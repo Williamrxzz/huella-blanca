@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test tests/unit/",
+    "test:unit": "node --test tests/unit/",
+    "test:e2e": "node tests/e2e/correr.mjs",
+    "test:limpiar": "node tests/e2e/limpiar.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.115.0",

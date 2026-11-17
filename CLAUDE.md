@@ -923,6 +923,15 @@ que sale agrega "Además: N avisos más. Mirá el mapa". Y
 
 - Avanzar de a una pantalla o función por vez, probando después de cada
   cambio antes de seguir.
+- **Pruebas automatizadas** (desde el 2026-11-17, detalle en
+  `tests/README.md`): `npm test` corre las unitarias (lógica pura, sin red,
+  menos de un segundo); `PRUEBAS_EN_PRODUCCION=si npm run test:e2e` corre
+  las de punta a punta contra la base real, con cuentas temporales
+  `prueba-…@example.com` que se borran solas (13 pruebas, 240
+  verificaciones, unos 20 minutos). Correr las unitarias antes de cada
+  commit y las de punta a punta antes de publicar un cambio de base, de
+  Edge Function o de una pantalla del recorrido principal. Una prueba nueva
+  va en `tests/`, nunca solo en una carpeta temporal.
 - Los mensajes de commit llevan el código de la historia adelante, por
   ejemplo: `TRA04: envío de ubicación desde la ficha pública`.
 - No exponer nunca el contenido de `.env.local`.

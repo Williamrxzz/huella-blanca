@@ -1586,3 +1586,43 @@ IA02 37/37, fotos 21/21, estadísticas 12/12, panel 13/13, push en Chrome real
   retiró el 2026-11-16.
 La base quedó igual que al empezar (2 cuentas, 4 mascotas, 49 placas, 198
 escaneos, 5 avisos, 11 casos, 3 fotos).
+
+## 2026-11-17 — Pruebas automatizadas en el repositorio
+
+Hallazgo de la revisión completa del proyecto: no había ninguna prueba
+versionada. Todo lo que este documento cita como probado ("25 de 28", "37 de
+37", etc.) eran scripts en una carpeta temporal, fuera del repositorio:
+nadie más podía repetirlos y se perdían al cerrar la sesión.
+
+- **`tests/unit/`** (`npm test`): 18 pruebas de lógica pura con el runner que
+  trae Node (`node:test`, sin dependencias nuevas), en menos de un segundo:
+  normalización del teléfono a E.164 (TRA05), el lector `/escanear` que
+  rechaza `javascript:`/`data:` y el texto para compartir la búsqueda (IA03:
+  sin teléfono, domicilio ni mensaje privado; señas solo públicas; ubicación
+  redondeada; sin emojis).
+- **`tests/e2e/`** (`PRUEBAS_EN_PRODUCCION=si npm run test:e2e`): los 13
+  scripts de punta a punta usados durante las sesiones del 2026-11-16 y
+  2026-11-17, llevados al repositorio con un módulo común (`comun.mjs`:
+  claves pedidas al CLI en cada ejecución, base, API, Chrome, verificaciones
+  y código de salida). Corren contra la base de producción (no hay un
+  proyecto de pruebas aparte), por eso no arrancan sin esa variable.
+  `correr.mjs` levanta el servidor de desarrollo y el build de producción si
+  hacen falta, corre las pruebas de a una, compara la base con la línea base
+  y resume; `limpiar.mjs` borra restos de pruebas cortadas (cuentas
+  `prueba-…@example.com` y placas con código de prueba), el problema que hubo
+  hoy cuando un error de red cortó `prueba_fotos` a mitad de camino.
+- Cambios al llevarlas: `seguridad-rol` pasó de imprimir resultados a
+  verificarlos (y suma el trigger de respaldo); `limite-ia` suma la regresión
+  del 401 que colgaba las llamadas siguientes; `eliminar-cuenta.py` comprueba
+  el borrado de fotos en la tabla de Storage y no en la URL pública (el caché
+  del CDN la seguía sirviendo: eran las 3 verificaciones "en rojo" del
+  2026-11-16, que ahora pasan); las pruebas de IA bajan la foto pública de
+  una mascota cargada en vez de guardar una foto en el repositorio, que es
+  público. `prueba_purga.py` no se llevó: probaba la papelera retirada el
+  2026-11-16.
+- **Resultado** de la primera corrida desde el repositorio: 13 de 13 pruebas
+  en verde, 240 de 240 verificaciones, la base igual que al empezar. Unitarias:
+  18 de 18.
+- Limitaciones: las de punta a punta dependen de macOS con Google Chrome (o
+  `CHROME_PATH`), del CLI de Supabase con sesión y de `python3`; tardan unos
+  20 minutos. No hay integración continua: se corren a mano.
