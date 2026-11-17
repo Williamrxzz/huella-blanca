@@ -490,10 +490,12 @@ Usuario", con siete listas, una por bloque.
   (`Recuperar.jsx`) pide el email y llama a `resetPasswordForEmail`; responde
   igual exista o no la cuenta. El enlace del email abre `/restablecer`
   (`Restablecer.jsx`), que pide la contraseña nueva dos veces y la guarda con
-  `updateUser`; si el enlace venció, ofrece pedir otro. Hoy `/restablecer` no
-  está entre las URLs de vuelta permitidas en Supabase, así que el enlace
-  vuelve al inicio: `src/lib/desvioRecuperacion.js`, importado primero en
-  `main.jsx`, lo manda a `/restablecer` igual. El email lo manda el servicio
+  `updateUser`; si el enlace venció, ofrece pedir otro. En producción
+  Supabase devuelve directo a `/restablecer`; desde `localhost` (que no está
+  entre las URLs permitidas) vuelve al inicio del Site URL.
+  `src/lib/desvioRecuperacion.js`, importado primero en `main.jsx`, manda a
+  `/restablecer` cualquier dirección con token de recuperación, así que
+  funciona en los dos casos. El email lo manda el servicio
   de Supabase con su plantilla por defecto (en inglés; se traduce en el panel
   de Supabase, Authentication → Email Templates) y con su límite de envíos
   por hora.

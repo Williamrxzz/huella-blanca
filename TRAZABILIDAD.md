@@ -1680,13 +1680,12 @@ mascota, justo cuando más lo necesitaba.
   ofrece pedir otro.
 - **Desvío al arrancar** (`src/lib/desvioRecuperacion.js`, primer import de
   `main.jsx`): si la dirección trae un token de recuperación, la ruta pasa a
-  `/restablecer` antes de crear el cliente de Supabase. Hacía falta: la prueba
-  mostró que hoy `/restablecer` **no** está entre las URLs de vuelta
-  permitidas del proyecto y Supabase devuelve al inicio, que habría mandado al
-  panel con la sesión abierta sin pedir la contraseña nueva. Con el desvío
-  funciona sin tocar la configuración. (Opcional: agregar
-  `https://huella-blanca.vercel.app/restablecer` en Authentication → URL
-  Configuration → Redirect URLs.)
+  `/restablecer` antes de crear el cliente de Supabase. Corriendo la prueba
+  desde `localhost`, Supabase devolvía al inicio del Site URL (localhost no
+  está entre las URLs permitidas), que habría mandado al panel con la sesión
+  abierta sin pedir la contraseña nueva; corrida contra producción, devuelve
+  directo a `/restablecer`. El desvío cubre los dos casos y cualquier cambio
+  futuro de esa configuración.
 - "¿Olvidaste tu contraseña?" en `/login`.
 - **Verificado** (`tests/e2e/recuperar-contrasena.mjs`, 13/13): el enlace se
   genera con la API de administración (el mismo que llega por email) y se
@@ -1694,6 +1693,8 @@ mascota, justo cuando más lo necesitaba.
   la dirección, "no coinciden" se avisa, la contraseña nueva entra y la vieja
   ya no; sin token, ofrece otro enlace; con un email sin cuenta, la respuesta
   es la misma. Junto con `seguridad-rol` y `telefono`: 38/38, la base igual.
+  Después del deploy, la misma prueba contra producción
+  (`BASE=https://huella-blanca.vercel.app`): 13/13.
 - Pendiente del dueño del proyecto: la plantilla del email de Supabase está
   en inglés (Authentication → Email Templates → Reset Password).
 - De paso: `public/sw-push.js` tenía una asignación inútil que marcaba el
