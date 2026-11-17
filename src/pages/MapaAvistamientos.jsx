@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { iconoAviso, iconoCasa } from '../lib/leaflet-iconos'
 import { MapContainer, TileLayer, Marker, Circle, Popup, useMap } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
-import { borrarFoto, subirFoto } from '../lib/fotos'
+import { borrarFoto, fotoAJpegBase64, subirFoto, verificarFoto } from '../lib/fotos'
 import Encabezado from '../components/Encabezado'
 
 const ETIQUETA_SITUACION = {
@@ -22,7 +22,44 @@ function formatearFecha(fechaIso) {
 
 function FormularioReencuentro({ mascota, onCancelar, onConfirmar, enviando }) {
   const [mensaje, setMensaje] = useState('')
+  // Foto preparada ({ base64, pase }) y estado de su verificación (IA02): la
+  // misma regla que la foto de perfil de la mascota.
   const [foto, setFoto] = useState(null)
+  const [analizando, setAnalizando] = useState(false)
+  const [avisoFoto, setAvisoFoto] = useState(null)
+  const eleccionActual = useRef(0)
+
+  async function elegirFoto(e) {
+    const archivo = e.target.files?.[0] || null
+    if (!archivo) return
+    const numero = ++eleccionActual.current
+    setAvisoFoto(null)
+    setFoto(null)
+    setAnalizando(true)
+    try {
+      const base64 = await fotoAJpegBase64(archivo)
+      if (numero !== eleccionActual.current) return
+      setFoto({ base64, pase: null })
+      const data = await verificarFoto(base64)
+      if (numero !== eleccionActual.current) return
+      if (!data) {
+        setAvisoFoto({ tipo: 'sin_verificar' })
+        return
+      }
+      if (data.categoria === 'sin_animal' || data.categoria === 'inapropiada') {
+        setFoto(null)
+        e.target.value = ''
+        setAvisoFoto({ tipo: 'rechazada', categoria: data.categoria, motivo: data.motivo })
+        return
+      }
+      setFoto({ base64, pase: data.pase || null })
+      if (data.categoria === 'incorrecta') setAvisoFoto({ tipo: 'advertencia', motivo: data.motivo })
+    } catch {
+      if (numero === eleccionActual.current) setAvisoFoto({ tipo: 'sin_verificar' })
+    } finally {
+      if (numero === eleccionActual.current) setAnalizando(false)
+    }
+  }
 
   return (
     <div className="superposicion">
@@ -44,8 +81,25 @@ function FormularioReencuentro({ mascota, onCancelar, onConfirmar, enviando }) {
 
         <label className="campo-archivo">
           Foto del reencuentro (opcional)
-          <input type="file" accept="image/*" onChange={(e) => setFoto(e.target.files?.[0] || null)} />
+          <input type="file" accept="image/*" onChange={elegirFoto} />
         </label>
+
+        {analizando && <p className="ayuda">Analizando la foto…</p>}
+        {avisoFoto?.tipo === 'rechazada' && (
+          <p className="ayuda error" role="alert">
+            {avisoFoto.categoria === 'sin_animal'
+              ? 'Esta foto no parece ser de un animal. Elegí una foto del reencuentro con tu mascota, o seguí sin foto.'
+              : `Esa foto no se puede usar (${avisoFoto.motivo || 'contenido no permitido'}). Elegí otra o seguí sin foto.`}
+          </p>
+        )}
+        {avisoFoto?.tipo === 'advertencia' && (
+          <p className="ayuda error" role="alert">
+            {avisoFoto.motivo || 'La foto no se ve del todo clara.'} Podés seguir igual, o elegir otra.
+          </p>
+        )}
+        {avisoFoto?.tipo === 'sin_verificar' && (
+          <p className="ayuda">No pudimos verificar la foto en este momento. Podés seguir igual.</p>
+        )}
 
         <div className="acciones-tarjeta">
           <button className="boton secundario" type="button" onClick={onCancelar} disabled={enviando}>
@@ -55,9 +109,9 @@ function FormularioReencuentro({ mascota, onCancelar, onConfirmar, enviando }) {
             className="boton"
             type="button"
             onClick={() => onConfirmar({ mensaje: mensaje.trim() || null, foto })}
-            disabled={enviando}
+            disabled={enviando || analizando}
           >
-            {enviando ? 'Guardando…' : 'Confirmar'}
+            {enviando ? 'Guardando…' : analizando ? 'Verificando la foto…' : 'Confirmar'}
           </button>
         </div>
       </div>
@@ -141,10 +195,12 @@ export default function MapaAvistamientos() {
     let fotoNueva = null
     if (foto) {
       try {
-        fotoNueva = await subirFoto(mascota.dueno_id, 'reencuentro-', foto)
+        fotoNueva = await subirFoto({ ...foto, tipo: 'reencuentro' })
       } catch (errorSubida) {
         setCerrando(false)
-        setErrorCierre('No pudimos subir la foto: ' + errorSubida.message)
+        setErrorCierre(errorSubida.codigo === 'foto_rechazada'
+          ? 'Esa foto no se puede usar: elegí otra o cerrá el caso sin foto.'
+          : 'No pudimos subir la foto: ' + errorSubida.message)
         return
       }
       fotoUrl = fotoNueva.url

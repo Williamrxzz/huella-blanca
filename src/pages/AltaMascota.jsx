@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { iconoCasa } from '../lib/leaflet-iconos'
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
-import { borrarFoto, subirFoto } from '../lib/fotos'
+import { borrarFoto, fotoAJpegBase64, subirFoto, verificarFoto } from '../lib/fotos'
 import { pedirUbicacion } from '../lib/ubicacion'
 import { X } from 'lucide-react'
 import Encabezado from '../components/Encabezado'
@@ -14,33 +14,6 @@ const ERRORES_VINCULAR = {
   placa_no_encontrada: 'No encontramos esa placa',
   placa_ya_asignada: 'Esa placa ya está asignada a otra mascota',
   mascota_no_encontrada: 'No pudimos identificar la mascota',
-}
-
-function archivoABase64(archivo) {
-  return new Promise((resolve, reject) => {
-    const lector = new FileReader()
-    lector.onload = () => resolve(String(lector.result).split(',')[1])
-    lector.onerror = reject
-    lector.readAsDataURL(archivo)
-  })
-}
-
-// Reduce la foto y la convierte a JPEG antes de mandarla a la IA. La API solo
-// acepta JPEG, PNG, GIF y WebP (no HEIC, el formato de las fotos de iPhone) y
-// rechaza imágenes muy pesadas: así la verificación no falla por el formato o
-// el tamaño del archivo, y además viaja menos y responde más rápido.
-async function fotoAJpegBase64(archivo, ladoMaximo = 1280) {
-  const imagen = await createImageBitmap(archivo)
-  const escala = Math.min(1, ladoMaximo / Math.max(imagen.width, imagen.height))
-  const lienzo = document.createElement('canvas')
-  lienzo.width = Math.max(1, Math.round(imagen.width * escala))
-  lienzo.height = Math.max(1, Math.round(imagen.height * escala))
-  lienzo.getContext('2d').drawImage(imagen, 0, 0, lienzo.width, lienzo.height)
-  imagen.close?.()
-  const jpeg = await new Promise((resolve, reject) => {
-    lienzo.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('sin_jpeg'))), 'image/jpeg', 0.85)
-  })
-  return archivoABase64(jpeg)
 }
 
 function SelectorMapa({ onSeleccionar }) {
@@ -70,6 +43,8 @@ export default function AltaMascota() {
   const [senas, setSenas] = useState('')
   const [caracter, setCaracter] = useState('amigable')
   const [foto, setFoto] = useState(null)
+  // Bytes ya reducidos (JPEG en base64) y el pase de la verificación: son los que se guardan.
+  const [fotoPreparada, setFotoPreparada] = useState(null)
   const [fotoUrlActual, setFotoUrlActual] = useState(null)
   const [analizandoFoto, setAnalizandoFoto] = useState(false)
   const verificacionActual = useRef(0)
@@ -157,9 +132,10 @@ export default function AltaMascota() {
     setAnalizandoFoto(true)
     try {
       const base64 = await fotoAJpegBase64(archivo)
-      const { data, error: errorFn } = await supabase.functions.invoke('sugerir-ficha', {
-        body: { imagen_base64: base64, media_type: 'image/jpeg' },
-      })
+      if (numeroVerificacion !== verificacionActual.current) return
+      setFotoPreparada({ base64, pase: null })
+
+      const data = await verificarFoto(base64)
 
       if (numeroVerificacion !== verificacionActual.current) return
 
@@ -167,13 +143,17 @@ export default function AltaMascota() {
       // devolvió una clasificación): la IA sugiere y la persona confirma, así
       // que se sigue sin verificar y nunca se traba el alta de la mascota.
       // Solo se bloquea abajo, cuando el modelo SÍ contestó que no hay un animal.
-      if (errorFn || !data || data.error) {
+      // (`subir-foto` vuelve a intentar la verificación al guardar.)
+      if (!data) {
         setAvisoFotoIA({ tipo: 'sin_verificar', motivo: null })
         return
       }
 
+      setFotoPreparada({ base64, pase: data.pase || null })
+
       if (data.categoria === 'inapropiada') {
         setFoto(null)
+        setFotoPreparada(null)
         e.target.value = ''
         setAvisoFotoIA({ tipo: 'bloqueo', motivo: data.motivo })
         return
@@ -181,6 +161,7 @@ export default function AltaMascota() {
 
       if (data.categoria === 'sin_animal') {
         setFoto(null)
+        setFotoPreparada(null)
         e.target.value = ''
         setAvisoFotoIA({ tipo: 'sin_animal', motivo: null })
         return
@@ -234,6 +215,7 @@ export default function AltaMascota() {
   function quitarFoto() {
     verificacionActual.current += 1
     setFoto(null)
+    setFotoPreparada(null)
     setAvisoFotoIA(null)
     setAnalizandoFoto(false)
     setError(null)
@@ -261,11 +243,21 @@ export default function AltaMascota() {
 
     let fotoUrl = fotoUrlActual
     let fotoNueva = null
-    if (foto) {
+    if (foto && fotoPreparada) {
       try {
-        fotoNueva = await subirFoto(sesion.user.id, '', foto)
+        fotoNueva = await subirFoto({ ...fotoPreparada, tipo: 'mascota' })
       } catch (errorSubida) {
         setGuardando(false)
+        if (errorSubida.codigo === 'foto_rechazada') {
+          // La verificación del servidor la rechazó (por ejemplo, la del
+          // navegador había fallado): mismo trato que al elegirla.
+          setFoto(null)
+          setFotoPreparada(null)
+          setAvisoFotoIA(errorSubida.categoria === 'sin_animal'
+            ? { tipo: 'sin_animal', motivo: null }
+            : { tipo: 'bloqueo', motivo: errorSubida.message })
+          return
+        }
         setError('No pudimos subir la foto: ' + errorSubida.message)
         return
       }

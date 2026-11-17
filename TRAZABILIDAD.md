@@ -1137,3 +1137,53 @@ b) al editar una mascota y reemplazar la foto, la anterior no se borraba.
 - No probado por pantalla: el rollback de la foto de reencuentro (mismo
   código que el de la mascota; no hay forma de forzar el fallo del cierre
   desde la pantalla sin tocar la base).
+
+## 2026-11-17 — IA02 completa: verificación de fotos del lado del servidor
+
+Cierra los dos huecos documentados el 2026-11-04: la verificación corría solo
+en el navegador (se evitaba subiendo directo a Storage) y no cubría la foto de
+reencuentro (REC02).
+
+**Diseño.** El navegador ya no sube nada directo al bucket: se quitaron las
+políticas de subida y actualización (migración
+`20261117000001_fotos_solo_por_funcion.sql`; quedan lectura pública y borrado
+de la carpeta propia). Las fotos entran únicamente por la Edge Function nueva
+**`subir-foto`**, que exige sesión, valida que los bytes sean un JPEG de hasta
+6 MB, verifica con la IA y guarda en la carpeta de la cuenta con la clave de
+servicio. Para no pagar ni esperar dos veces la clasificación:
+- `sugerir-ficha` (v8), al elegir la foto, devuelve además un **pase**:
+  HMAC (clave: la service_role key, que no sale del servidor) sobre
+  `{uid, sha256 de los bytes, categoría, vencimiento 2 h}`, solo si hubo
+  sesión y la foto no fue rechazada.
+- `subir-foto` acepta el pase solo si coincide la cuenta y el hash de los
+  bytes que recibe; si no hay pase o no coincide, clasifica ella misma. Solo
+  rechaza (422 `foto_rechazada`) cuando la IA contestó `sin_animal` o
+  `inapropiada`; si la IA no responde, guarda igual (`categoria:
+  'sin_verificar'`): la app sigue funcionando sin IA, como manda el proyecto.
+- La clasificación (prompt, herramienta, normalización) se movió a
+  `supabase/functions/_shared/clasificar.ts`; el pase, a `_shared/pase.ts`.
+- El navegador manda a `subir-foto` **los mismos bytes** que mandó a
+  `sugerir-ficha` (el JPEG reducido a 1280 px que ya se generaba para la IA):
+  `src/lib/fotos.js` concentra `fotoAJpegBase64`, `verificarFoto`,
+  `subirFoto`, `borrarFoto`. Lo guardado es ese JPEG reducido, no el archivo
+  original (más liviano para la ficha pública).
+- `MapaAvistamientos.jsx`: la foto del reencuentro pasa por la misma
+  verificación al elegirla (bloquea `sin_animal`/`inapropiada`, advierte
+  `incorrecta`, deja pasar si la IA no responde) y se guarda por `subir-foto`.
+
+**Prueba, 37 de 37 (dos corridas; Chrome real + API; con fotos reales que
+pasan por la IA; base y Storage restaurados):** todo lo del punto 6 sigue
+andando (reemplazo, rollback, alta); la subida directa a Storage con sesión y
+la sobrescritura de una foto propia se rechazan; `subir-foto` sin sesión da
+401, con bytes que no son JPEG 400, con una imagen sin animal (un cartel de
+texto generado en el navegador) 422 y no guarda nada; `sugerir-ficha` da pase
+con el perro y no con el cartel, ni sin sesión; el pase del perro no sirve
+para subir el cartel (se reclasifica y rechaza); con el pase correcto sube en
+<2 s sin reclasificar; el pase de A no vale para B; y el cierre de caso con
+foto de reencuentro por pantalla la guarda vía `subir-foto`. En la primera
+corrida, la llamada sin sesión dio 503 por arranque en frío de la función
+(verificado aparte: 401 estable) y la limpieza dejó dos fotos huérfanas de
+las cuentas de prueba, borradas después y con el script corregido.
+
+**Costo:** una llamada a Haiku por foto elegida (igual que antes); una
+segunda solo si el pase falta o no coincide.

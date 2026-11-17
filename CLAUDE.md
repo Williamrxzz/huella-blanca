@@ -546,10 +546,12 @@ commit) de las historias del MVP con texto dudoso. Resultado:
   (`formatearFecha(a.creado_en)`) junto a la ubicación — no hizo falta
   agregar nada.
 - **PER04**: construida el 2026-11-16 (Web Push).
-- Fotos en Storage: desde el 2026-11-17 cada dueño puede borrar las de su
-  carpeta (política `fotos_mascotas_borrado_propio_dueno`), y la app borra
-  la foto anterior al reemplazarla y la recién subida si el guardado
-  falla (`src/lib/fotos.js`). Ver `TRAZABILIDAD.md`, entrada del 2026-11-17.
+- Fotos en Storage: desde el 2026-11-17 el navegador **no sube** al
+  bucket (solo lee y borra las de su carpeta, política
+  `fotos_mascotas_borrado_propio_dueno`); sube a través de la Edge
+  Function `subir-foto`, que verifica con la IA. La app borra la foto
+  anterior al reemplazarla y la recién subida si el guardado falla
+  (`src/lib/fotos.js`). Ver `TRAZABILIDAD.md`, entradas del 2026-11-17.
 - Todas las funciones de Supabase del núcleo (`generar_placa`,
   `ficha_publica`, `registrar_escaneo`, `registrar_avistamiento`) se
   probaron en vivo contra una mascota descartable, no solo leyendo su
@@ -692,7 +694,7 @@ sin registrarse — esa regla no cambió. Probado de punta a punta con
 clics reales, salvo la confirmación real de email (no se puede hacer
 desde este entorno).
 
-### IA01 + IA02: IA01 terminada; IA02 parcial (actualizado el 2026-11-04)
+### IA01 + IA02: terminadas (IA02 completa el 2026-11-17)
 
 Una sola Edge Function, `sugerir-ficha` (`supabase/functions/sugerir-ficha`,
 versión 7 desde el 2026-11-04), llamada desde `AltaMascota.jsx` al
@@ -719,9 +721,13 @@ corre **al crear y al editar**; las sugerencias de ficha se aplican
   un animal. Subí una foto de tu mascota (perro, gato u otro animal)
   para continuar.") o que la foto es inapropiada.
 
-IA02 queda **Parcial**: el bloqueo es solo del navegador y solo cubre la
-foto de perfil de la mascota (no la del reencuentro). Ver
-`TRAZABILIDAD.md`, entrada del 2026-11-04.
+**Desde el 2026-11-17 la verificación también corre en el servidor** y
+cubre la foto de reencuentro: el navegador no puede subir al bucket
+(sin políticas de subida/actualización); la única entrada es la Edge
+Function `subir-foto`, que verifica o acepta un *pase* firmado que
+`sugerir-ficha` emite para esos mismos bytes. La clasificación vive en
+`supabase/functions/_shared/clasificar.ts`. Ver `TRAZABILIDAD.md`,
+entrada del 2026-11-17.
 
 Detalle completo y qué se probó (incluida la simulación de
 "inapropiada" sin usar contenido real) en `TRAZABILIDAD.md`, entrada
@@ -781,7 +787,7 @@ del 2026-09-21.
 
 ### Estado de las 63 historias (actualizado el 2026-11-04)
 
-- **37 terminadas** (DAT05 primera versión, PER04 y PER03 completas el 2026-11-16 — ver `TRAZABILIDAD.md`, entradas de ese día). Incluye **IA03**, construida el 2026-11-04: con la
+- **38 terminadas** (DAT05 primera versión, PER04 y PER03 completas el 2026-11-16, IA02 completa el 2026-11-17 — ver `TRAZABILIDAD.md`). Incluye **IA03**, construida el 2026-11-04: con la
   mascota en estado `perdida`, el panel (`Panel.jsx`, componente
   `TextoParaCompartir`) muestra un texto de búsqueda armado con una
   plantilla (`src/lib/textoBusqueda.js`, sin llamar a la IA) con los
@@ -801,9 +807,8 @@ del 2026-09-21.
   sin uso; se elimina en una migración aparte. No cuenta entre las
   historias cerradas en la entrega del Sprint 3: es una corrección
   posterior. Ver `TRAZABILIDAD.md`, entradas del 2026-10-25.
-- **1 cumplida parcialmente**: **IA02** (el bloqueo corre solo en el
-  navegador y solo cubre la foto de perfil; ver la sección de IA01 + IA02).
-  PER03 estuvo Parcial entre el 2026-10-25 y el 2026-11-16: la alerta con
+- **0 cumplidas parcialmente.** IA02 estuvo Parcial entre el 2026-11-04 y
+  el 2026-11-17 (ver la sección de IA01 + IA02). PER03 estuvo Parcial entre el 2026-10-25 y el 2026-11-16: la alerta con
   la distancia y el paso automático a `perdida` se construyeron junto con
   PER04 (ver "Notificaciones push" más abajo).
 - **8 pendientes**: DUE08, DUE11, TRA07, TRA10, PER09, REC08, ADM03,
