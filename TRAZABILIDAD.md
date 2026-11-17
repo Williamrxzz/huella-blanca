@@ -1522,3 +1522,67 @@ Hallazgo de la revisión completa del proyecto.
   una hora bloquea los avisos de esa mascota hasta que pase la hora; el botón
   de contacto sigue funcionando. Se eligió esto antes que exigir cuenta para
   avisar, que contradice la decisión central del proyecto.
+
+## 2026-11-17 — Ficha de ejemplo, escaneos del dueño y "el dueño confirmó"
+
+Hallazgos de la revisión completa del proyecto.
+
+**1. "Ver un ejemplo de ficha" llevaba a la ficha real de Blanca.** El enlace
+del inicio apuntaba a `/m/C30A45A9`. Con Blanca en `perdida`, cada visitante
+que solo quería conocer la app registraba un escaneo real (188 de los 198
+escaneos de la base son de Blanca), recibía el teléfono del dueño dentro del
+JSON y veía los botones para llamarlo, y si tocaba "La vi acá" le mandaba un
+aviso real con push. Ahora el enlace lleva a `/ejemplo`: la misma pantalla
+(`FichaPublica` con `demo`) con datos fijos de `src/lib/fichaEjemplo.js` (los
+datos públicos de Blanca, con un caso simulado y la "última ubicación" en el
+centro de Caleta Olivia, no en su casa). No hace ningún pedido a la base, no
+tiene teléfono (los botones explican qué harían), el aviso es simulado y un
+recuadro aclara que es un ejemplo. `/m/C30A45A9` sigue siendo la ficha real.
+
+**2. Los escaneos del propio dueño contaban como escaneos reales.**
+`registrar_escaneo()` registraba el escaneo y, lejos de casa, abría una
+posible pérdida aunque quien escaneaba fuera el dueño (probando su placa,
+compartiendo la ficha, de viaje). Ahora, si hay sesión y es el dueño, devuelve
+`{"ok": true, "propio": true}` sin registrar nada. Los escaneos viejos no se
+tocan (no se puede saber cuáles fueron del dueño).
+
+**3. PER03 b: "El dueño confirmó" cuando nadie confirmó.** Si un caso pasaba
+solo a `perdida` por falta de respuesta, la ficha decía "El dueño confirmó que
+no está en su casa". Se agregó `casos_perdida.escalado_en`, que pone
+`escalar_casos_sin_respuesta()`; `ficha_publica()` lo informa como
+`perdida_automatica` y la ficha dice "La detectamos lejos de su casa y su
+familia todavía no respondió". El texto confirmado pasó a "Su familia
+confirmó...". Los tres casos abiertos al aplicarlo (Blanca, Luneri, Liliana)
+los confirmó su dueño: ninguno tiene notificación de paso automático, así que
+no hubo que completar datos.
+
+Migración `20261117000008_escalado_y_escaneo_propio.sql`.
+
+**Verificado**, 19/19 con una mascota temporal: el dueño escanea lejos → no se
+registra nada; otra persona → escaneo, posible pérdida y aviso; la tarea de
+escalado (corrida solo después de comprobar que no había casos reales en
+condiciones de escalar) marca el caso y la ficha muestra el texto nuevo;
+Blanca sigue como confirmada; `/ejemplo` muestra el aviso de ejemplo, la
+alerta y el mensaje, los botones de contacto no tienen enlace real, el aviso
+simulado no ofrece crear cuenta, y **no hubo ningún pedido a la base** en todo
+el recorrido (medido con las peticiones de red de Chrome); el dueño con sesión
+abre su propia ficha y no suma escaneo. Blanca sin escaneos, avisos ni
+notificaciones nuevas.
+
+**Batería completa de pruebas de la sesión**, corrida después de este cambio:
+teléfono 26/26 y 16/16, escalada de rol 6/6, límite de IA 8/8, ficha y avisos
+21/21, límite de push 13/13, ejemplo y escalado 19/19, notificaciones 26/26,
+IA02 37/37, fotos 21/21, estadísticas 12/12, panel 13/13, push en Chrome real
+15/15. Notas:
+- `prueba_fotos` se cortó la primera vez por un error de red de la API de
+  Supabase y dejó dos cuentas de prueba (`prueba-fotos-…@example.com`), que se
+  borraron; repetida, pasó entera.
+- `prueba_escalada` usaba un teléfono `'123'`, que el check E.164 de hoy
+  rechaza a propósito; se cambió por uno válido.
+- `prueba_eliminar.py`: 25/28. Las 3 restantes son las URLs públicas de las
+  fotos borradas, que el CDN sigue sirviendo un rato desde su caché (la misma
+  causa documentada el 2026-11-16); el objeto ya no existe en Storage.
+- `prueba_purga.py` quedó obsoleta: prueba la papelera con purga diaria que se
+  retiró el 2026-11-16.
+La base quedó igual que al empezar (2 cuentas, 4 mascotas, 49 placas, 198
+escaneos, 5 avisos, 11 casos, 3 fotos).

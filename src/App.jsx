@@ -61,7 +61,7 @@ function Inicio() {
 
       <Link className="boton" to="/login">Iniciar sesión</Link>
       <Link className="boton secundario" to="/escanear">Escanear un QR</Link>
-      <Link className="enlace-discreto" to="/m/C30A45A9">Ver un ejemplo de ficha</Link>
+      <Link className="enlace-discreto" to="/ejemplo">Ver un ejemplo de ficha</Link>
     </main>
   )
 }
@@ -85,6 +85,7 @@ export default function App() {
           <Route path="/admin/estadisticas" element={<AdminEstadisticas />} />
         <Route path="/mi-historial" element={<HistorialColaboracion />} />
         <Route path="/m/:codigo" element={<FichaPublica />} />
+        <Route path="/ejemplo" element={<FichaPublica demo />} />
       </Routes>
       <BotonAccesibilidad />
     </BrowserRouter>

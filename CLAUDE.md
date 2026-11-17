@@ -289,7 +289,10 @@ cuando la mascota del caso pertenece al dueño autenticado.
   domicilio y, si supera `radio_metros` y el modo paseo no está activo
   (`pausado_hasta` nulo o vencido), abre un caso en estado
   `posible_perdida`. Fuente verificada con `pg_get_functiondef` el
-  2026-09-21.
+  2026-09-21. Desde el 2026-11-17, si quien escanea es el dueño con
+  sesión iniciada, no registra nada ni abre caso (devuelve
+  `{"ok": true, "propio": true}`): el dueño mirando su ficha no es alguien
+  que la encontró.
 - `registrar_avistamiento(p_codigo, p_lat, p_lng, p_origen, p_situacion,
   p_mensaje, p_contacto)` → registra el aviso; funciona con o sin cuenta.
   Acepta el aviso sin coordenadas (TRA11) siempre que traiga un texto que
@@ -341,7 +344,12 @@ Desde el frontend se llaman con `supabase.rpc('nombre', { parametros })`.
   únicas mascotas en producción y hay 45 placas `sin_asignar`
   (inventario de QR; ver `TRAZABILIDAD.md`, entrada del 2026-11-04).
 
-Para probar: `http://localhost:5173/m/C30A45A9`
+Para probar: `http://localhost:5173/m/C30A45A9` (ojo: es la ficha real
+de Blanca y cada visita sin sesión cuenta como escaneo). Para mostrar la
+app sin tocar datos reales está `/ejemplo` ("Ver un ejemplo de ficha" en
+el inicio): la misma pantalla con datos fijos de `src/lib/fichaEjemplo.js`,
+sin pedidos a la base, sin teléfono y con el aviso simulado. Hasta el
+2026-11-17 ese enlace llevaba a la ficha real de Blanca.
 
 ---
 
@@ -430,7 +438,11 @@ Usuario", con siete listas, una por bloque.
   estado: roja y con un indicador que pulsa si el dueño ya confirmó la
   pérdida, ámbar si es una sospecha automática todavía sin confirmar
   (el título de esa alerta se mantiene deliberadamente breve para no
-  restarle atención al resto de la ficha). Al cargar, llama **siempre**
+  restarle atención al resto de la ficha). Si el caso pasó solo a
+  `perdida` por falta de respuesta (`casos_perdida.escalado_en`,
+  `perdida_automatica` en `ficha_publica()`), la alerta roja dice que la
+  familia todavía no respondió, no que confirmó (desde el 2026-11-17).
+  Al cargar, llama **siempre**
   a `registrar_escaneo` (TRA04, DAT01), tenga o no ubicación: si el
   navegador ya tenía el permiso concedido de antes, la manda; si no,
   la manda en `null` y queda igual el registro de fecha y hora. Nunca

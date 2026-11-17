@@ -5,6 +5,7 @@ import { Phone } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { pedirUbicacion, pedirUbicacionSiYaHayPermiso } from '../lib/ubicacion'
 import Encabezado from '../components/Encabezado'
+import { FICHA_EJEMPLO } from '../lib/fichaEjemplo'
 
 function IconoWhatsApp(props) {
   return (
@@ -41,11 +42,13 @@ function SelectorMapa({ onSeleccionar }) {
   return null
 }
 
-export default function FichaPublica() {
+// `demo`: la ficha de ejemplo de /ejemplo. Misma pantalla, datos fijos
+// (src/lib/fichaEjemplo.js); no lee ni escribe nada en la base.
+export default function FichaPublica({ demo = false }) {
   const { codigo } = useParams()
   const navigate = useNavigate()
-  const [ficha, setFicha] = useState(null)
-  const [cargando, setCargando] = useState(true)
+  const [ficha, setFicha] = useState(demo ? FICHA_EJEMPLO : null)
+  const [cargando, setCargando] = useState(!demo)
   const [error, setError] = useState(null)
   const [activando, setActivando] = useState(false)
 
@@ -69,8 +72,11 @@ export default function FichaPublica() {
   const [errorCuenta, setErrorCuenta] = useState(null)
   const [cuentaCreada, setCuentaCreada] = useState(false)
   const [emailYaRegistrado, setEmailYaRegistrado] = useState(false)
+  const [notaContactoDemo, setNotaContactoDemo] = useState(false)
 
   useEffect(() => {
+    if (demo) return // el ejemplo no lee ni registra nada
+
     async function cargar() {
       setCargando(true)
       const { data, error } = await supabase.rpc('ficha_publica', { p_codigo: codigo })
@@ -91,7 +97,7 @@ export default function FichaPublica() {
       })
     }
     registrarEscaneo()
-  }, [codigo])
+  }, [codigo, demo])
 
   async function activarPlaca() {
     setActivando(true)
@@ -125,6 +131,12 @@ export default function FichaPublica() {
     // alcanza con describir el lugar en el texto (la base exige lo mismo).
     if (!ubicacion && !mensaje.trim()) {
       setErrorEnvio('Marcá en el mapa dónde la viste, o contanos el lugar en el texto (calle, esquina, algo que haya cerca).')
+      return
+    }
+
+    if (demo) {
+      // Ejemplo: no se manda nada, solo se muestra lo que vería la persona.
+      setAvisoEnviado(true)
       return
     }
 
@@ -248,7 +260,13 @@ export default function FichaPublica() {
       </div>
 
       <div className="ficha-contenido">
-      <Encabezado />
+      <Encabezado volver={demo ? '/' : undefined} />
+      {demo && (
+        <p className="aviso-ejemplo" role="note">
+          <strong>Ficha de ejemplo.</strong> Es lo que ve quien escanea la placa de una mascota
+          perdida. Podés tocar todo: no se envía nada a nadie.
+        </p>
+      )}
       {perdida && (
         <div className={`alerta ${ficha.estado === 'perdida' ? 'confirmada' : 'posible'}`}>
           <span className="punto" aria-hidden="true" />
@@ -257,9 +275,12 @@ export default function FichaPublica() {
               {ficha.estado === 'perdida' ? 'Reportada como perdida' : 'Podría estar perdida'}
             </strong>
             <p>
-              {ficha.estado === 'perdida'
-                ? 'El dueño confirmó que no está en su casa. Si la ves, avisale.'
-                : 'Se detectó un escaneo lejos de su domicilio y el dueño todavía no lo confirmó.'}
+              {ficha.estado !== 'perdida'
+                ? 'Se detectó un escaneo lejos de su domicilio y el dueño todavía no lo confirmó.'
+                : ficha.perdida_automatica
+                  // PER03 b: pasó sola a perdida porque nadie respondió la alerta.
+                  ? 'La detectamos lejos de su casa y su familia todavía no respondió. Si la ves, avisá.'
+                  : 'Su familia confirmó que no está en casa. Si la ves, avisá.'}
             </p>
             {ficha.mensaje_perdida && (
               <blockquote className="alerta-mensaje">
@@ -316,7 +337,27 @@ export default function FichaPublica() {
         </>
       )}
 
-      {perdida && (ficha.contacto_tel || ficha.contacto_whatsapp) && (
+      {demo && perdida && (
+        <>
+          <div className="contacto-dueno">
+            <button className="boton boton-contacto" type="button" onClick={() => setNotaContactoDemo(true)}>
+              <IconoWhatsApp />
+              WhatsApp
+            </button>
+            <button className="boton secundario boton-contacto" type="button" onClick={() => setNotaContactoDemo(true)}>
+              <Phone size={22} />
+              Llamar
+            </button>
+          </div>
+          {notaContactoDemo && (
+            <p className="ayuda" role="status">
+              En una ficha real, esto abre WhatsApp o una llamada con su familia, sin mostrar el número en pantalla.
+            </p>
+          )}
+        </>
+      )}
+
+      {!demo && perdida && (ficha.contacto_tel || ficha.contacto_whatsapp) && (
         <div className="contacto-dueno">
           {ficha.contacto_whatsapp && (
             <a className="boton boton-contacto" href={ficha.contacto_whatsapp} target="_blank" rel="noopener noreferrer">
@@ -339,7 +380,12 @@ export default function FichaPublica() {
             ¡Gracias! Avisamos al dueño de {ficha.nombre}.
           </div>
 
-          {cuentaCreada ? (
+          {demo ? (
+            <p className="ayuda">
+              Esto es un ejemplo: no se envió nada. En una ficha real, el aviso le llega a su familia
+              al instante, con el lugar que marcaste.
+            </p>
+          ) : cuentaCreada ? (
             <p className="ayuda">
               {emailYaRegistrado
                 ? 'Tu ayuda quedó registrada. Si ya tenías una cuenta con ese email, iniciá sesión y tu aviso se va a vincular solo.'

@@ -1420,3 +1420,17 @@ html[data-tema="oscuro"] .enlace-leido { background: #24282e; }
   gap: 6px;
 }
 .campo-con-ayuda .ayuda { margin: 0 0 0 4px; }
+
+/* /ejemplo: aclara que la ficha es de muestra y que no se envía nada. */
+.aviso-ejemplo {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px dashed #8aa9c8;
+  background: #eef4fa;
+  color: #234a70;
+  font-size: calc(14px * var(--escala-texto));
+  line-height: 1.4;
+}
+html[data-tema="oscuro"] .aviso-ejemplo { background: #1b2733; border-color: #3d5a78; color: #b9d3ec; }
+html[data-contraste="alto"] .aviso-ejemplo { background: #fff; color: #000; border: 2px solid #000; }
