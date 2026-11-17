@@ -1101,4 +1101,39 @@ No bloquea nada: el panel funciona igual sin activar los avisos.
 - Bug encontrado y corregido antes de commitear: `Panel.jsx` solo guardaba
   `perfilId` en la rama del perfil diferido, así que la tarjeta no aparecía
   para ningún dueño con perfil ya creado.
-- Falta probar en un teléfono real (Android y, con la app instalada, iPhone).
+- Commits `5fa9530` (todo lo anterior) y `5ff2664` (en iPhone sin instalar,
+  mostrar cómo activar los avisos en vez de nada: el componente devolvía
+  null antes de llegar a ese aviso porque Safari no tiene `PushManager`).
+- **Probado en el teléfono del dueño del proyecto el 2026-11-17: la
+  notificación llegó.** Queda sin probar en la otra plataforma.
+
+## 2026-11-17 — Fugas menores de Storage (punto 6 del plan de Sprint 5)
+
+Sin historia asociada. Dos fugas en el bucket `fotos-mascotas`:
+a) si el guardado de la mascota (o el cierre del caso con foto de
+reencuentro) fallaba después de subir la foto, la foto quedaba huérfana;
+b) al editar una mascota y reemplazar la foto, la anterior no se borraba.
+
+- **Bloqueo previo:** el bucket no tenía política de borrado, así que el
+  navegador no podía limpiar ni siquiera una foto propia. Migración
+  `20261117000000_storage_borrado_propio.sql`: política `DELETE` para
+  `authenticated` dentro de su propia carpeta (`<uid>/...`), la misma regla
+  que la de subida y actualización. Aplicada.
+- `src/lib/fotos.js` (nuevo): `subirFoto`, `borrarFoto` (nunca lanza: si no
+  puede borrar queda la huérfana, pero no se interrumpe a la persona) y
+  `rutaDesdeUrl`. `AltaMascota.jsx`: si el insert o el update falla, borra
+  la foto recién subida; si el update anduvo y había foto anterior, la
+  borra. `MapaAvistamientos.jsx`: si el cierre del caso falla, borra la
+  foto del reencuentro recién subida.
+- **Prueba, 21 de 21, con Chrome real contra el servidor de desarrollo y
+  una foto real (pasa por la verificación de IA):** reemplazar la foto al
+  editar borra la anterior y deja solo la nueva; editar sin foto nueva no
+  toca nada; un guardado que falla después de subir (forzado con un plazo
+  de confirmación fuera del `check` de la base) borra la foto subida y la
+  mascota conserva la anterior, tanto al editar como al crear; crear con
+  foto sigue funcionando; otro usuario y `anon` no pueden borrar fotos
+  ajenas (Storage responde 200 con lista vacía: no borra nada). Base y
+  Storage restaurados.
+- No probado por pantalla: el rollback de la foto de reencuentro (mismo
+  código que el de la mascota; no hay forma de forzar el fallo del cierre
+  desde la pantalla sin tocar la base).

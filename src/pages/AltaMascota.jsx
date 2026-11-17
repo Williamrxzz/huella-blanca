@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { iconoCasa } from '../lib/leaflet-iconos'
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
+import { borrarFoto, subirFoto } from '../lib/fotos'
 import { pedirUbicacion } from '../lib/ubicacion'
 import { X } from 'lucide-react'
 import Encabezado from '../components/Encabezado'
@@ -259,20 +260,16 @@ export default function AltaMascota() {
     setGuardando(true)
 
     let fotoUrl = fotoUrlActual
+    let fotoNueva = null
     if (foto) {
-      const ruta = `${sesion.user.id}/${Date.now()}-${foto.name}`
-      const { error: errorSubida } = await supabase.storage
-        .from('fotos-mascotas')
-        .upload(ruta, foto)
-
-      if (errorSubida) {
+      try {
+        fotoNueva = await subirFoto(sesion.user.id, '', foto)
+      } catch (errorSubida) {
         setGuardando(false)
         setError('No pudimos subir la foto: ' + errorSubida.message)
         return
       }
-
-      const { data } = supabase.storage.from('fotos-mascotas').getPublicUrl(ruta)
-      fotoUrl = data.publicUrl
+      fotoUrl = fotoNueva.url
     }
 
     const datosMascota = {
@@ -301,8 +298,15 @@ export default function AltaMascota() {
         .eq('id', id)
 
       setGuardando(false)
-      if (errorUpdate) setError(errorUpdate.message)
-      else navigate('/panel')
+      if (errorUpdate) {
+        // No quedó guardada: la foto recién subida no tiene a quién pertenecer.
+        if (fotoNueva) await borrarFoto(fotoNueva.ruta)
+        setError(errorUpdate.message)
+        return
+      }
+      // Se reemplazó la foto: la anterior ya no la usa nadie.
+      if (fotoNueva && fotoUrlActual) await borrarFoto(fotoUrlActual)
+      navigate('/panel')
       return
     }
 
@@ -313,6 +317,8 @@ export default function AltaMascota() {
       .single()
 
     if (errorInsert) {
+      // La mascota no se guardó: se borra la foto para no dejarla huérfana.
+      if (fotoNueva) await borrarFoto(fotoNueva.ruta)
       setGuardando(false)
       setError(errorInsert.message)
       return

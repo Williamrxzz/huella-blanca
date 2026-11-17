@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom'
 import { iconoAviso, iconoCasa } from '../lib/leaflet-iconos'
 import { MapContainer, TileLayer, Marker, Circle, Popup, useMap } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
+import { borrarFoto, subirFoto } from '../lib/fotos'
 import Encabezado from '../components/Encabezado'
 
 const ETIQUETA_SITUACION = {
@@ -137,18 +138,16 @@ export default function MapaAvistamientos() {
     setErrorCierre(null)
 
     let fotoUrl = null
+    let fotoNueva = null
     if (foto) {
-      const ruta = `${mascota.dueno_id}/reencuentro-${Date.now()}-${foto.name}`
-      const { error: errorSubida } = await supabase.storage.from('fotos-mascotas').upload(ruta, foto)
-
-      if (errorSubida) {
+      try {
+        fotoNueva = await subirFoto(mascota.dueno_id, 'reencuentro-', foto)
+      } catch (errorSubida) {
         setCerrando(false)
         setErrorCierre('No pudimos subir la foto: ' + errorSubida.message)
         return
       }
-
-      const { data } = supabase.storage.from('fotos-mascotas').getPublicUrl(ruta)
-      fotoUrl = data.publicUrl
+      fotoUrl = fotoNueva.url
     }
 
     const { data: avistamientoConColaborador } = await supabase
@@ -170,6 +169,9 @@ export default function MapaAvistamientos() {
         foto_reencuentro_url: fotoUrl,
       })
       .eq('id', caso.id)
+
+    // El caso no se cerró: la foto del reencuentro no tiene a qué pertenecer.
+    if (errorCierreCaso && fotoNueva) await borrarFoto(fotoNueva.ruta)
 
     setCerrando(false)
     setMostrarFormularioVolvio(false)

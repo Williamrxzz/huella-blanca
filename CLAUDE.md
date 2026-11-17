@@ -546,6 +546,10 @@ commit) de las historias del MVP con texto dudoso. Resultado:
   (`formatearFecha(a.creado_en)`) junto a la ubicación — no hizo falta
   agregar nada.
 - **PER04**: construida el 2026-11-16 (Web Push).
+- Fotos en Storage: desde el 2026-11-17 cada dueño puede borrar las de su
+  carpeta (política `fotos_mascotas_borrado_propio_dueno`), y la app borra
+  la foto anterior al reemplazarla y la recién subida si el guardado
+  falla (`src/lib/fotos.js`). Ver `TRAZABILIDAD.md`, entrada del 2026-11-17.
 - Todas las funciones de Supabase del núcleo (`generar_placa`,
   `ficha_publica`, `registrar_escaneo`, `registrar_avistamiento`) se
   probaron en vivo contra una mascota descartable, no solo leyendo su
