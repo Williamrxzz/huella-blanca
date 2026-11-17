@@ -58,6 +58,7 @@ Para correr solo algunas: `PRUEBAS_EN_PRODUCCION=si npm run test:e2e -- telefono
 | `e2e/telefono.mjs` | TRA05 en pantalla: `/perfil`, `/registro`, perfil diferido y el check de la base. |
 | `e2e/ficha-avisos.mjs` | PER07 (mensaje del dueño en la ficha), TRA11 (aviso sin ubicación), TRA09 (reclamo del aviso). |
 | `e2e/ejemplo-escalado.mjs` | `/ejemplo` no toca la base; escaneos del dueño ignorados; texto del caso escalado solo. |
+| `e2e/rescatista.mjs` | Al cerrar el caso el dueño elige a quién agradecer ("Está conmigo" preseleccionado); el rescatista solo puede ser alguien que avisó en ese caso; el navegador no escribe `rescatista_id`. |
 | `e2e/fotos-ia.mjs` | IA02: verificación de fotos en el servidor, pase firmado, subida directa bloqueada, foto de reencuentro. |
 | `e2e/fotos-storage.mjs` | Reemplazar una foto borra la anterior; un guardado que falla borra la recién subida. |
 | `e2e/estadisticas.mjs` | DAT05: `/admin/estadisticas` muestra los totales reales. |

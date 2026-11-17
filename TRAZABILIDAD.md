@@ -1729,3 +1729,46 @@ Migración `20261117000009_limpieza_permisos.sql`.
   verificaciones, la base igual que al empezar. Unitarias: 22 de 22.
 - `esquema.sql` se volvió a exportar con la migración aplicada; el diff de
   git muestra exactamente las políticas y permisos que cambiaron.
+
+## 2026-11-17 — PER08 / REC02: el dueño elige a quién agradecer
+
+Último hallazgo pendiente de la revisión completa del proyecto.
+
+- **Qué pasaba.** Al cerrar el caso, `MapaAvistamientos.jsx` buscaba el
+  **último** aviso hecho con cuenta y le asignaba el rescate, sin preguntar.
+  El mérito se repartía por azar: el último en avisar puede haber visto pasar
+  a la mascota, y quien la tuvo y la devolvió, no aparecer. Como el
+  reconocimiento (REC01/REC02: historial, mensaje y foto de agradecimiento)
+  se apoya en `rescatista_id`, el agradecimiento podía llegarle a la persona
+  equivocada. Además el navegador escribía `rescatista_id` directo, así que
+  con la API se podía poner cualquier cuenta.
+- **Corrección** (migración `20261117000010_elegir_rescatista.sql`):
+  - `colaboradores_del_caso()`: solo para el dueño del caso, la lista de
+    quienes avisaron con cuenta (primer nombre, cuántos avisos, si dijeron
+    "Está conmigo"). Hacía falta una función porque el dueño no puede leer
+    perfiles ajenos.
+  - El formulario de cierre muestra "¿Quién te ayudó?" con esa lista, quien
+    dijo "Está conmigo" preseleccionado y siempre "Nadie de la lista". El
+    mensaje y la foto del reencuentro se piden solo si se elige a alguien:
+    son para esa persona y solo los ve en su historial. Sin avisos con
+    cuenta, lo explica y sugiere escribirle a quien haya dejado contacto.
+  - `cerrar_caso()`: cierra con el agradecimiento y verifica que el
+    rescatista haya avisado en ese caso; rechaza a otras cuentas y casos ya
+    cerrados.
+  - El navegador solo puede escribir en `casos_perdida` las columnas que usa
+    el panel (crear el caso; actualizar estado, mensaje, última ubicación y
+    `cerrado_en`): `rescatista_id` y `escalado_en` quedan fuera.
+- **Verificado** (`tests/e2e/rescatista.mjs`, 23/23), con el escenario en que
+  la lógica vieja se equivocaba: Marta avisa "Está conmigo" y después Raúl
+  "La vi pasar". La lista muestra a los dos (no al anónimo), Marta
+  preseleccionada; con "Nadie de la lista" no se piden mensaje ni foto; el
+  caso se cierra con Marta y su mensaje, que ella ve en su historial y Raúl
+  no; el navegador recibe 403 al escribir `rescatista_id`; `cerrar_caso`
+  rechaza a quien no avisó y a otras cuentas; el panel sigue pudiendo marcar
+  y corregir una pérdida. La prueba de IA02 (`fotos-ia`) se adaptó: su caso
+  de foto de reencuentro no tenía avisos con cuenta, y ahora la foto se pide
+  solo con un rescatista elegido. Batería completa: 16 de 16 pruebas, 288 de
+  288 verificaciones, la base igual que al empezar.
+- Con esto quedan atendidos todos los hallazgos de la revisión del
+  2026-11-17, salvo la deuda conocida de `set-state-in-effect` en
+  `Panel.jsx` y `MapaAvistamientos.jsx`.

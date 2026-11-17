@@ -25,6 +25,7 @@ const PRUEBAS = [
   { archivo: 'telefono.mjs', que: 'Teléfono en formato internacional (TRA05)', servidor: 'dev' },
   { archivo: 'ficha-avisos.mjs', que: 'Mensaje del dueño, aviso sin ubicación, reclamo (PER07, TRA11, TRA09)', servidor: 'dev' },
   { archivo: 'ejemplo-escalado.mjs', que: 'Ficha de ejemplo, escaneos del dueño, caso escalado', servidor: 'dev' },
+  { archivo: 'rescatista.mjs', que: 'Al cerrar el caso, el dueño elige a quién agradecer (PER08, REC02)', servidor: 'dev' },
   { archivo: 'fotos-ia.mjs', que: 'Verificación de fotos en el servidor (IA02)', servidor: 'dev' },
   { archivo: 'fotos-storage.mjs', que: 'Fotos: reemplazo y rollback en Storage', servidor: 'dev' },
   { archivo: 'estadisticas.mjs', que: 'Estadísticas de administración (DAT05)', servidor: 'dev' },

@@ -337,6 +337,14 @@ sesión o el rol adentro). El detalle exacto está en
   reencuentros (con el mensaje/foto de agradecimiento del dueño, si
   los dejó) de la persona autenticada. Nunca devuelve domicilio ni
   coordenadas de la mascota. Solo `authenticated`.
+- `colaboradores_del_caso(p_caso_id uuid)` → solo para el dueño del
+  caso: quienes avisaron con cuenta (primer nombre, cuántos avisos, si
+  dijeron "Está conmigo"). Solo `authenticated`.
+- `cerrar_caso(p_caso_id, p_rescatista_id, p_mensaje, p_foto_url)` →
+  cierra el caso con el agradecimiento; el rescatista tiene que haber
+  avisado en ese caso. El navegador ya no puede escribir `rescatista_id`
+  (solo tiene permiso sobre las columnas que usa el panel). Solo
+  `authenticated`.
 - `reclamar_avistamiento(p_avistamiento_id uuid)` → asocia a la cuenta
   recién creada un aviso que se había hecho sin sesión (TRA09/REC09),
   dentro de una ventana de 7 días (era 1 hora hasta el 2026-11-17: quien
@@ -573,10 +581,14 @@ Usuario", con siete listas, una por bloque.
   (**PER06**, ya estaba hecho: `{a.contacto}` en el popup y en la
   lista); los avisos sin ubicación exacta se listan aparte. Si la
   mascota tiene un caso abierto, muestra la alerta correspondiente y
-  (**PER08**) el botón "{nombre} volvió a casa": cierra el caso
-  (`estado: 'cerrada'`, `cerrado_en: now()`) y, si algún avistamiento
-  de ese caso tiene `reportado_por` (alguien logueado que avisó),
-  guarda ese id como `rescatista_id`.
+  (**PER08**) el botón "{nombre} volvió a casa": abre un formulario
+  donde el dueño elige a quién agradecer entre quienes avisaron con
+  cuenta en ese caso (`colaboradores_del_caso()`; quien dijo "Está
+  conmigo" va preseleccionado; siempre está "Nadie de la lista"). El
+  mensaje y la foto del reencuentro se piden solo si eligió a alguien,
+  porque son para esa persona. Cierra con `cerrar_caso()`, que verifica
+  que el rescatista haya avisado en ese caso. Hasta el 2026-11-17 el
+  rescate se asignaba solo al último aviso con cuenta, sin preguntar.
 - `src/index.css` — estilos propios.
 - Columnas `lat`/`lng` de `avistamientos` pasadas a nullable (se
   necesita para el aviso sin ubicación de TRA11). Columna `sexo`

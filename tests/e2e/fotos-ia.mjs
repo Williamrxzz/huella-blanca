@@ -192,17 +192,21 @@ try {
   // ---- 7. foto de reencuentro por pantalla ----
   const caso = await api('POST', '/rest/v1/casos_perdida', { mascota_id: M, estado: 'perdida', origen: 'manual' }, { Prefer: 'return=representation' })
   const casoId = caso.j[0].id
+  // La foto del reencuentro es para quien ayudó (la ve en su historial): desde
+  // el 2026-11-17 se pide solo si el dueño elige a alguien que avisó con
+  // cuenta. B avisa "Está conmigo" y queda preseleccionado.
+  await api('POST', '/rest/v1/avistamientos', { mascota_id: M, caso_id: casoId, origen: 'manual', situacion: 'conmigo', mensaje: 'La tengo yo', reportado_por: Bu.id })
   await ir(`${B}/mascotas/${M}/mapa`); await sleep(2500)
   await ev(`[...document.querySelectorAll('button')].find(b=>/volvió a casa/.test(b.innerText)).click(); true`)
-  await sleep(800)
-  check('se abrió el formulario de reencuentro', /Foto del reencuentro/.test(await ev('document.body.innerText')))
+  await sleep(2500)
+  check('se abrió el formulario de reencuentro, con B elegido', /Foto del reencuentro/.test(await ev('document.body.innerText')) && !!(await ev(`document.querySelector('.opciones-rescatista input:checked')?.closest('label')?.innerText.includes('Avisó que tenía')`)))
   habilitado = await elegirArchivo()
   const antesRe = fotosDe(A.id).length
-  await ev(`[...document.querySelectorAll('button')].find(b=>/^Confirmar$/.test(b.innerText.trim())).click(); true`)
+  await ev(`[...document.querySelectorAll('button')].find(b=>/^Cerrar el caso$/.test(b.innerText.trim())).click(); true`)
   for (let i = 0; i < 30; i++) { const e = db(`select estado, foto_reencuentro_url from casos_perdida where id='${casoId}'`)[0]; if (e.estado === 'cerrada') break; await sleep(500) }
-  const cerrado = db(`select estado, foto_reencuentro_url from casos_perdida where id='${casoId}'`)[0]
+  const cerrado = db(`select estado, foto_reencuentro_url, rescatista_id::text = '${Bu.id}' as rescatista_b from casos_perdida where id='${casoId}'`)[0]
   const fotosRe = fotosDe(A.id)
-  check('el caso se cerró con la foto del reencuentro guardada por subir-foto', cerrado.estado === 'cerrada' && cerrado.foto_reencuentro_url && fotosRe.length === antesRe + 1 && fotosRe.some(f => f.includes('/reencuentro-') && cerrado.foto_reencuentro_url.endsWith(f)), JSON.stringify(cerrado).slice(0, 120))
+  check('el caso se cerró con B como rescatista y la foto guardada por subir-foto', cerrado.estado === 'cerrada' && cerrado.rescatista_b && cerrado.foto_reencuentro_url && fotosRe.length === antesRe + 1 && fotosRe.some(f => f.includes('/reencuentro-') && cerrado.foto_reencuentro_url.endsWith(f)), JSON.stringify(cerrado).slice(0, 120))
   await foto('ia02-reencuentro.png')
   ws.close()
 } catch (e) {

@@ -1434,3 +1434,42 @@ html[data-tema="oscuro"] .enlace-leido { background: #24282e; }
 }
 html[data-tema="oscuro"] .aviso-ejemplo { background: #1b2733; border-color: #3d5a78; color: #b9d3ec; }
 html[data-contraste="alto"] .aviso-ejemplo { background: #fff; color: #000; border: 2px solid #000; }
+
+/* PER08: elegir a quién agradecer al cerrar el caso. Una tarjeta por persona;
+   la elegida se marca con el borde. Mínimo táctil de 44 px. */
+.opciones-rescatista {
+  border: 0;
+  padding: 0;
+  margin: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.opciones-rescatista legend {
+  font-weight: 600;
+  margin-bottom: 8px;
+  padding: 0;
+}
+.opciones-rescatista label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #e3e1dc;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.opciones-rescatista label:has(input:checked) {
+  border-color: #2e5c8a;
+  background: #eef4fa;
+}
+.opciones-rescatista input { flex-shrink: 0; width: 18px; height: 18px; margin: 0; }
+.opciones-rescatista span { display: flex; flex-direction: column; gap: 2px; }
+.opciones-rescatista small { color: #6f6e6a; font-size: calc(13px * var(--escala-texto)); }
+html[data-tema="oscuro"] .opciones-rescatista label { border-color: #34383d; }
+html[data-tema="oscuro"] .opciones-rescatista label:has(input:checked) { border-color: #6a9fd4; background: #1b2733; }
+html[data-tema="oscuro"] .opciones-rescatista small { color: #a8a7a1; }
+html[data-contraste="alto"] .opciones-rescatista label { border: 2px solid #000; }
+html[data-contraste="alto"] .opciones-rescatista label:has(input:checked) { background: #000; color: #fff; }
+html[data-contraste="alto"] .opciones-rescatista label:has(input:checked) small { color: #fff; }

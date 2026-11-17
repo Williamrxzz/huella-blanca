@@ -22,7 +22,17 @@ function formatearFecha(fechaIso) {
   })
 }
 
-function FormularioReencuentro({ mascota, onCancelar, onConfirmar, enviando }) {
+// PER08 / REC02: al cerrar el caso, el dueño elige a quién agradecer entre
+// quienes avisaron con cuenta (antes se asignaba solo al último que avisó).
+// "Está conmigo" va preseleccionado; siempre se puede elegir "Nadie de la
+// lista". El mensaje y la foto son para esa persona (los ve en su historial),
+// así que solo se piden si se eligió a alguien.
+const NADIE = 'nadie'
+
+function FormularioReencuentro({ mascota, casoId, onCancelar, onConfirmar, enviando }) {
+  const [colaboradores, setColaboradores] = useState(null) // null = cargando
+  const [errorColaboradores, setErrorColaboradores] = useState(false)
+  const [elegido, setElegido] = useState(NADIE)
   const [mensaje, setMensaje] = useState('')
   // Foto preparada ({ base64, pase }) y estado de su verificación (IA02): la
   // misma regla que la foto de perfil de la mascota.
@@ -30,6 +40,21 @@ function FormularioReencuentro({ mascota, onCancelar, onConfirmar, enviando }) {
   const [analizando, setAnalizando] = useState(false)
   const [avisoFoto, setAvisoFoto] = useState(null)
   const eleccionActual = useRef(0)
+
+  useEffect(() => {
+    let vigente = true
+    supabase.rpc('colaboradores_del_caso', { p_caso_id: casoId }).then(({ data, error }) => {
+      if (!vigente) return
+      const lista = !error && Array.isArray(data) ? data : []
+      setErrorColaboradores(Boolean(error))
+      setColaboradores(lista)
+      const conmigo = lista.find((c) => c.hubo_conmigo)
+      if (conmigo) setElegido(conmigo.perfil_id)
+    })
+    return () => { vigente = false }
+  }, [casoId])
+
+  const rescatista = colaboradores?.find((c) => c.perfil_id === elegido) || null
 
   async function elegirFoto(e) {
     const archivo = e.target.files?.[0] || null
@@ -67,11 +92,51 @@ function FormularioReencuentro({ mascota, onCancelar, onConfirmar, enviando }) {
     <div className="superposicion">
       <div className="tarjeta-confirmacion">
         <h2>{mascota.nombre} volvió a casa</h2>
-        <p className="ayuda">
-          Si querés, dejale un agradecimiento a quien ayudó (opcional): un mensaje, una foto del
-          reencuentro, o las dos cosas.
-        </p>
 
+        {colaboradores === null ? (
+          <p className="ayuda">Buscando quién avisó…</p>
+        ) : colaboradores.length > 0 ? (
+          <fieldset className="opciones-rescatista">
+            <legend>¿Quién te ayudó?</legend>
+            {colaboradores.map((c) => (
+              <label key={c.perfil_id}>
+                <input
+                  type="radio"
+                  name="rescatista"
+                  value={c.perfil_id}
+                  checked={elegido === c.perfil_id}
+                  onChange={() => setElegido(c.perfil_id)}
+                />
+                <span>
+                  <strong>{c.nombre}</strong>
+                  <small>
+                    {c.hubo_conmigo
+                      ? `Avisó que tenía a ${mascota.nombre}`
+                      : c.avisos === 1 ? 'Dio 1 aviso' : `Dio ${c.avisos} avisos`}
+                    {' · '}{formatearFecha(c.ultimo_aviso_en)}
+                  </small>
+                </span>
+              </label>
+            ))}
+            <label>
+              <input type="radio" name="rescatista" value={NADIE} checked={elegido === NADIE} onChange={() => setElegido(NADIE)} />
+              <span><strong>Nadie de la lista</strong></span>
+            </label>
+          </fieldset>
+        ) : (
+          <p className="ayuda">
+            {errorColaboradores
+              ? 'No pudimos cargar quién avisó. Podés cerrar el caso igual.'
+              : 'Nadie avisó con una cuenta, así que no hay a quién dejarle un agradecimiento en la app. Si alguien dejó su contacto en un aviso, podés escribirle.'}
+          </p>
+        )}
+
+        {rescatista && (
+          <>
+            <p className="ayuda">
+              Si querés, dejale a {rescatista.nombre} un mensaje o una foto del reencuentro (opcional): lo va a
+              ver en su historial de colaboración.
+            </p>
         <textarea
           className="entrada"
           placeholder="Un mensaje para quien ayudó (opcional)"
@@ -102,6 +167,8 @@ function FormularioReencuentro({ mascota, onCancelar, onConfirmar, enviando }) {
         {avisoFoto?.tipo === 'sin_verificar' && (
           <p className="ayuda">No pudimos verificar la foto en este momento. Podés seguir igual.</p>
         )}
+          </>
+        )}
 
         <div className="acciones-tarjeta">
           <button className="boton terciario" type="button" onClick={onCancelar} disabled={enviando}>
@@ -110,10 +177,12 @@ function FormularioReencuentro({ mascota, onCancelar, onConfirmar, enviando }) {
           <button
             className="boton"
             type="button"
-            onClick={() => onConfirmar({ mensaje: mensaje.trim() || null, foto })}
-            disabled={enviando || analizando}
+            onClick={() => onConfirmar(rescatista
+              ? { rescatistaId: rescatista.perfil_id, mensaje: mensaje.trim() || null, foto }
+              : { rescatistaId: null, mensaje: null, foto: null })}
+            disabled={enviando || analizando || colaboradores === null}
           >
-            {enviando ? 'Guardando…' : analizando ? 'Verificando la foto…' : 'Confirmar'}
+            {enviando ? 'Guardando…' : analizando ? 'Verificando la foto…' : 'Cerrar el caso'}
           </button>
         </div>
       </div>
@@ -190,7 +259,7 @@ export default function MapaAvistamientos() {
     cargar()
   }, [id, navigate])
 
-  async function volvioACasa({ mensaje, foto }) {
+  async function volvioACasa({ rescatistaId, mensaje, foto }) {
     setCerrando(true)
     setErrorCierre(null)
 
@@ -209,25 +278,14 @@ export default function MapaAvistamientos() {
       fotoUrl = fotoNueva.url
     }
 
-    const { data: avistamientoConColaborador } = await supabase
-      .from('avistamientos')
-      .select('reportado_por')
-      .eq('caso_id', caso.id)
-      .not('reportado_por', 'is', null)
-      .order('creado_en', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    const { error: errorCierreCaso } = await supabase
-      .from('casos_perdida')
-      .update({
-        estado: 'cerrada',
-        cerrado_en: new Date().toISOString(),
-        rescatista_id: avistamientoConColaborador?.reportado_por ?? null,
-        mensaje_agradecimiento: mensaje,
-        foto_reencuentro_url: fotoUrl,
-      })
-      .eq('id', caso.id)
+    // La base verifica que el rescatista haya avisado en este caso.
+    const { data: cierre, error: errorRpc } = await supabase.rpc('cerrar_caso', {
+      p_caso_id: caso.id,
+      p_rescatista_id: rescatistaId,
+      p_mensaje: mensaje,
+      p_foto_url: fotoUrl,
+    })
+    const errorCierreCaso = errorRpc || (cierre?.ok ? null : { message: cierre?.motivo || 'error' })
 
     // El caso no se cerró: la foto del reencuentro no tiene a qué pertenecer.
     if (errorCierreCaso && fotoNueva) await borrarFoto(fotoNueva.ruta)
@@ -298,6 +356,7 @@ export default function MapaAvistamientos() {
       {mostrarFormularioVolvio && (
         <FormularioReencuentro
           mascota={mascota}
+          casoId={caso.id}
           onCancelar={() => setMostrarFormularioVolvio(false)}
           onConfirmar={volvioACasa}
           enviando={cerrando}
