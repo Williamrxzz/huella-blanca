@@ -74,6 +74,7 @@ export default function AltaMascota() {
   const verificacionActual = useRef(0)
   const [avisoFotoIA, setAvisoFotoIA] = useState(null)
   const [radioMetros, setRadioMetros] = useState(100)
+  const [horasConfirmacion, setHorasConfirmacion] = useState(24)
   const [visibilidadSenas, setVisibilidadSenas] = useState('publico')
   const [visibilidadSalud, setVisibilidadSalud] = useState('privado')
   const [salud, setSalud] = useState('')
@@ -119,6 +120,7 @@ export default function AltaMascota() {
       setCaracter(mascota.caracter)
       setFotoUrlActual(mascota.foto_url)
       setRadioMetros(mascota.radio_metros)
+      setHorasConfirmacion(mascota.horas_confirmacion ?? 24)
       setVisibilidadSenas(mascota.visibilidad_senas)
       setVisibilidadSalud(mascota.visibilidad_salud)
       setSalud(mascota.salud || '')
@@ -286,6 +288,7 @@ export default function AltaMascota() {
       domicilio_lat: domicilio.lat,
       domicilio_lng: domicilio.lng,
       radio_metros: radioMetros,
+      horas_confirmacion: horasConfirmacion,
       salud: salud.trim() || null,
       visibilidad_senas: visibilidadSenas,
       visibilidad_salud: visibilidadSalud,
@@ -573,6 +576,18 @@ export default function AltaMascota() {
             step={100}
           />
         </label>
+
+        <select
+          className="entrada"
+          aria-label="Plazo para confirmar una posible pérdida"
+          value={horasConfirmacion}
+          onChange={(e) => setHorasConfirmacion(Number(e.target.value))}
+        >
+          <option value={6}>Si no respondo a una posible pérdida en 6 h, marcarla como perdida</option>
+          <option value={12}>Si no respondo a una posible pérdida en 12 h, marcarla como perdida</option>
+          <option value={24}>Si no respondo a una posible pérdida en 24 h, marcarla como perdida</option>
+          <option value={48}>Si no respondo a una posible pérdida en 48 h, marcarla como perdida</option>
+        </select>
 
         <textarea
           className="entrada"

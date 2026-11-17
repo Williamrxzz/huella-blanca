@@ -8,6 +8,8 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Manejo de push (public/sw-push.js) sumado al service worker generado.
+      workbox: { importScripts: ['sw-push.js'] },
       manifest: {
         name: 'Huella Blanca',
         short_name: 'Huella Blanca',

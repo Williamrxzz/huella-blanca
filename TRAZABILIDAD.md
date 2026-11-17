@@ -1025,3 +1025,80 @@ Primera versión del módulo de analítica, en `/admin/estadisticas` (solo
   desplegables. Base restaurada tras la prueba.
 - **Alcance:** DAT05 queda como primera versión. Pendiente de decidir si se
   agregan más métricas (altas de cuentas por semana, distancia de los escaneos).
+
+## 2026-11-16 — PER04 y PER03 (resto): notificaciones push al dueño
+
+Primer canal para avisarle algo al dueño sin que esté mirando el panel.
+Se eligió **Web Push** sobre email: encaja con la decisión de que la app
+instalable es para el dueño "que recibe los avisos", no exige cuenta en
+terceros ni dominio propio (los proveedores de email gratuitos —Resend,
+Brevo— exigen verificar un remitente, y `huella-blanca.vercel.app` no se
+puede verificar), y es inmediato. Limitación conocida: en iPhone solo
+funciona con la app agregada a la pantalla de inicio (iOS 16.4+); la
+tarjeta del panel lo explica en ese caso.
+
+**Base** (`20261116000001_notificaciones_push.sql`):
+- `suscripciones_push`: una fila por dispositivo del dueño (endpoint,
+  claves `p256dh`/`auth`), con RLS para que cada uno maneje solo las suyas.
+- `notificaciones`: historial y cola a la vez (`titulo`, `cuerpo`, `url`,
+  `tipo`, `enviada_en`, `resultado`). Nunca se borran (bajas lógicas). El
+  dueño puede leer las suyas; nadie las inserta desde el navegador.
+- `mascotas.horas_confirmacion` (1 a 168, por defecto 24): plazo para
+  responder a una posible pérdida antes de que pase sola a `perdida`.
+- Triggers que arman el aviso: `escaneos` (posible pérdida nueva, o escaneo
+  con caso abierto, con la distancia a la casa en texto legible —
+  `distancia_legible()`), `avistamientos` (siempre: situación y distancia;
+  si el aviso abrió el caso, lo dice en el mismo mensaje en vez de mandar
+  dos). Un escaneo cerca de casa sin caso **no** avisa: sería ruido en cada
+  paseo.
+- `enviar_notificacion_push()`: trigger sobre `notificaciones` que llama con
+  `pg_net` a la Edge Function `notificar`. El secreto compartido se lee de
+  **Vault** (`notificar_secret`), nunca está en el SQL versionado.
+- `escalar_casos_sin_respuesta()` + trabajo de **pg_cron** cada 15 minutos
+  (PER03 b): posible pérdida sin respuesta en más de `horas_confirmacion`
+  horas → `perdida` + aviso `perdida_automatica`. La UI para elegir el
+  plazo está en el formulario de mascota (6/12/24/48 h).
+
+**Edge Function `notificar`** (desplegada sin verificación de JWT; se
+autentica con la cabecera `x-notificar-secret`): firma con VAPID
+(`jsr:@negrel/webpush`), envía a cada suscripción del dueño, borra las que
+el servicio de push da por muertas (404/410), guarda el resultado por
+notificación (`enviadas`, `fallidas`, `dadas_de_baja`, `errores`). Secretos:
+`VAPID_CLAVES` (JWK pública+privada) y `NOTIFICAR_SECRET`. La clave pública
+VAPID está en `src/lib/push.js` (no es secreta).
+
+**Frontend**: `public/sw-push.js` se suma al service worker generado por
+vite-plugin-pwa con `importScripts` (manejo de `push` y `notificationclick`,
+que abre la `url` del aviso); `src/lib/push.js` (activar/desactivar);
+`src/components/AvisosPush.jsx`, tarjeta en el panel con un solo botón.
+No bloquea nada: el panel funciona igual sin activar los avisos.
+
+**Pruebas** (datos de prueba creados y borrados; base restaurada):
+- Circuito en la base y la función, 25 de 26 (la restante es el cron,
+  pausado a propósito, ver abajo): escaneo cerca sin caso no avisa; escaneo
+  lejos abre posible pérdida y avisa con "2,4 km de tu casa"; escaneo con
+  caso abierto avisa; avistamiento con y sin ubicación; una suscripción con
+  endpoint muerto se da de baja sola; el escalado pasa el caso a `perdida`
+  una sola vez y avisa; `anon` no lee ni encola nada; la función rechaza sin
+  secreto o con una sesión común (401).
+- **Push real, 15 de 15, con Chrome (headless) y `npm run preview`**:
+  login, tarjeta visible, "Activar avisos" → suscripción real en FCM
+  guardada en la base → escaneo lejos → la función envía (`enviadas: 1`) →
+  **la notificación se mostró en el service worker** con el título, el texto
+  y la url esperados → "Desactivar" borra la suscripción en la base y en el
+  navegador. Ojo al probar: registrarse en FCM tarda más de 10 s en
+  headless; el botón muestra "Un momento…" mientras tanto.
+- **Incidente durante la prueba:** la primera corrida llamó a
+  `escalar_casos_sin_respuesta()` y, como corre sobre toda la base, pasó a
+  `perdida` el caso real de Blanca (posible pérdida automática abierta
+  desde el 11/11, más vieja que las 24 h). Se revirtió en el acto (caso de
+  vuelta a `posible_perdida`, notificación borrada, 4 escaneos huérfanos de
+  la mascota de prueba eliminados) y el script ahora omite ese paso si hay
+  casos reales elegibles. **El cron quedó pausado** (`cron.unschedule`)
+  hasta decidir qué hacer con ese caso viejo: al reactivarlo, lo pasaría a
+  `perdida` en el primer ciclo. Para reactivar:
+  `select cron.schedule('escalar-casos-sin-respuesta', '*/15 * * * *', $$select public.escalar_casos_sin_respuesta()$$);`
+- Bug encontrado y corregido antes de commitear: `Panel.jsx` solo guardaba
+  `perfilId` en la rama del perfil diferido, así que la tarjeta no aparecía
+  para ningún dueño con perfil ya creado.
+- Falta probar en un teléfono real (Android y, con la app instalada, iPhone).

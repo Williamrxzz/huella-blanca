@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import { Check, Copy, Share2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
+import AvisosPush from '../components/AvisosPush'
 import { armarTextoBusqueda, enlaceWhatsApp } from '../lib/textoBusqueda'
 
 const ERRORES_VINCULAR = {
@@ -367,6 +368,7 @@ export default function Panel() {
   const [mascotas, setMascotas] = useState([])
   const [casos, setCasos] = useState({})
   const [esAdmin, setEsAdmin] = useState(false)
+  const [perfilId, setPerfilId] = useState(null)
   const [telefono, setTelefono] = useState(null)
   const [avisoTelefonoCerrado, setAvisoTelefonoCerrado] = useState(false)
 
@@ -376,6 +378,8 @@ export default function Panel() {
       navigate('/login')
       return
     }
+
+    setPerfilId(session.user.id)
 
     const { data: perfilExistente } = await supabase
       .from('perfiles')
@@ -448,6 +452,8 @@ export default function Panel() {
     <main className="pagina">
       <Encabezado />
       <h1>Mis mascotas</h1>
+
+      {perfilId && mascotas.length > 0 && <AvisosPush perfilId={perfilId} />}
 
       {mascotas.length > 0 && !telefono && !avisoTelefonoCerrado && (
         <div className="aviso-telefono">

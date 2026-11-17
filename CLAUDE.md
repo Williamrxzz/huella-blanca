@@ -110,6 +110,16 @@ Ya instalado y funcionando:
   en local, que no se usó.
 
 - Recharts — gráficos de `/admin/estadisticas` (DAT05).
+- Web Push (API estándar del navegador, firmado con VAPID desde la Edge
+  Function `notificar` con `jsr:@negrel/webpush`). Sin servicio de
+  terceros: el push lo entrega el navegador de cada dueño. Las claves
+  VAPID viven en el secreto `VAPID_CLAVES`; la pública está en
+  `src/lib/push.js`. El manejo en el service worker está en
+  `public/sw-push.js`, sumado al SW generado con `importScripts`.
+- pg_cron + pg_net + Vault (extensiones de Supabase): el trigger de
+  `notificaciones` llama a la Edge Function con `pg_net` usando un secreto
+  guardado en Vault (`notificar_secret`); `pg_cron` corre
+  `escalar_casos_sin_respuesta()` cada 15 minutos.
 
 Pendiente de incorporar: nada por ahora.
 
@@ -214,6 +224,20 @@ creado_en. Registra solo los avisos deliberados.
 **Distinción importante:** `escaneos` guarda todos los escaneos de placa;
 `avistamientos` guarda solo cuando la persona apretó el botón para
 avisar. No mezclarlas.
+
+`suscripciones_push` — id, perfil_id, endpoint (único), p256dh, auth,
+navegador, creado_en, ultimo_envio_en. Un dispositivo del dueño que
+aceptó recibir avisos. RLS: cada dueño maneja solo las suyas.
+
+`notificaciones` — id, perfil_id, mascota_id, tipo ('posible_perdida' |
+'escaneo' | 'avistamiento' | 'perdida_automatica'), titulo, cuerpo, url,
+creado_en, enviada_en, resultado (jsonb). Historial y cola de los avisos
+al dueño: las insertan solo los triggers de la base, la Edge Function
+`notificar` las marca enviadas. Nunca se borran. El dueño lee las suyas.
+
+`mascotas.horas_confirmacion` (1 a 168, por defecto 24): plazo para que
+el dueño confirme o descarte una posible pérdida antes de que pase sola
+a `perdida` (PER03). Se elige en el formulario de mascota.
 
 ### Seguridad
 
@@ -495,14 +519,11 @@ Usuario", con siete listas, una por bloque.
   recibiendo la SPA. Solo usa datos públicos de `ficha_publica()` y no
   cuenta escaneos. Ver `TRAZABILIDAD.md`, entrada del 2026-11-04.
 
-### MVP: 13 de 14 historias terminadas
+### MVP: 14 de 14 historias terminadas
 
-La única pendiente es **PER04 — notificación inmediata al dueño**
-cuando escanean la placa de una mascota perdida. Queda fuera del
-alcance de esta versión porque requiere un servicio de correo o push
-(por ejemplo un proveedor de email desde una Edge Function) que hoy no
-está integrado en el proyecto. Hasta que exista, el dueño solo se
-entera revisando el panel o el mapa de avistamientos a mano.
+**PER04 — notificación inmediata al dueño** fue la última: quedó
+construida el 2026-11-16 con Web Push (ver "Notificaciones push" más
+abajo). Hasta entonces el dueño solo se enteraba revisando el panel.
 
 ### Verificado contra el código (no solo contra los commits)
 
@@ -524,7 +545,7 @@ commit) de las historias del MVP con texto dudoso. Resultado:
   `MapaAvistamientos.jsx` ya mostraba la fecha y hora
   (`formatearFecha(a.creado_en)`) junto a la ubicación — no hizo falta
   agregar nada.
-- **PER04**: sigue sin construir (ver arriba).
+- **PER04**: construida el 2026-11-16 (Web Push).
 - Todas las funciones de Supabase del núcleo (`generar_placa`,
   `ficha_publica`, `registrar_escaneo`, `registrar_avistamiento`) se
   probaron en vivo contra una mascota descartable, no solo leyendo su
@@ -756,7 +777,7 @@ del 2026-09-21.
 
 ### Estado de las 63 historias (actualizado el 2026-11-04)
 
-- **35 terminadas** (la 35ª es DAT05, primera versión, 2026-11-16). Incluye **IA03**, construida el 2026-11-04: con la
+- **37 terminadas** (DAT05 primera versión, PER04 y PER03 completas el 2026-11-16 — ver `TRAZABILIDAD.md`, entradas de ese día). Incluye **IA03**, construida el 2026-11-04: con la
   mascota en estado `perdida`, el panel (`Panel.jsx`, componente
   `TextoParaCompartir`) muestra un texto de búsqueda armado con una
   plantilla (`src/lib/textoBusqueda.js`, sin llamar a la IA) con los
@@ -776,34 +797,35 @@ del 2026-09-21.
   sin uso; se elimina en una migración aparte. No cuenta entre las
   historias cerradas en la entrega del Sprint 3: es una corrección
   posterior. Ver `TRAZABILIDAD.md`, entradas del 2026-10-25.
-- **2 cumplidas parcialmente**: **IA02** (antes figuraba como
-  Terminada: el bloqueo corre solo en el navegador y solo cubre la foto
-  de perfil; ver la sección de IA01 + IA02) y **PER03** (antes figuraba
-  como Terminada). De PER03 funcionan "Confirmar pérdida" y "No, está conmigo", un
-  toque cada uno (`Panel.jsx`). Sin construir: la alerta al dueño con la
-  distancia al domicilio (`registrar_escaneo()` ya guarda
-  `escaneos.distancia_m`, pero nada la muestra ni avisa) y el paso
-  automático a `perdida` si el dueño no responde en el tiempo
-  configurado (no hay trabajo programado, trigger ni columna de plazo).
-  Ambas dependen de la misma infraestructura de notificaciones que
-  PER04 (correo o push, no integrado) más un trabajo programado que
-  tampoco existe; pasan al Sprint 5. Los PDFs de Historias v4 y Product
-  Backlog v3 todavía la dan por Terminada. Ver `TRAZABILIDAD.md`,
-  entrada del 2026-10-25.
-- **9 pendientes**: DUE08, DUE11, TRA07, TRA10, PER04, PER09, REC08,
-  ADM03, ADM07.
+- **1 cumplida parcialmente**: **IA02** (el bloqueo corre solo en el
+  navegador y solo cubre la foto de perfil; ver la sección de IA01 + IA02).
+  PER03 estuvo Parcial entre el 2026-10-25 y el 2026-11-16: la alerta con
+  la distancia y el paso automático a `perdida` se construyeron junto con
+  PER04 (ver "Notificaciones push" más abajo).
+- **8 pendientes**: DUE08, DUE11, TRA07, TRA10, PER09, REC08, ADM03,
+  ADM07.
 - **17 descartadas**: REC03 a REC07, COM01 a COM03, ADM04, ADM05,
   ADM06, ADM08, ADM09, ADM10, ADM11, ADM12 y DAT04 — el detalle y el
   motivo de cada una están en `TRAZABILIDAD.md`.
+
+### Notificaciones push (PER04 + PER03 completas, 2026-11-16)
+
+El dueño activa los avisos en este dispositivo desde una tarjeta del
+panel (`AvisosPush.jsx`). Avisan: escaneo lejos de casa que abre una
+posible pérdida (con la distancia), escaneo de una mascota con caso
+abierto, cualquier avistamiento (situación y distancia a la casa), y el
+paso automático a `perdida` por falta de respuesta. Un escaneo normal
+cerca de casa no avisa. Detalle, decisiones y pruebas en
+`TRAZABILIDAD.md`, entrada del 2026-11-16. Pendiente: probar en un
+teléfono real; el trabajo de pg_cron quedó pausado hasta decidir qué
+hacer con el caso viejo de Blanca (ver esa entrada).
 
 ### Pendiente, en este orden
 
 1. **DAT05** (analítica con Recharts): primera versión hecha el
    2026-11-16; queda decidir si se suman más métricas.
-2. El resto de las pendientes (DUE08, DUE11, TRA07, TRA10, PER04,
-   PER09, REC08, ADM03, ADM07) y la parte sin construir de **PER03**
-   (alerta con la distancia y paso automático a `perdida`, junto con
-   PER04) no tienen todavía un plan de trabajo asignado a un sprint
+2. El resto de las pendientes (DUE08, DUE11, TRA07, TRA10, PER09,
+   REC08, ADM03, ADM07) no tienen todavía un plan de trabajo asignado a un sprint
    más allá de figurar en el Sprint 5.
 3. Optimizar el bundle: Vite avisa que el JS de producción pasa los
    500 KB (sobre todo por Leaflet). No es urgente, pero si se nota lento

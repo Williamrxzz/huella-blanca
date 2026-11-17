@@ -1181,3 +1181,23 @@ html[data-tema="oscuro"] {
 .admin-tabla summary { cursor: pointer; color: var(--viz-texto); }
 .admin-tabla table { width: 100%; border-collapse: collapse; margin-top: 6px; max-height: 240px; display: block; overflow-y: auto; }
 .admin-tabla th, .admin-tabla td { text-align: left; padding: 3px 8px; border-bottom: 1px solid var(--viz-grilla); }
+
+/* Avisos push en el panel (PER04) */
+.avisos-push {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  margin-bottom: 18px;
+  background: #e8f1fb;
+  border: 1px solid #b9d3ee;
+  color: #1f4a73;
+}
+.avisos-push.activo { background: #e9f6ec; border-color: #b7dec1; color: #1f5a2e; }
+.avisos-push p { margin: 0; font-size: calc(13.5px * var(--escala-texto)); line-height: 1.4; flex: 1; min-width: 200px; }
+.avisos-push .ayuda.error { flex-basis: 100%; margin: 0; }
+html[data-tema="oscuro"] .avisos-push { background: #142535; border-color: #244a6e; color: #a9cdf0; }
+html[data-tema="oscuro"] .avisos-push.activo { background: #14301c; border-color: #2a5c38; color: #a6dcb3; }
