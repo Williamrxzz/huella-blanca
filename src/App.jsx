@@ -4,6 +4,8 @@ import FichaPublica from './pages/FichaPublica'
 import GeneradorQR from './pages/GeneradorQR'
 import Login from './pages/Login'
 import Registro from './pages/Registro'
+import Recuperar from './pages/Recuperar'
+import Restablecer from './pages/Restablecer'
 import Panel from './pages/Panel'
 import Perfil from './pages/Perfil'
 import AltaMascota from './pages/AltaMascota'
@@ -74,6 +76,8 @@ export default function App() {
         <Route path="/placas" element={<GeneradorQR />} />
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
+        <Route path="/recuperar" element={<Recuperar />} />
+        <Route path="/restablecer" element={<Restablecer />} />
         <Route path="/panel" element={<Panel />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/mascotas/nueva" element={<AltaMascota />} />
@@ -82,7 +86,7 @@ export default function App() {
         <Route path="/escanear" element={<Escanear />} />
         <Route path="/admin/placas" element={<AdminPlacas />} />
         <Route path="/admin/cuentas" element={<AdminCuentas />} />
-          <Route path="/admin/estadisticas" element={<AdminEstadisticas />} />
+        <Route path="/admin/estadisticas" element={<AdminEstadisticas />} />
         <Route path="/mi-historial" element={<HistorialColaboracion />} />
         <Route path="/m/:codigo" element={<FichaPublica />} />
         <Route path="/ejemplo" element={<FichaPublica demo />} />

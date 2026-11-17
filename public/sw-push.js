@@ -3,7 +3,7 @@
 // la Edge Function `notificar`: { titulo, cuerpo, url, tag }.
 
 self.addEventListener('push', (evento) => {
-  let datos = {}
+  let datos
   try {
     datos = evento.data ? evento.data.json() : {}
   } catch {

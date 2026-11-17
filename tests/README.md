@@ -53,6 +53,7 @@ Para correr solo algunas: `PRUEBAS_EN_PRODUCCION=si npm run test:e2e -- telefono
 | `e2e/notificaciones.mjs` | PER04/PER03: qué hechos avisan al dueño, el envío por la Edge Function y la baja de suscripciones muertas. |
 | `e2e/limite-push.mjs` | Límite de frecuencia de los push; "Está conmigo" prioritario; tope de 20 avisos por hora. |
 | `e2e/eliminar-cuenta.py` | Eliminar una cuenta desde `/admin/cuentas` borra todo lo suyo y no toca a nadie más. |
+| `e2e/recuperar-contrasena.mjs` | `/recuperar` responde igual exista o no la cuenta; el enlace del email lleva a `/restablecer` aunque Supabase vuelva al inicio; la contraseña nueva entra y la vieja no. |
 | `e2e/telefono.mjs` | TRA05 en pantalla: `/perfil`, `/registro`, perfil diferido y el check de la base. |
 | `e2e/ficha-avisos.mjs` | PER07 (mensaje del dueño en la ficha), TRA11 (aviso sin ubicación), TRA09 (reclamo del aviso). |
 | `e2e/ejemplo-escalado.mjs` | `/ejemplo` no toca la base; escaneos del dueño ignorados; texto del caso escalado solo. |

@@ -62,6 +62,8 @@ export default function Login() {
         </button>
       </form>
 
+      <Link className="enlace-discreto" to="/recuperar">¿Olvidaste tu contraseña?</Link>
+
       <Link
         className="enlace-discreto"
         to={placaPendiente ? `/registro?placa=${placaPendiente}` : '/registro'}

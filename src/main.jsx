@@ -1,3 +1,6 @@
+// Primero de todo: un enlace de recuperación de contraseña va a /restablecer
+// (ver el módulo). Tiene que correr antes de crear el cliente de Supabase.
+import './lib/desvioRecuperacion'
 import { createRoot } from 'react-dom/client'
 import 'leaflet/dist/leaflet.css'
 import './lib/leaflet-iconos'

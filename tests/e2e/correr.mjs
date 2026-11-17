@@ -20,6 +20,7 @@ const PRUEBAS = [
   { archivo: 'notificaciones.mjs', que: 'Notificaciones al dueño (PER04, PER03)' },
   { archivo: 'limite-push.mjs', que: 'Límite de frecuencia de los push' },
   { archivo: 'eliminar-cuenta.py', que: 'Eliminar cuentas desde /admin/cuentas' },
+  { archivo: 'recuperar-contrasena.mjs', que: 'Recuperar la contraseña por email', servidor: 'dev' },
   { archivo: 'telefono.mjs', que: 'Teléfono en formato internacional (TRA05)', servidor: 'dev' },
   { archivo: 'ficha-avisos.mjs', que: 'Mensaje del dueño, aviso sin ubicación, reclamo (PER07, TRA11, TRA09)', servidor: 'dev' },
   { archivo: 'ejemplo-escalado.mjs', que: 'Ficha de ejemplo, escaneos del dueño, caso escalado', servidor: 'dev' },

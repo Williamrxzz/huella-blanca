@@ -485,7 +485,18 @@ Usuario", con siete listas, una por bloque.
   apuntando siempre al dominio desde el que se sirve la app
   (`window.location.origin`).
 - `src/pages/Login.jsx` — login del dueño con email y contraseña, con
-  enlace a `/registro`.
+  enlace a `/registro` y a "¿Olvidaste tu contraseña?".
+- **Recuperar la contraseña** (desde el 2026-11-17): `/recuperar`
+  (`Recuperar.jsx`) pide el email y llama a `resetPasswordForEmail`; responde
+  igual exista o no la cuenta. El enlace del email abre `/restablecer`
+  (`Restablecer.jsx`), que pide la contraseña nueva dos veces y la guarda con
+  `updateUser`; si el enlace venció, ofrece pedir otro. Hoy `/restablecer` no
+  está entre las URLs de vuelta permitidas en Supabase, así que el enlace
+  vuelve al inicio: `src/lib/desvioRecuperacion.js`, importado primero en
+  `main.jsx`, lo manda a `/restablecer` igual. El email lo manda el servicio
+  de Supabase con su plantilla por defecto (en inglés; se traduce en el panel
+  de Supabase, Authentication → Email Templates) y con su límite de envíos
+  por hora.
 - `src/pages/Registro.jsx` (`/registro`) — alta de cuenta de dueño
   (nombre, email, contraseña) para el prototipo: `supabase.auth.signUp`
   y, si Supabase entrega sesión al instante, inserta la fila en

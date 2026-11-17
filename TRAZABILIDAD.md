@@ -1661,3 +1661,40 @@ se crearon a mano en el editor SQL y no estaban escritos en ningún archivo.
   (las protege el chequeo de rol interno), políticas duplicadas en `placas` y
   `casos_perdida`, y `mascotas` con política `all` para el dueño (permite un
   `delete` físico).
+
+## 2026-11-17 — Recuperar la contraseña
+
+Hallazgo de la revisión completa del proyecto: no había forma de recuperar
+la contraseña. Un dueño que la olvidaba perdía el acceso a la búsqueda de su
+mascota, justo cuando más lo necesitaba.
+
+- **`/recuperar`**: pide el email y llama a `resetPasswordForEmail` con vuelta
+  a `/restablecer`. La respuesta es siempre "Si hay una cuenta con ese email,
+  te mandamos un enlace", para que la pantalla no sirva para averiguar qué
+  emails están registrados. Si se piden muchos enlaces seguidos (el servicio
+  de email de Supabase tiene un límite por hora), lo dice.
+- **`/restablecer`**: con la sesión de recuperación que crea el enlace, pide
+  la contraseña nueva dos veces y la guarda (`updateUser`). Mensajes propios
+  para "no coinciden", "igual a la anterior" y "muy débil". Sin sesión
+  válida (enlace vencido, usado o abierto en otro navegador), lo explica y
+  ofrece pedir otro.
+- **Desvío al arrancar** (`src/lib/desvioRecuperacion.js`, primer import de
+  `main.jsx`): si la dirección trae un token de recuperación, la ruta pasa a
+  `/restablecer` antes de crear el cliente de Supabase. Hacía falta: la prueba
+  mostró que hoy `/restablecer` **no** está entre las URLs de vuelta
+  permitidas del proyecto y Supabase devuelve al inicio, que habría mandado al
+  panel con la sesión abierta sin pedir la contraseña nueva. Con el desvío
+  funciona sin tocar la configuración. (Opcional: agregar
+  `https://huella-blanca.vercel.app/restablecer` en Authentication → URL
+  Configuration → Redirect URLs.)
+- "¿Olvidaste tu contraseña?" en `/login`.
+- **Verificado** (`tests/e2e/recuperar-contrasena.mjs`, 13/13): el enlace se
+  genera con la API de administración (el mismo que llega por email) y se
+  abre en el inicio de la app: desvía a `/restablecer`, el token no queda en
+  la dirección, "no coinciden" se avisa, la contraseña nueva entra y la vieja
+  ya no; sin token, ofrece otro enlace; con un email sin cuenta, la respuesta
+  es la misma. Junto con `seguridad-rol` y `telefono`: 38/38, la base igual.
+- Pendiente del dueño del proyecto: la plantilla del email de Supabase está
+  en inglés (Authentication → Email Templates → Reset Password).
+- De paso: `public/sw-push.js` tenía una asignación inútil que marcaba el
+  lint; quedan solo los dos errores de `set-state-in-effect` ya conocidos.
