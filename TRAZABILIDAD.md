@@ -1281,3 +1281,50 @@ Instagram, más un mensaje editable con el enlace de la ficha.
   fecha se pisaba con la firma: corregido). La vista previa pasa a edición y
   la hoja se cierra. Sin probar en teléfono: el panel nativo de compartir con
   archivo (`navigator.share` con `files`), que headless no tiene.
+
+## 2026-11-17 — Seguridad: cualquier cuenta podía hacerse administradora
+
+Hallazgo de la revisión completa del proyecto (Sprints 1 a 5), hecha
+leyendo el código y la base reales. Era el problema más grave encontrado.
+
+- **Qué pasaba.** Las políticas de `perfiles` solo verificaban
+  `auth.uid() = id`, sin restringir la columna `rol`. Cualquier cuenta común
+  podía crear su perfil con `rol = 'admin'` llamando a la API REST con su
+  propia sesión (en vez de pasar por `Registro.jsx`), o cambiárselo después
+  con un `update`. Todas las funciones de administración verifican el rol
+  *dentro* de la base (`admin_listar_cuentas`, `admin_detalle_cuenta`,
+  `generar_lote_placas`, `admin_estadisticas`, la Edge Function
+  `eliminar-cuenta`), y esa decisión era correcta, pero verificaban un dato
+  que el propio usuario podía escribir. Se comprobó en vivo con una cuenta
+  temporal: el insert con `rol = 'admin'` devolvió 201 y a partir de ahí la
+  cuenta listó todas las cuentas con teléfono y email, y generó placas. La
+  cuenta y la placa de la prueba se borraron enseguida.
+- **Corrección** (migración `20261117000002_perfiles_rol_protegido.sql`), con
+  dos defensas independientes:
+  1. Privilegios de columna: se revocó `insert`/`update` sobre la tabla a
+     `anon` y `authenticated`, y se otorgó solo sobre `id, nombre, telefono`
+     (insert) y `nombre, telefono` (update). Desde la API, `rol` no se puede
+     ni nombrar: el intento devuelve 403.
+  2. Trigger `proteger_rol_perfil` (`before insert or update`): si hay sesión
+     de un usuario que no es admin, fuerza `rol = 'usuario'` al insertar y
+     conserva el rol anterior al actualizar. Cubre el caso de que alguien
+     vuelva a otorgar el privilegio por error. Sin sesión (SQL Editor,
+     service role) no interviene: los administradores se nombran desde ahí.
+  También: `rol` con default `'usuario'`; se borró la política de insert
+  duplicada (`dueños crean su propio perfil`, idéntica a `perfil propio:
+  crear`); la política de update ahora tiene también `with check`.
+- **Frontend**: `Registro.jsx`, `Panel.jsx` (perfil diferido) y
+  `FichaPublica.jsx` (cuenta después de avisar, TRA09) ya no mandan `rol`.
+  El frontend publicado antes de este cambio sí lo mandaba, y la base ahora
+  lo rechaza: por eso el cambio de base y el de frontend se publicaron juntos.
+- **Verificado** con el mismo script que mostró el agujero: insert con
+  `rol = 'admin'` → 403; insert legítimo sin rol → 201 con `rol = 'usuario'`;
+  edición de nombre y teléfono (lo que hace `/perfil`) → 200; update de
+  `rol` → 403; `admin_listar_cuentas` y `generar_lote_placas` →
+  `no_autorizado`. El trigger solo, simulando una sesión de usuario común
+  dentro de una transacción deshecha: el `update ... set rol = 'admin'`
+  queda en `usuario`. La base quedó como estaba (2 perfiles, 2 usuarios,
+  49 placas; 1 admin y 1 usuario).
+- Los demás hallazgos de la revisión (lector `/escanear`, `sugerir-ficha` sin
+  sesión, teléfono sin normalizar, mensaje de pérdida que no se muestra,
+  aviso sin ubicación, entre otros) quedan pendientes; se corrigen de a uno.

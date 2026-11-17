@@ -255,7 +255,13 @@ RLS está activo en las seis tablas. Las políticas hacen que cada dueño
 acceda únicamente a sus mascotas, casos, escaneos y avistamientos.
 Política agregada para el registro: `perfiles` permite `insert` a
 `authenticated` cuando `auth.uid() = id`, para que un dueño recién
-registrado pueda crear su propia fila. Políticas agregadas para PER01
+registrado pueda crear su propia fila. **El rol no lo elige nunca el
+navegador** (desde el 2026-11-17, ver `TRAZABILIDAD.md`): `authenticated`
+solo tiene privilegio de columna para escribir `id`, `nombre` y
+`telefono` (insert) y `nombre`, `telefono` (update); `rol` toma el
+default `'usuario'`, y el trigger `proteger_rol_perfil` lo vuelve a fijar
+como respaldo. Un administrador se nombra solo desde el SQL Editor. El
+frontend no manda `rol` en ningún insert. Políticas agregadas para PER01
 y PER08: `casos_perdida` permite `insert` y `update` a `authenticated`
 cuando la mascota del caso pertenece al dueño autenticado.
 

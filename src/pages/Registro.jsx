@@ -48,7 +48,7 @@ export default function Registro() {
 
     const { error: errorPerfil } = await supabase
       .from('perfiles')
-      .insert({ id: data.user.id, nombre, telefono: telefono.trim() || null, rol: 'usuario' })
+      .insert({ id: data.user.id, nombre, telefono: telefono.trim() || null })
 
     setEnviando(false)
 

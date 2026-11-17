@@ -187,7 +187,7 @@ export default function FichaPublica() {
       return
     }
 
-    await supabase.from('perfiles').insert({ id: data.user.id, nombre: nombreCuenta, rol: 'usuario' })
+    await supabase.from('perfiles').insert({ id: data.user.id, nombre: nombreCuenta })
 
     if (avistamientoId) {
       await supabase.rpc('reclamar_avistamiento', { p_avistamiento_id: avistamientoId })

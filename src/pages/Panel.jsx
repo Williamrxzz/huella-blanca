@@ -331,7 +331,7 @@ export default function Panel() {
         id: session.user.id,
         nombre: session.user.user_metadata?.nombre || '',
         telefono: telefonoInicial,
-        rol: 'usuario',
+        // rol no se manda: la base lo fija en 'usuario' (el navegador no puede elegirlo).
       })
       setTelefono(telefonoInicial)
     } else {
