@@ -59,6 +59,17 @@ test('el esquema se ejecuta completo y crea todo', async () => {
   await db.close()
 })
 
+test('bajas lógicas: el navegador no puede borrar el historial', async () => {
+  const db = await baseReconstruida()
+  for (const tabla of ['perfiles', 'mascotas', 'placas', 'casos_perdida', 'escaneos', 'avistamientos', 'notificaciones']) {
+    for (const rol of ['anon', 'authenticated']) {
+      const p = (await db.query(`select has_table_privilege('${rol}', 'public.${tabla}', 'DELETE') p`)).rows[0].p
+      assert.equal(p, false, `${rol} puede borrar ${tabla}`)
+    }
+  }
+  await db.close()
+})
+
 test('el navegador no puede escribir perfiles.rol', async () => {
   const db = await baseReconstruida()
   const r = (await db.query("select has_column_privilege('authenticated', 'public.perfiles', 'rol', 'INSERT') i, has_column_privilege('authenticated', 'public.perfiles', 'rol', 'UPDATE') u")).rows[0]

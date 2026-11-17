@@ -585,7 +585,7 @@ begin
 end;
 $function$;
 revoke all on function public.generar_lote_placas(integer) from public, anon, authenticated;
-grant execute on function public.generar_lote_placas(integer) to anon, authenticated, service_role;
+grant execute on function public.generar_lote_placas(integer) to authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION public.generar_placa(p_mascota_id uuid)
  RETURNS text
@@ -618,7 +618,7 @@ begin
 end;
 $function$;
 revoke all on function public.generar_placa(uuid) from public, anon, authenticated;
-grant execute on function public.generar_placa(uuid) to public, anon, authenticated, service_role;
+grant execute on function public.generar_placa(uuid) to authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION public.historial_colaboracion()
  RETURNS json
@@ -654,7 +654,7 @@ begin
 end;
 $function$;
 revoke all on function public.historial_colaboracion() from public, anon, authenticated;
-grant execute on function public.historial_colaboracion() to anon, authenticated, service_role;
+grant execute on function public.historial_colaboracion() to authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION public.limitar_notificacion_push()
  RETURNS trigger
@@ -1135,7 +1135,7 @@ begin
 end;
 $function$;
 revoke all on function public.vincular_placa(text,uuid) from public, anon, authenticated;
-grant execute on function public.vincular_placa(text,uuid) to public, anon, authenticated, service_role;
+grant execute on function public.vincular_placa(text,uuid) to authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
 -- Triggers
@@ -1172,11 +1172,8 @@ create policy "admin puede ver todos los casos de perdida" on public.casos_perdi
    FROM perfiles
   WHERE ((perfiles.id = auth.uid()) AND (perfiles.rol = 'admin'::text)))));
 
-create policy "casos: dueño" on public.casos_perdida as permissive for all to public
+create policy "casos: dueño lee" on public.casos_perdida as permissive for select to authenticated
   using ((EXISTS ( SELECT 1
-   FROM mascotas m
-  WHERE ((m.id = casos_perdida.mascota_id) AND (m.dueno_id = auth.uid())))))
-  with check ((EXISTS ( SELECT 1
    FROM mascotas m
   WHERE ((m.id = casos_perdida.mascota_id) AND (m.dueno_id = auth.uid())))));
 
@@ -1203,9 +1200,15 @@ create policy "admin puede ver todas las mascotas" on public.mascotas as permiss
    FROM perfiles
   WHERE ((perfiles.id = auth.uid()) AND (perfiles.rol = 'admin'::text)))));
 
-create policy "mascotas: dueño" on public.mascotas as permissive for all to public
+create policy "mascotas: dueño crea" on public.mascotas as permissive for insert to authenticated
+  with check ((auth.uid() = dueno_id));
+
+create policy "mascotas: dueño edita" on public.mascotas as permissive for update to authenticated
   using ((auth.uid() = dueno_id))
   with check ((auth.uid() = dueno_id));
+
+create policy "mascotas: dueño lee" on public.mascotas as permissive for select to authenticated
+  using ((auth.uid() = dueno_id));
 
 create policy notificaciones_propias_select on public.notificaciones as permissive for select to authenticated
   using ((auth.uid() = perfil_id));
@@ -1226,11 +1229,6 @@ create policy "admin puede ver todas las placas" on public.placas as permissive 
   WHERE ((perfiles.id = auth.uid()) AND (perfiles.rol = 'admin'::text)))));
 
 create policy duenos_ven_sus_placas on public.placas as permissive for select to public
-  using ((EXISTS ( SELECT 1
-   FROM mascotas m
-  WHERE ((m.id = placas.mascota_id) AND (m.dueno_id = auth.uid())))));
-
-create policy "placas: dueño de la mascota" on public.placas as permissive for select to public
   using ((EXISTS ( SELECT 1
    FROM mascotas m
   WHERE ((m.id = placas.mascota_id) AND (m.dueno_id = auth.uid())))));
@@ -1266,26 +1264,26 @@ revoke all on public.perfiles from anon, authenticated;
 revoke all on public.placas from anon, authenticated;
 revoke all on public.suscripciones_push from anon, authenticated;
 revoke all on public.uso_ia from anon, authenticated;
-grant delete, insert, maintain, references, select, trigger, truncate, update on public.avistamientos to anon;
-grant delete, insert, maintain, references, select, trigger, truncate, update on public.avistamientos to authenticated;
+grant insert, maintain, references, select, trigger, truncate, update on public.avistamientos to anon;
+grant insert, maintain, references, select, trigger, truncate, update on public.avistamientos to authenticated;
 grant delete, insert, maintain, references, select, trigger, truncate, update on public.avistamientos to service_role;
-grant delete, insert, maintain, references, select, trigger, truncate, update on public.casos_perdida to anon;
-grant delete, insert, maintain, references, select, trigger, truncate, update on public.casos_perdida to authenticated;
+grant insert, maintain, references, select, trigger, truncate, update on public.casos_perdida to anon;
+grant insert, maintain, references, select, trigger, truncate, update on public.casos_perdida to authenticated;
 grant delete, insert, maintain, references, select, trigger, truncate, update on public.casos_perdida to service_role;
-grant delete, insert, maintain, references, select, trigger, truncate, update on public.escaneos to anon;
-grant delete, insert, maintain, references, select, trigger, truncate, update on public.escaneos to authenticated;
+grant insert, maintain, references, select, trigger, truncate, update on public.escaneos to anon;
+grant insert, maintain, references, select, trigger, truncate, update on public.escaneos to authenticated;
 grant delete, insert, maintain, references, select, trigger, truncate, update on public.escaneos to service_role;
-grant delete, insert, maintain, references, select, trigger, truncate, update on public.mascotas to anon;
-grant delete, insert, maintain, references, select, trigger, truncate, update on public.mascotas to authenticated;
+grant insert, maintain, references, select, trigger, truncate, update on public.mascotas to anon;
+grant insert, maintain, references, select, trigger, truncate, update on public.mascotas to authenticated;
 grant delete, insert, maintain, references, select, trigger, truncate, update on public.mascotas to service_role;
-grant delete, insert, maintain, references, select, trigger, truncate, update on public.notificaciones to anon;
-grant delete, insert, maintain, references, select, trigger, truncate, update on public.notificaciones to authenticated;
+grant insert, maintain, references, select, trigger, truncate, update on public.notificaciones to anon;
+grant insert, maintain, references, select, trigger, truncate, update on public.notificaciones to authenticated;
 grant delete, insert, maintain, references, select, trigger, truncate, update on public.notificaciones to service_role;
-grant delete, maintain, references, select, trigger, truncate on public.perfiles to anon;
-grant delete, maintain, references, select, trigger, truncate on public.perfiles to authenticated;
+grant maintain, references, select, trigger, truncate on public.perfiles to anon;
+grant maintain, references, select, trigger, truncate on public.perfiles to authenticated;
 grant delete, insert, maintain, references, select, trigger, truncate, update on public.perfiles to service_role;
-grant delete, insert, maintain, references, select, trigger, truncate, update on public.placas to anon;
-grant delete, insert, maintain, references, select, trigger, truncate, update on public.placas to authenticated;
+grant insert, maintain, references, select, trigger, truncate, update on public.placas to anon;
+grant insert, maintain, references, select, trigger, truncate, update on public.placas to authenticated;
 grant delete, insert, maintain, references, select, trigger, truncate, update on public.placas to service_role;
 grant delete, insert, maintain, references, select, trigger, truncate, update on public.suscripciones_push to anon;
 grant delete, insert, maintain, references, select, trigger, truncate, update on public.suscripciones_push to authenticated;

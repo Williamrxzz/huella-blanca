@@ -270,7 +270,24 @@ frontend no manda `rol` en ningún insert. Políticas agregadas para PER01
 y PER08: `casos_perdida` permite `insert` y `update` a `authenticated`
 cuando la mascota del caso pertenece al dueño autenticado.
 
-### Funciones (todas `security definer`, ejecutables por `anon`)
+**Bajas lógicas garantizadas por la base** (desde el 2026-11-17, migración
+`20261117000009_limpieza_permisos.sql`): el navegador (`anon`,
+`authenticated`) no tiene `DELETE` sobre `perfiles`, `mascotas`, `placas`,
+`casos_perdida`, `escaneos`, `avistamientos` ni `notificaciones`, y las
+políticas del dueño en `mascotas` y `casos_perdida` son de leer, crear y
+actualizar (antes eran `for all` y permitían borrar). Solo
+`suscripciones_push` conserva `DELETE` (desactivar los avisos del
+dispositivo). El borrado de cuentas del administrador usa la clave de
+servicio desde la Edge Function `eliminar-cuenta`.
+
+### Funciones (todas `security definer`)
+
+Las públicas (`ficha_publica`, `registrar_escaneo`,
+`registrar_avistamiento`, `distancia_metros`) las ejecuta `anon`; las que
+necesitan cuenta, solo `authenticated` (verificado en la base desde el
+2026-11-17; antes `anon` también podía llamarlas, aunque todas verifican la
+sesión o el rol adentro). El detalle exacto está en
+`supabase/esquema/esquema.sql`.
 
 - `ficha_publica(p_codigo text)` → JSON con los datos visibles de la
   mascota. Nunca devuelve domicilio. Devuelve `contacto_tel`

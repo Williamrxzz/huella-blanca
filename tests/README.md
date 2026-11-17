@@ -49,6 +49,7 @@ Para correr solo algunas: `PRUEBAS_EN_PRODUCCION=si npm run test:e2e -- telefono
 | Archivo | Qué protege |
 |---|---|
 | `e2e/seguridad-rol.mjs` | Una cuenta común no puede crearse ni cambiarse el rol a `admin` (agujero corregido el 2026-11-17). |
+| `e2e/bajas-logicas.mjs` | Un dueño no puede borrar sus mascotas, casos ni avisos con la API (sí darlos de baja o cerrarlos); `anon` no puede llamar a las funciones que necesitan cuenta. |
 | `e2e/limite-ia.mjs` | `sugerir-ficha` exige sesión; límite de 30 clasificaciones por hora con Claude. |
 | `e2e/notificaciones.mjs` | PER04/PER03: qué hechos avisan al dueño, el envío por la Edge Function y la baja de suscripciones muertas. |
 | `e2e/limite-push.mjs` | Límite de frecuencia de los push; "Está conmigo" prioritario; tope de 20 avisos por hora. |

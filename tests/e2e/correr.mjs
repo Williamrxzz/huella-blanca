@@ -16,6 +16,7 @@ import { limpiarRestos } from './limpiar.mjs'
 // Orden: primero las que solo usan la API (rápidas), después las de Chrome.
 const PRUEBAS = [
   { archivo: 'seguridad-rol.mjs', que: 'Una cuenta común no puede hacerse administradora' },
+  { archivo: 'bajas-logicas.mjs', que: 'Bajas lógicas garantizadas por la base; funciones solo con cuenta' },
   { archivo: 'limite-ia.mjs', que: 'sugerir-ficha con sesión y límite de uso de la IA' },
   { archivo: 'notificaciones.mjs', que: 'Notificaciones al dueño (PER04, PER03)' },
   { archivo: 'limite-push.mjs', que: 'Límite de frecuencia de los push' },

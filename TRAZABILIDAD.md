@@ -1699,3 +1699,33 @@ mascota, justo cuando más lo necesitaba.
   en inglés (Authentication → Email Templates → Reset Password).
 - De paso: `public/sw-push.js` tenía una asignación inútil que marcaba el
   lint; quedan solo los dos errores de `set-state-in-effect` ya conocidos.
+
+## 2026-11-17 — Limpieza de permisos y políticas: bajas lógicas garantizadas por la base
+
+Lo mostró el esquema exportado el mismo día (`supabase/esquema/esquema.sql`).
+Migración `20261117000009_limpieza_permisos.sql`.
+
+- **Bajas lógicas.** La regla "las bajas son lógicas, nunca físicas" la
+  cumplía la app, pero no la base: las políticas `"mascotas: dueño"` y
+  `"casos: dueño"` eran `for all`, así que un dueño podía borrar sus mascotas
+  y sus casos con un `DELETE` directo a la API. Ahora las políticas del dueño
+  son de leer, crear y actualizar, y el navegador no tiene `DELETE` sobre
+  `perfiles`, `mascotas`, `placas`, `casos_perdida`, `escaneos`,
+  `avistamientos` ni `notificaciones` (solo `suscripciones_push` lo conserva,
+  para desactivar los avisos del dispositivo). El borrado de cuentas del
+  administrador no cambia: usa la clave de servicio.
+- **Política duplicada** en `placas` (`"placas: dueño de la mascota"`,
+  idéntica a `duenos_ven_sus_placas`): borrada.
+- **Funciones solo para cuentas** (`generar_placa`, `vincular_placa`,
+  `historial_colaboracion`, `generar_lote_placas`): ya no las ejecuta `anon`.
+  No era explotable (todas verifican la sesión o el rol adentro), pero
+  `CLAUDE.md` decía "solo authenticated" y la base no lo cumplía.
+- **Pruebas nuevas**: `tests/e2e/bajas-logicas.mjs` (12/12: el dueño crea,
+  ve, cierra y da de baja, pero no puede borrar su caso ni su mascota, 403;
+  `anon` recibe 401 en las funciones que necesitan cuenta) y, en
+  `tests/unit/esquema.test.mjs`, que ningún rol del navegador tenga `DELETE`
+  sobre las tablas de historial.
+- **Batería completa** después del cambio: 15 de 15 pruebas, 265 de 265
+  verificaciones, la base igual que al empezar. Unitarias: 22 de 22.
+- `esquema.sql` se volvió a exportar con la migración aplicada; el diff de
+  git muestra exactamente las políticas y permisos que cambiaron.
