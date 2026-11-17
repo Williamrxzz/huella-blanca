@@ -1475,3 +1475,50 @@ sin interpretar HTML; el formulario ofrece mapa o texto, sin nada explica
 qué falta, con texto se envía. En el panel, un aviso de hace 2 días se
 asocia a la cuenta, se confirma con el nombre de la mascota y no se puede
 reclamar dos veces. La base quedó como estaba.
+
+## 2026-11-17 — PER04: límite de frecuencia de los push al dueño
+
+Hallazgo de la revisión completa del proyecto.
+
+- **Qué pasaba.** `registrar_escaneo()` y `registrar_avistamiento()` son
+  públicas (quien encuentra la mascota no se registra; es una decisión de
+  diseño que no cambia) y el código de la placa está impreso en el collar y
+  en cada afiche compartido. Antes de PER04 eso era, como mucho, ruido en una
+  tabla; desde que existen los push, cualquiera podía con un script mandarle
+  al dueño decenas de notificaciones por minuto. Además, con un caso abierto
+  cada escaneo era un push.
+- **Criterio.** Los datos nunca se pierden: cada notificación queda en el
+  historial y cada aviso en el mapa. Lo que se frena es el push.
+- **Corrección** (migraciones `20261117000006_limite_notificaciones.sql` y
+  `20261117000007_notificacion_prioritaria.sql`):
+  - Trigger `before insert` en `notificaciones` (`limitar_notificacion_push`):
+    marca `resultado = {"omitida": "limite_frecuencia"}` si es un "escanearon
+    la placa" y ya salió otro en 10 minutos para esa mascota, si ya salieron
+    5 push en 10 minutos o 12 en una hora. El trigger que llama a la Edge
+    Function `notificar` ignora las omitidas.
+  - "¿Está perdida?" y "pasó a perdida" no se frenan nunca: las genera el
+    sistema, una vez por caso.
+  - El siguiente push que sí sale agrega "Además: N avisos y M escaneos más.
+    Mirá el mapa." y lleva al mapa, para que el dueño sepa que hay novedades.
+  - **"Está conmigo" es prioritaria** (columna `notificaciones.prioritaria`):
+    no la frena el tope de 10 minutos, sí el de la hora. Salió de la prueba:
+    con la primera versión, un "Está conmigo" que llegó después de cuatro
+    "La vi pasar" quedó omitido, y es el aviso más importante de todos.
+  - Tope duro en `registrar_avistamiento()`: 20 avisos por hora por mascota
+    (`demasiados_avisos`); la ficha le dice a la persona que use el botón de
+    contacto, que con caso abierto está visible. Un uso real queda lejos.
+- **Verificado** con una mascota temporal, 13/13: tres escaneos seguidos →
+  sale uno y se omiten dos; el aviso siguiente sale con "Además: 2 escaneos
+  más"; el quinto "La vi pasar" en 10 minutos se omite y el "Está conmigo"
+  siguiente sale igual; pasada la ventana vuelve a salir; tope de 12 por
+  hora; aviso 21 en la hora → `demasiados_avisos`; "¿está perdida?" sale con
+  el tope lleno; la Edge Function procesó las enviadas y ninguna omitida. La
+  prueba de notificaciones del 2026-11-16 (26 casos) se actualizó en dos
+  pasos que chocaban con cambios de hoy (aviso sin ubicación ahora necesita
+  texto; segundo escaneo a segundos del primero ahora se omite) y pasa 26/26.
+  La base quedó como estaba; Blanca no recibió notificaciones.
+- **Límite conocido:** el tope es por mascota, no por quien llama (las
+  funciones son anónimas a propósito). Alguien que mande 20 avisos falsos en
+  una hora bloquea los avisos de esa mascota hasta que pase la hora; el botón
+  de contacto sigue funcionando. Se eligió esto antes que exigir cuenta para
+  avisar, que contradice la decisión central del proyecto.

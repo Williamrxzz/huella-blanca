@@ -144,7 +144,10 @@ export default function FichaPublica() {
     if (error || data?.ok === false) {
       setErrorEnvio(data?.motivo === 'falta_lugar'
         ? 'Marcá en el mapa dónde la viste, o contanos el lugar en el texto.'
-        : 'No pudimos enviar el aviso. Revisá tu conexión y probá de nuevo.')
+        : data?.motivo === 'demasiados_avisos'
+          // Tope de 20 avisos por hora (protege al dueño de avisos en bucle).
+          ? `${ficha.nombre} recibió muchos avisos en la última hora y no podemos registrar más por ahora. Si está con vos, usá el botón para contactar a su familia.`
+          : 'No pudimos enviar el aviso. Revisá tu conexión y probá de nuevo.')
       return
     }
     setAvistamientoId(data?.avistamiento_id || null)

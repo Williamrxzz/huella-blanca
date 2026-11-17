@@ -877,6 +877,17 @@ cerca de casa no avisa. Detalle, decisiones y pruebas en
 `TRAZABILIDAD.md`, entrada del 2026-11-16. Probado en el teléfono del
 dueño del proyecto (2026-11-17); el trabajo de pg_cron está activo.
 
+**Límite de frecuencia (desde el 2026-11-17):** la notificación se guarda
+siempre, pero el push se omite (`resultado = {"omitida":
+"limite_frecuencia"}`, trigger `notificaciones_limitar`) si es un
+"escanearon la placa" y ya salió otro en 10 minutos para esa mascota, si
+ya salieron 5 en 10 minutos o 12 en una hora. "Está conmigo" va marcada
+`prioritaria`: no la frena el tope de 10 minutos, sí el de la hora.
+"¿Está perdida?" y "pasó a perdida" no se frenan nunca. El siguiente push
+que sale agrega "Además: N avisos más. Mirá el mapa". Y
+`registrar_avistamiento()` acepta como mucho 20 avisos por hora por mascota
+(`demasiados_avisos`; la ficha invita a usar el botón de contacto).
+
 ### Pendiente, en este orden
 
 1. **DAT05** (analítica con Recharts): primera versión hecha el
