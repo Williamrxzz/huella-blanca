@@ -1626,3 +1626,37 @@ nadie más podía repetirlos y se perdían al cerrar la sesión.
 - Limitaciones: las de punta a punta dependen de macOS con Google Chrome (o
   `CHROME_PATH`), del CLI de Supabase con sesión y de `python3`; tardan unos
   20 minutos. No hay integración continua: se corren a mano.
+
+## 2026-11-17 — Esquema de la base versionado en el repositorio
+
+Hallazgo de la revisión completa del proyecto: la base no se podía
+reconstruir desde el repositorio. Las migraciones empiezan el 2026-10-19; las
+seis tablas originales, sus políticas RLS y el índice único de casos abiertos
+se crearon a mano en el editor SQL y no estaban escritos en ningún archivo.
+
+- **`supabase/esquema/esquema.sql`**: foto completa del esquema actual (9
+  tablas, 42 restricciones, 10 índices, 22 funciones, 5 triggers, 22
+  políticas de `public` y `storage.objects`, permisos por tabla, columna y
+  función, el bucket `fotos-mascotas` y la tarea de `pg_cron`). Sin datos y
+  sin valores secretos: de Vault, solo el nombre `notificar_secret`.
+- **`supabase/esquema/exportar.mjs`** (`npm run esquema:exportar`): lo genera
+  leyendo el catálogo de Postgres con `supabase db query --linked`, porque
+  `supabase db dump` necesita Docker, que el proyecto no usa. Es determinista
+  (dos corridas dan el mismo archivo) y aborta si lo exportado contiene algo
+  que parezca un secreto. No va en `migrations/` para que la CLI no lo aplique
+  como un cambio.
+- **Verificado**: se ejecutó completo en un PostgreSQL 17.4 vacío (PGlite, en
+  una carpeta temporal, sin instalar nada en el sistema) con las piezas de
+  Supabase simuladas; se crearon todos los objetos, con RLS en las 9 tablas, y
+  un recorrido de humo pasó 15/15 (alta de dueño, mascota y placa; ficha
+  pública sin domicilio ni teléfono; escaneo lejos de casa que abre la posible
+  pérdida y, por los triggers, encola la notificación; contacto solo con caso
+  abierto; check del teléfono E.164; `rol` no escribible por
+  `authenticated`). Esa prueba de reconstrucción no quedó en el repositorio
+  porque necesita PGlite como dependencia de desarrollo, a decidir por el
+  dueño del proyecto.
+- El archivo muestra tal cual algunas cosas ya señaladas en la revisión y
+  todavía sin corregir: funciones de administración ejecutables por `anon`
+  (las protege el chequeo de rol interno), políticas duplicadas en `placas` y
+  `casos_perdida`, y `mascotas` con política `all` para el dueño (permite un
+  `delete` físico).

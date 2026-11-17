@@ -937,5 +937,12 @@ que sale agrega "Además: N avisos más. Mirá el mapa". Y
 - No exponer nunca el contenido de `.env.local`.
 - Si una funcionalidad necesita cambios en la base de datos, escribir el
   SQL y avisar para ejecutarlo en el editor de Supabase.
+- **Esquema versionado** (desde el 2026-11-17): `supabase/esquema/esquema.sql`
+  es la foto completa del esquema (tablas, funciones, triggers, RLS,
+  permisos, Storage, cron), generada con `npm run esquema:exportar` desde el
+  catálogo de la base. Después de aplicar una migración, volver a exportar y
+  commitear el `esquema.sql` junto con la migración. Las migraciones solas no
+  reconstruyen la base (las tablas originales se crearon a mano); este
+  archivo sí. Ver `supabase/esquema/README.md`.
 - Ante la duda entre pedir un dato más al usuario o no pedirlo, no
   pedirlo: la fricción en el registro es el mayor riesgo del producto.
