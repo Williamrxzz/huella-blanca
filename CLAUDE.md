@@ -406,8 +406,11 @@ Usuario", con siete listas, una por bloque.
   pantalla es solo para quien todavía no inició sesión.
 - `src/pages/Escanear.jsx` (`/escanear`) — lector de QR por cámara
   (`jsqr`) pensado solo para la demo en vivo: si el código leído
-  apunta a esta misma app navega con el router, si no abre el link tal
-  cual con `window.location.href`.
+  apunta a esta misma app navega con el router. Si es un link `http(s)`
+  de otro sitio, lo muestra y pide confirmación ("Abrir de todos
+  modos"); cualquier otro esquema (`javascript:`, `data:`...) se
+  rechaza. La decisión está en `src/lib/codigoQR.js` (desde el
+  2026-11-17; antes navegaba a cualquier cosa que dijera el QR).
 - `src/pages/FichaPublica.jsx` — muestra la ficha al escanear, con un
   saludo que usa el nombre de la mascota ("¡Hola! Soy {nombre}") para
   que quien la encuentra la llame así y se acerque con más confianza.
@@ -744,6 +747,16 @@ Function `subir-foto`, que verifica o acepta un *pase* firmado que
 `sugerir-ficha` emite para esos mismos bytes. La clasificación vive en
 `supabase/functions/_shared/clasificar.ts`. Ver `TRAZABILIDAD.md`,
 entrada del 2026-11-17.
+
+**Límite de uso de la IA (2026-11-17):** `sugerir-ficha` exige sesión
+(antes clasificaba sin ella, y la clave anon es pública). Cada
+clasificación con Claude deja una fila en la tabla `uso_ia` (RLS sin
+políticas: solo la usan las funciones); pasadas 30 por cuenta en una hora,
+`sugerir-ficha` y `subir-foto` sin pase responden 429 con un mensaje para
+la persona. `subir-foto` con un pase válido no llama a la IA y no cuenta.
+Lógica en `supabase/functions/_shared/limite.ts`. Las dos funciones leen
+el cuerpo **antes** de responder: contestar 401 sin consumir la foto deja
+colgadas las peticiones siguientes en el runtime de Supabase.
 
 Detalle completo y qué se probó (incluida la simulación de
 "inapropiada" sin usar contenido real) en `TRAZABILIDAD.md`, entrada

@@ -1328,3 +1328,53 @@ leyendo el código y la base reales. Era el problema más grave encontrado.
 - Los demás hallazgos de la revisión (lector `/escanear`, `sugerir-ficha` sin
   sesión, teléfono sin normalizar, mensaje de pérdida que no se muestra,
   aviso sin ubicación, entre otros) quedan pendientes; se corrigen de a uno.
+
+## 2026-11-17 — Seguridad: lector `/escanear` y gasto de IA sin sesión
+
+Otros dos hallazgos de la revisión completa del proyecto.
+
+**1. `/escanear` navegaba a cualquier cosa que dijera el QR.**
+- **Qué pasaba.** `Escanear.jsx` hacía `window.location.href = texto` con
+  cualquier URL que no fuera de la propia app. Un QR con `javascript:...` o
+  `data:text/html,...` ejecutaba código dentro de la app o mandaba a la
+  persona a cualquier sitio sin que lo viera.
+- **Corrección.** La decisión pasó a `src/lib/codigoQR.js`
+  (`interpretarCodigo`): un link de la propia app se sigue con el router;
+  un link `http(s)` de otro sitio se muestra en pantalla con "Abrir de todos
+  modos" (la persona decide) y "Escanear otro código"; cualquier otro
+  esquema se rechaza ("Este código no es el de una placa de Huella Blanca").
+- **Verificado** con la función contra nueve entradas (link propio,
+  `javascript:` en mayúsculas y minúsculas, `data:`, `file:`, `intent:`,
+  `vbscript:`, texto suelto y un `https` ajeno): solo el propio navega y
+  solo el `https` ajeno pide confirmación. La pantalla compila y pasa el
+  lint, pero no se probó con la cámara (headless no tiene cámara): queda
+  probarla en el teléfono con un QR propio y uno ajeno.
+
+**2. `sugerir-ficha` llamaba a Claude sin sesión.**
+- **Qué pasaba.** La función clasificaba antes de mirar si había sesión;
+  con la clave anon (pública, viaja en el JS) cualquiera podía llamarla en
+  bucle y gastar la cuenta de la API.
+- **Corrección.** Sesión obligatoria antes de llamar a la API (los dos usos
+  reales, alta/edición de mascota y foto de reencuentro, siempre la
+  tienen). Tabla nueva `uso_ia` (migración `20261117000003_uso_ia.sql`, RLS
+  sin políticas) y `_shared/limite.ts`: 30 clasificaciones por cuenta y por
+  hora, sumando `sugerir-ficha` y `subir-foto`. Pasado el límite,
+  `sugerir-ficha` responde 429 (la app sigue sin verificar, como ante
+  cualquier fallo de la IA) y `subir-foto` **sin pase** responde 429 con
+  "Subiste muchas fotos en poco tiempo...": guardar sin verificar sería la
+  forma de saltear IA02. Con un pase válido no se llama a la IA y no cuenta.
+  Si el contador falla, deja pasar.
+- **Bug encontrado al probarlo, no documentado antes:** responder 401 sin
+  leer el cuerpo de la petición (la foto, cientos de KB) dejaba colgada la
+  siguiente petición al runtime de Supabase (401, después 503 o sin
+  respuesta). `subir-foto` ya tenía el mismo patrón desde su creación. Las
+  dos funciones ahora leen el cuerpo antes de responder; ocho llamadas
+  seguidas sin sesión dan 401 en menos de 2 s cada una.
+- **Verificado:** prueba nueva de 8 casos (sin sesión → 401; con sesión →
+  apta + pase y una fila en `uso_ia`; el navegador no puede leer ni
+  escribir `uso_ia` → 403; con el cupo lleno, cargado directo en la tabla
+  para no gastar 30 llamadas reales: `sugerir-ficha` → 429, `subir-foto` sin
+  pase → 429, `subir-foto` con pase → se guarda; los rechazos no suman
+  filas) y la prueba completa de IA02 de punta a punta en Chrome, 37/37
+  (actualizada: el caso "sin sesión clasifica pero no da pase" ahora espera
+  401). La base y Storage quedaron como estaban.

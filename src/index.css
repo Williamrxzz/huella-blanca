@@ -1380,3 +1380,14 @@ html[data-tema="oscuro"] {
 .avisos-push .ayuda.error { flex-basis: 100%; margin: 0; }
 html[data-tema="oscuro"] .avisos-push { background: #142535; border-color: #244a6e; color: #a9cdf0; }
 html[data-tema="oscuro"] .avisos-push.activo { background: #14301c; border-color: #2a5c38; color: #a6dcb3; }
+
+/* /escanear: link de otro sitio leído de un QR, mostrado antes de abrirlo. */
+.enlace-leido {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: calc(14px * var(--escala-texto));
+  overflow-wrap: anywhere;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f1efec;
+}
+html[data-tema="oscuro"] .enlace-leido { background: #24282e; }

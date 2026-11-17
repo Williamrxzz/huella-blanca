@@ -10,6 +10,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { clasificarImagen } from '../_shared/clasificar.ts'
 import { decodificarBase64, sha256Hex, verificarPase } from '../_shared/pase.ts'
+import { MOTIVO_LIMITE, registrarUsoIa } from '../_shared/limite.ts'
 
 const BUCKET = 'fotos-mascotas'
 const TAMANO_MAXIMO = 6 * 1024 * 1024
@@ -28,6 +29,17 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
   if (req.method !== 'POST') return responder({ ok: false, error: 'metodo_no_permitido' }, 405)
 
+  // El cuerpo se lee antes de cualquier respuesta: contestar sin consumir la
+  // foto que se está subiendo deja colgadas las peticiones siguientes en el
+  // runtime de Supabase (ver sugerir-ficha).
+  let cuerpo: any
+  let cuerpoValido = true
+  try {
+    cuerpo = await req.json()
+  } catch {
+    cuerpoValido = false
+  }
+
   const url = Deno.env.get('SUPABASE_URL')!
   const comoUsuario = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, {
     global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
@@ -36,13 +48,7 @@ Deno.serve(async (req) => {
   const { data: sesion } = await comoUsuario.auth.getUser()
   const uid = sesion?.user?.id
   if (!uid) return responder({ ok: false, error: 'no_autorizado' }, 401)
-
-  let cuerpo: any
-  try {
-    cuerpo = await req.json()
-  } catch {
-    return responder({ ok: false, error: 'cuerpo_invalido' }, 400)
-  }
+  if (!cuerpoValido) return responder({ ok: false, error: 'cuerpo_invalido' }, 400)
   const { imagen_base64, media_type, tipo, pase } = cuerpo ?? {}
   if (typeof imagen_base64 !== 'string' || media_type !== 'image/jpeg' || !(tipo in PREFIJOS)) {
     return responder({ ok: false, error: 'parametros_invalidos' }, 400)
@@ -63,6 +69,11 @@ Deno.serve(async (req) => {
   let verificada = categoria !== null
 
   if (!categoria) {
+    // Sin pase hay que llamar a la IA: cuenta para el límite por hora. Pasado
+    // el límite no se guarda sin verificar (sería la forma de saltear IA02).
+    if (!(await registrarUsoIa(uid, 'subir-foto'))) {
+      return responder({ ok: false, error: 'demasiadas_solicitudes', motivo: MOTIVO_LIMITE }, 429)
+    }
     const resultado = await clasificarImagen(imagen_base64, media_type)
     if (resultado.ok) {
       categoria = resultado.clasificacion.categoria

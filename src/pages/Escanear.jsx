@@ -1,13 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import jsQR from 'jsqr'
+import { ExternalLink, ScanLine } from 'lucide-react'
 import Encabezado from '../components/Encabezado'
+import { interpretarCodigo } from '../lib/codigoQR'
+
 
 export default function Escanear() {
   const navigate = useNavigate()
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const [error, setError] = useState(null)
+  const [enlaceExterno, setEnlaceExterno] = useState(null)
+  const [intento, setIntento] = useState(0) // cambiarlo vuelve a prender la cámara
 
   useEffect(() => {
     let activo = true
@@ -22,16 +27,10 @@ export default function Escanear() {
 
     function procesarResultado(texto) {
       detener()
-      try {
-        const url = new URL(texto)
-        if (url.origin === window.location.origin) {
-          navigate(url.pathname + url.search)
-        } else {
-          window.location.href = texto
-        }
-      } catch {
-        setError(`Se leyó "${texto}", pero no es un link válido.`)
-      }
+      const resultado = interpretarCodigo(texto, window.location.origin)
+      if (resultado.tipo === 'propio') navigate(resultado.ruta)
+      else if (resultado.tipo === 'externo') setEnlaceExterno(resultado.url)
+      else setError('Este código no es el de una placa de Huella Blanca.')
     }
 
     function escanearCuadro() {
@@ -78,7 +77,13 @@ export default function Escanear() {
 
     iniciar()
     return detener
-  }, [navigate])
+  }, [navigate, intento])
+
+  function escanearOtro() {
+    setError(null)
+    setEnlaceExterno(null)
+    setIntento((n) => n + 1)
+  }
 
   return (
     <main className="pagina">
@@ -86,8 +91,25 @@ export default function Escanear() {
       <h1>Escanear QR</h1>
       <p className="ayuda">Apuntá la cámara al código QR de la placa.</p>
 
-      {error ? (
-        <p className="ayuda error" role="alert">{error}</p>
+      {enlaceExterno ? (
+        <div role="alert">
+          <p>Este código no es de una placa de Huella Blanca. Lleva a otro sitio:</p>
+          <p className="enlace-leido">{enlaceExterno}</p>
+          <p className="ayuda">Abrilo solo si confiás en quien lo puso.</p>
+          <a className="boton secundario" href={enlaceExterno} rel="noopener noreferrer">
+            <ExternalLink size={18} aria-hidden="true" /> Abrir de todos modos
+          </a>
+          <button className="boton" type="button" onClick={escanearOtro}>
+            <ScanLine size={18} aria-hidden="true" /> Escanear otro código
+          </button>
+        </div>
+      ) : error ? (
+        <>
+          <p className="ayuda error" role="alert">{error}</p>
+          <button className="boton" type="button" onClick={escanearOtro}>
+            <ScanLine size={18} aria-hidden="true" /> Escanear otro código
+          </button>
+        </>
       ) : (
         <div className="visor-camara">
           <video ref={videoRef} playsInline muted aria-hidden="true" />
