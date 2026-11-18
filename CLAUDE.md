@@ -237,7 +237,9 @@ botón de contacto de la ficha llamaba a un número inexistente.
 cargadas antes de este campo no lo tienen), raza, tamano ('pequeno' |
 'mediano' | 'grande'), color, senas, caracter ('amigable' |
 'temerosa' | 'no_acercarse'), foto_url, domicilio_lat, domicilio_lng,
-radio_metros (por defecto 100), pausado_hasta (modo paseo: suspende
+radio_metros (por defecto 100; configurable por mascota en el alta y la
+edición, campo "Radio de aviso (metros)", mínimo 100 y de a 100, sin tope
+en la base), pausado_hasta (modo paseo: suspende
 la detección automática mientras esté en el futuro; lo leen
 `registrar_escaneo()` y `notificar_escaneo()`, y desde el 2026-11-18 el
 dueño lo activa desde el panel con "Modo paseo", por 2 h a 1 semana: DUE11),
@@ -391,9 +393,12 @@ Desde el frontend se llaman con `supabase.rpc('nombre', { parametros })`.
 
 - Usuario en Authentication con UID
   `8fbf2316-eb8a-4c28-abb0-c5073c3e0d98`, con su perfil creado.
-- Mascota "Blanca": perro, mestiza, mediano, negra con pecho
-  blanco, amigable, domicilio en Caleta Olivia (-46.4380, -67.5280),
-  radio de 1000 metros.
+- Mascota "Blanca": perro, hembra, mestiza, mediano, negra con pecho
+  blanco, temerosa, domicilio en Caleta Olivia, radio de 100 metros y 24 h
+  para confirmar una posible pérdida (verificado contra la base el
+  2026-11-18; antes este documento decía "amigable" y "1000 metros"). La
+  coordenada del domicilio no se escribe acá: el repositorio es público y el
+  domicilio nunca se expone (sección 2).
 - Placa `C30A45A9` vinculada a esa mascota y en estado activa.
 - Mascota "Doggie" (perro, placa `B3B07800`), la única otra mascota
   que queda cargada. Desde la limpieza del 2026-11-04 son las dos
