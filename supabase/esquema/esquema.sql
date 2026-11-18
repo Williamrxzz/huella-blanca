@@ -397,6 +397,23 @@ $function$;
 revoke all on function public.cerrar_caso(uuid,uuid,text,text) from public, anon, authenticated;
 grant execute on function public.cerrar_caso(uuid,uuid,text,text) to authenticated, service_role;
 
+CREATE OR REPLACE FUNCTION public.cerrar_casos_de_mascota_dada_de_baja()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+begin
+  update casos_perdida
+     set estado = 'cerrada', cerrado_en = now()
+   where mascota_id = new.id
+     and estado in ('posible_perdida', 'perdida');
+  return new;
+end;
+$function$;
+revoke all on function public.cerrar_casos_de_mascota_dada_de_baja() from public, anon, authenticated;
+grant execute on function public.cerrar_casos_de_mascota_dada_de_baja() to service_role;
+
 CREATE OR REPLACE FUNCTION public.colaboradores_del_caso(p_caso_id uuid)
  RETURNS json
  LANGUAGE plpgsql
@@ -1196,6 +1213,7 @@ grant execute on function public.rutas_fotos_cuenta(uuid) to service_role;
 -- ---------------------------------------------------------------------------
 CREATE TRIGGER avistamientos_notificar AFTER INSERT ON public.avistamientos FOR EACH ROW EXECUTE FUNCTION notificar_avistamiento();
 CREATE TRIGGER escaneos_notificar AFTER INSERT ON public.escaneos FOR EACH ROW EXECUTE FUNCTION notificar_escaneo();
+CREATE TRIGGER mascotas_baja_cierra_caso AFTER UPDATE OF activa ON public.mascotas FOR EACH ROW WHEN ((old.activa AND (NOT new.activa))) EXECUTE FUNCTION cerrar_casos_de_mascota_dada_de_baja();
 CREATE TRIGGER notificaciones_enviar AFTER INSERT ON public.notificaciones FOR EACH ROW EXECUTE FUNCTION enviar_notificacion_push();
 CREATE TRIGGER notificaciones_limitar BEFORE INSERT ON public.notificaciones FOR EACH ROW EXECUTE FUNCTION limitar_notificacion_push();
 CREATE TRIGGER proteger_rol_perfil BEFORE INSERT OR UPDATE ON public.perfiles FOR EACH ROW EXECUTE FUNCTION proteger_rol_perfil();

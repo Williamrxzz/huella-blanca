@@ -581,7 +581,9 @@ Usuario", con siete listas, una por bloque.
   tiempo elegido; muestra "De paseo hasta…" y "Terminar paseo"; no se
   ofrece con un caso abierto).
   Cada mascota tiene enlaces para editar, ver el mapa de avistamientos,
-  y eliminar (borrado lógico). Además (**PER01**) un botón que cambia
+  y eliminar (borrado lógico). Desde el 2026-11-18, dar de baja una
+  mascota cierra su caso de pérdida abierto en la misma operación (trigger
+  `mascotas_baja_cierra_caso` en la base). Además (**PER01**) un botón que cambia
   según el caso abierto que tenga esa mascota: "Marcar como perdida" si
   no hay ninguno, o "Confirmar pérdida" si ya existe uno en
   `posible_perdida` por detección automática (lo actualiza a `perdida`
