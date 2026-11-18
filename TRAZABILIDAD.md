@@ -2043,3 +2043,32 @@ service worker desde la app (2026-11-18): si la persona tocaba "Activar
 avisos" apenas abría el panel, antes de que terminara el registro, veía
 "recargá la página". Ahora `activarPush()` registra el service worker en ese
 momento y espera a que esté listo (hasta 20 s).
+
+## 2026-11-18 — Dar de baja una mascota cierra su caso abierto (caso fantasma de Liliana)
+
+Encontrado al revisar los datos de producción antes de la demo.
+
+- **Qué pasaba.** "Eliminar mascota" la da de baja (`activa = false`, baja
+  lógica), pero si tenía un caso `perdida` o `posible_perdida` abierto, el
+  caso quedaba abierto para siempre: la ficha ya no responde
+  (`ficha_publica()` pide `activa`), así que nadie podía avisar ni
+  cerrarlo, y sumaba un caso fantasma a "casos abiertos" en las estadísticas.
+  Le pasó a Liliana (cuenta de prueba de Ariel): dada de baja con un caso
+  `perdida` abierto. Era el único.
+- **Corrección** (migración `20261118000002_baja_mascota_cierra_caso.sql`,
+  commit `6e118c0`): trigger `mascotas_baja_cierra_caso` (`after update of
+  activa`, solo cuando pasa de activa a dada de baja), que cierra sus casos
+  abiertos en la misma operación, con el mismo criterio que un cierre normal:
+  `estado = 'cerrada'` y `cerrado_en`, sin mensaje de agradecimiento, foto
+  ni rescatista. Está en la base para que valga por cualquier camino (panel,
+  API, una pantalla futura). La misma migración cerró el caso de Liliana.
+- **Efecto a tener en cuenta:** `admin_estadisticas()` cuenta los casos
+  `cerrada` como "reencuentros", así que el de Liliana suma uno que no fue
+  tal. Si se quiere evitar, la alternativa es cerrar estos casos como
+  `descartada`.
+- **Verificado** con `tests/e2e/bajas-logicas.mjs`, 16/16: una posible pérdida
+  automática se cierra al dar de baja la mascota por la API, y un caso
+  `perdida` se cierra al tocar "Eliminar mascota" en el panel; los dos sin
+  agradecimiento, foto ni rescatista, y no queda ningún caso abierto de una
+  mascota dada de baja en la base. Los datos de prueba se borraron (la base
+  quedó con 11 casos y 4 mascotas, como antes).
