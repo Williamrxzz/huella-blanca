@@ -21,8 +21,10 @@ const Escanear = lazy(() => import('./pages/Escanear'))
 const AdminCuentas = lazy(() => import('./pages/AdminCuentas'))
 const AdminEstadisticas = lazy(() => import('./pages/AdminEstadisticas'))
 const HistorialColaboracion = lazy(() => import('./pages/HistorialColaboracion'))
+const Privacidad = lazy(() => import('./pages/Privacidad'))
 
 function Inicio() {
+  const { state } = useLocation()
   const [verificando, setVerificando] = useState(true)
   const [haySesion, setHaySesion] = useState(false)
 
@@ -40,6 +42,9 @@ function Inicio() {
 
   return (
     <main className="pagina inicio">
+      {state?.cuentaEliminada && (
+        <p className="confirmacion" role="status">Tu cuenta y todos sus datos se eliminaron.</p>
+      )}
       <div className="hero">
         <img className="logo" src="/pwa-512.png" alt="Huella Blanca" />
         <h1>Huella Blanca</h1>
@@ -68,6 +73,7 @@ function Inicio() {
       <Link className="boton" to="/login">Iniciar sesión</Link>
       <Link className="boton secundario" to="/escanear">Escanear un QR</Link>
       <Link className="enlace-discreto" to="/ejemplo">Ver un ejemplo de ficha</Link>
+      <Link className="enlace-discreto" to="/privacidad">Política de privacidad</Link>
     </main>
   )
 }
@@ -99,6 +105,7 @@ export default function App() {
         <Route path="/admin/cuentas" element={<AdminCuentas />} />
         <Route path="/admin/estadisticas" element={<AdminEstadisticas />} />
         <Route path="/mi-historial" element={<HistorialColaboracion />} />
+        <Route path="/privacidad" element={<Privacidad />} />
         <Route path="/m/:codigo" element={<FichaPublica />} />
         <Route path="/ejemplo" element={<FichaPublica demo />} />
       </Routes>

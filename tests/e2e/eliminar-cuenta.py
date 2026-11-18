@@ -24,11 +24,18 @@ def check(nombre, ok, detalle=''):
 
 
 def cli(*args):
-    return subprocess.run(['npx', 'supabase', *args], cwd=CWD, capture_output=True, text=True).stdout
+    return subprocess.run(['npx', 'supabase', *args], cwd=CWD, capture_output=True, text=True, timeout=90).stdout
 
 
-def db(sql):
-    out = subprocess.run(['npx', 'supabase', 'db', 'query', '--linked', sql], cwd=CWD, capture_output=True, text=True)
+def db(sql, intento=1):
+    # Con límite de tiempo: si la red se corta, el CLI puede quedar colgado
+    # indefinidamente (pasó el 2026-11-18); mejor fallar en 90 s y reintentar.
+    try:
+        out = subprocess.run(['npx', 'supabase', 'db', 'query', '--linked', sql], cwd=CWD, capture_output=True, text=True, timeout=90)
+    except subprocess.TimeoutExpired:
+        if intento < 2:
+            return db(sql, intento + 1)
+        raise RuntimeError('db: la consulta no respondió en 90 s (¿conexión?)')
     txt = out.stdout + out.stderr
     i = txt.find('{')
     if i < 0:

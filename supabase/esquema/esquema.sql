@@ -111,7 +111,8 @@ create table public.perfiles (
   nombre text not null,
   telefono text,
   rol text default 'usuario'::text not null,
-  creado_en timestamp with time zone default now() not null
+  creado_en timestamp with time zone default now() not null,
+  privacidad_aceptada_en timestamp with time zone
 );
 
 create table public.placas (
@@ -1294,7 +1295,7 @@ grant delete, insert, maintain, references, select, trigger, truncate, update on
 grant delete, insert, maintain, references, select, trigger, truncate, update on public.uso_ia to service_role;
 grant insert (mascota_id, estado, origen, mensaje, ultima_lat, ultima_lng) on public.casos_perdida to authenticated;
 grant update (estado, mensaje, ultima_lat, ultima_lng, cerrado_en) on public.casos_perdida to authenticated;
-grant insert (id, nombre, telefono) on public.perfiles to authenticated;
+grant insert (id, nombre, telefono, privacidad_aceptada_en) on public.perfiles to authenticated;
 grant update (nombre, telefono) on public.perfiles to authenticated;
 
 -- ---------------------------------------------------------------------------

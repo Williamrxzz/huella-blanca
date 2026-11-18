@@ -309,6 +309,7 @@ export default function Panel() {
         id: session.user.id,
         nombre: session.user.user_metadata?.nombre || '',
         telefono: telefonoInicial,
+        privacidad_aceptada_en: session.user.user_metadata?.privacidad_aceptada_en || null,
         // rol no se manda: la base lo fija en 'usuario' (el navegador no puede elegirlo).
       })
       setTelefono(telefonoInicial)

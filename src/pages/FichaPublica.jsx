@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { pedirUbicacion, pedirUbicacionSiYaHayPermiso } from '../lib/ubicacion'
 import Encabezado from '../components/Encabezado'
 import { FICHA_EJEMPLO } from '../lib/fichaEjemplo'
+import AceptoPrivacidad from '../components/AceptoPrivacidad'
 
 function IconoWhatsApp(props) {
   return (
@@ -65,6 +66,7 @@ export default function FichaPublica({ demo = false }) {
   const [errorCuenta, setErrorCuenta] = useState(null)
   const [cuentaCreada, setCuentaCreada] = useState(false)
   const [emailYaRegistrado, setEmailYaRegistrado] = useState(false)
+  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false)
   const [notaContactoDemo, setNotaContactoDemo] = useState(false)
 
   useEffect(() => {
@@ -160,7 +162,7 @@ export default function FichaPublica({ demo = false }) {
     const { data, error: errorRegistro } = await supabase.auth.signUp({
       email: emailCuenta,
       password: contrasenaCuenta,
-      options: { data: { nombre: nombreCuenta } },
+      options: { data: { nombre: nombreCuenta, privacidad_aceptada_en: new Date().toISOString() } },
     })
 
     if (errorRegistro) {
@@ -192,7 +194,7 @@ export default function FichaPublica({ demo = false }) {
       return
     }
 
-    await supabase.from('perfiles').insert({ id: data.user.id, nombre: nombreCuenta })
+    await supabase.from('perfiles').insert({ id: data.user.id, nombre: nombreCuenta, privacidad_aceptada_en: new Date().toISOString() })
 
     if (avistamientoId) {
       const { data: reclamo, error: errorReclamo } = await supabase.rpc('reclamar_avistamiento', { p_avistamiento_id: avistamientoId })
@@ -387,6 +389,7 @@ export default function FichaPublica({ demo = false }) {
                 minLength={6}
                 required
               />
+              <AceptoPrivacidad aceptado={aceptaPrivacidad} onCambio={setAceptaPrivacidad} />
               {errorCuenta && <p className="ayuda error" role="alert">{errorCuenta}</p>}
               <button className="boton" type="submit" disabled={creandoCuenta}>
                 {creandoCuenta ? 'Creando cuenta…' : 'Crear cuenta'}
@@ -467,6 +470,10 @@ export default function FichaPublica({ demo = false }) {
             value={contacto}
             onChange={(e) => setContacto(e.target.value)}
           />
+          <p className="ayuda">
+            Tu aviso y tu contacto los ve solo su familia.{' '}
+            <a href="/privacidad" target="_blank" rel="noopener">Cómo usamos estos datos</a>
+          </p>
 
           {errorEnvio && <p className="ayuda error" role="alert">{errorEnvio}</p>}
 

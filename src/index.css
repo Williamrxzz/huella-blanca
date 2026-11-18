@@ -1431,3 +1431,32 @@ html[data-contraste="alto"] .opciones-rescatista label:has(input:checked) small 
 /* Lugar del mapa mientras se descarga (MapasFicha.jsx se carga aparte). */
 .mapa-cargando { background: #ece9e4; }
 html[data-tema="oscuro"] .mapa-cargando { background: #24282e; }
+
+/* Política de privacidad: texto largo, legible en el teléfono. */
+.texto-legal h2 {
+  font-size: calc(18px * var(--escala-texto));
+  margin: 24px 0 6px;
+}
+.texto-legal p, .texto-legal li { line-height: 1.55; }
+.texto-legal ul { padding-left: 20px; margin: 6px 0; }
+.texto-legal li { margin-bottom: 6px; }
+
+/* Consentimiento al registrarse: casilla con mínimo táctil de 44 px. */
+.acepto-privacidad {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: calc(14px * var(--escala-texto));
+}
+.acepto-privacidad input { width: 20px; height: 20px; flex-shrink: 0; margin: 0; }
+
+/* Perfil: eliminar la propia cuenta, separado del resto y sin competir. */
+.zona-eliminar {
+  margin-top: 36px;
+  padding-top: 20px;
+  border-top: 1px solid #e3e1dc;
+}
+.zona-eliminar h2 { font-size: calc(17px * var(--escala-texto)); margin: 0 0 8px; }
+.confirmar-eliminar { display: flex; flex-direction: column; gap: 10px; }
+html[data-tema="oscuro"] .zona-eliminar { border-top-color: #34383d; }

@@ -1,12 +1,17 @@
-// Elimina una cuenta de forma definitiva, al instante. La llama el panel de
-// administración (/admin/cuentas); nunca corre sola. Para la cuenta indicada,
+// Elimina una cuenta de forma definitiva, al instante. Dos usos:
+//   * el administrador, desde /admin/cuentas: `{ id }` de otra cuenta;
+//   * cualquier persona, su propia cuenta desde /perfil: `{ propia: true }`
+//     (derecho de supresión, Ley 25.326; desde el 2026-11-18). Un
+//     administrador no puede borrarse así, para que la app no quede sin
+//     nadie que la administre.
+// Nunca corre sola. Para la cuenta indicada,
 // en este orden:
 //   1. borra sus fotos de Storage (desde SQL no se pueden borrar),
 //   2. borra sus datos de la base (purgar_cuenta),
 //   3. borra el usuario de Auth (email y contraseña).
 // Si un paso falla se corta ahí y se avisa; no queda nada a medias en silencio.
-// Quien llama tiene que ser administrador: se verifica acá, con su sesión, y
-// no solo en la pantalla.
+// Quién llama y qué puede borrar se verifica acá, con su sesión, y no solo
+// en la pantalla.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const BUCKET = 'fotos-mascotas'
@@ -39,22 +44,37 @@ Deno.serve(async (req) => {
   const quien = sesion?.user
   if (!quien) return responder({ ok: false, error: 'no_autorizado' }, 401)
 
-  const { data: perfilAdmin } = await servicio.from('perfiles').select('rol').eq('id', quien.id).maybeSingle()
-  if (perfilAdmin?.rol !== 'admin') return responder({ ok: false, error: 'no_autorizado' }, 403)
-
-  // 2) Qué cuenta: no la propia ni la de otro administrador.
-  let id: string | undefined
+  let cuerpo: { id?: string; propia?: boolean } = {}
   try {
-    id = (await req.json())?.id
+    cuerpo = (await req.json()) ?? {}
   } catch {
     // cuerpo vacío o inválido
   }
-  if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return responder({ ok: false, error: 'cuenta_invalida' }, 400)
-  if (id === quien.id) return responder({ ok: false, error: 'cuenta_propia' }, 400)
 
-  const { data: objetivo } = await servicio.from('perfiles').select('rol').eq('id', id).maybeSingle()
-  if (!objetivo) return responder({ ok: false, error: 'cuenta_no_encontrada' }, 404)
-  if (objetivo.rol === 'admin') return responder({ ok: false, error: 'cuenta_admin' }, 400)
+  const { data: perfilQuien } = await servicio.from('perfiles').select('rol').eq('id', quien.id).maybeSingle()
+  let id: string
+
+  if (cuerpo.propia === true) {
+    // 2a) La propia cuenta: alcanza con la sesión.
+    if (perfilQuien?.rol === 'admin') return responder({ ok: false, error: 'cuenta_admin' }, 400)
+    id = quien.id
+  } else {
+    // 2b) Otra cuenta: solo un administrador, y nunca la propia ni la de otro admin.
+    if (perfilQuien?.rol !== 'admin') return responder({ ok: false, error: 'no_autorizado' }, 403)
+    if (!cuerpo.id || !/^[0-9a-f-]{36}$/i.test(cuerpo.id)) return responder({ ok: false, error: 'cuenta_invalida' }, 400)
+    id = cuerpo.id
+    if (id === quien.id) return responder({ ok: false, error: 'cuenta_propia' }, 400)
+    const { data: objetivo } = await servicio.from('perfiles').select('rol').eq('id', id).maybeSingle()
+    if (!objetivo) return responder({ ok: false, error: 'cuenta_no_encontrada' }, 404)
+    if (objetivo.rol === 'admin') return responder({ ok: false, error: 'cuenta_admin' }, 400)
+  }
+
+  // Una cuenta sin perfil (registro que nunca llegó al panel) también se borra.
+  if (!perfilQuien && cuerpo.propia === true) {
+    const { error } = await servicio.auth.admin.deleteUser(id)
+    if (error) return responder({ ok: false, error: 'fallo_auth', detalle: error.message }, 500)
+    return responder({ ok: true })
+  }
 
   // 3) Borrado: fotos, base y por último el usuario de Auth.
   const { data: rutas, error: errorRutas } = await servicio.rpc('rutas_fotos_cuenta', { p_id: id })

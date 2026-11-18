@@ -51,11 +51,17 @@ export function check(nombre, ok, detalle = '') {
 
 // ---- base y API ----
 export function cli(args) {
-  return spawnSync('npx', ['supabase', ...args], { cwd: CWD, encoding: 'utf8' }).stdout
+  return spawnSync('npx', ['supabase', ...args], { cwd: CWD, encoding: 'utf8', timeout: 90_000 }).stdout
 }
 
-export function db(sql) {
-  const r = spawnSync('npx', ['supabase', 'db', 'query', '--linked', sql], { cwd: CWD, encoding: 'utf8' })
+// Con un límite de tiempo: si la red se corta, el CLI puede quedar colgado
+// indefinidamente; mejor fallar en 90 s y reintentar una vez.
+export function db(sql, intento = 1) {
+  const r = spawnSync('npx', ['supabase', 'db', 'query', '--linked', sql], { cwd: CWD, encoding: 'utf8', timeout: 90_000 })
+  if (r.error?.code === 'ETIMEDOUT' || r.signal) {
+    if (intento < 2) return db(sql, intento + 1)
+    throw new Error('db: la consulta no respondió en 90 s (¿conexión?)')
+  }
   const t = r.stdout + r.stderr
   const i = t.indexOf('{')
   if (i < 0) throw new Error('db: ' + t.slice(0, 300))

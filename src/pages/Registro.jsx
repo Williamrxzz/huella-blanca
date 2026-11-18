@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
 import CampoTelefono from '../components/CampoTelefono'
+import AceptoPrivacidad from '../components/AceptoPrivacidad'
 import { normalizarTelefono } from '../lib/telefono'
 
 export default function Registro() {
@@ -14,6 +15,7 @@ export default function Registro() {
   const [error, setError] = useState(null)
   const [enviando, setEnviando] = useState(false)
   const [revisarEmail, setRevisarEmail] = useState(false)
+  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false)
   const [intentoEnviar, setIntentoEnviar] = useState(false)
 
   async function crearCuenta(e) {
@@ -30,7 +32,9 @@ export default function Registro() {
     const { data, error: errorRegistro } = await supabase.auth.signUp({
       email,
       password: contrasena,
-      options: { data: { nombre, telefono: tel.valor } },
+      // La fecha de aceptación viaja en los metadatos por si el perfil se crea
+      // después (confirmación de email pendiente, ver Panel.jsx).
+      options: { data: { nombre, telefono: tel.valor, privacidad_aceptada_en: new Date().toISOString() } },
     })
 
     if (errorRegistro) {
@@ -52,7 +56,7 @@ export default function Registro() {
 
     const { error: errorPerfil } = await supabase
       .from('perfiles')
-      .insert({ id: data.user.id, nombre, telefono: tel.valor })
+      .insert({ id: data.user.id, nombre, telefono: tel.valor, privacidad_aceptada_en: new Date().toISOString() })
 
     setEnviando(false)
 
@@ -118,6 +122,7 @@ export default function Registro() {
           minLength={6}
           required
         />
+        <AceptoPrivacidad aceptado={aceptaPrivacidad} onCambio={setAceptaPrivacidad} />
 
         {error && <p className="ayuda error" role="alert">{error}</p>}
 

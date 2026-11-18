@@ -63,6 +63,7 @@ export default function Login() {
       <Link className="enlace-discreto" to="/recuperar">¿Olvidaste tu contraseña?</Link>
 
       <Link className="enlace-discreto" to="/registro">Crear una cuenta</Link>
+      <Link className="enlace-discreto" to="/privacidad">Política de privacidad</Link>
     </main>
   )
 }

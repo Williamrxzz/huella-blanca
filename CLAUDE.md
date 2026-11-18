@@ -112,6 +112,22 @@ Ya instalado y funcionando:
   `vite preview` usa los mismos (los lee `vite.config.js`). **Si la app
   empieza a cargar algo de otro dominio, hay que sumarlo a la CSP**; la
   prueba `tests/e2e/encabezados.mjs` lo detecta.
+- **Política de privacidad** (Ley 25.326, desde el 2026-11-18): `/privacidad`
+  (`Privacidad.jsx`), enlazada desde el inicio, el login, el perfil y el
+  formulario para avisar. Crear una cuenta exige aceptarla
+  (`AceptoPrivacidad.jsx`, en `/registro` y en la cuenta opcional después
+  de avisar); la fecha queda en `perfiles.privacidad_aceptada_en` (nula en
+  las cuentas anteriores). Avisar nunca pide nada. **Si cambia lo que se
+  guarda, quién lo ve o con qué servicio se comparte, hay que actualizar la
+  política.**
+- **Supabase no se pausa** (desde el 2026-11-18): el plan gratuito pausa el
+  proyecto tras 7 días sin actividad. El cron gratuito de Vercel (`crons` en
+  `vercel.json`) llama una vez por día a `api/mantener-activo.js`, que hace
+  una lectura liviana (`ficha_publica` con un código inexistente).
+- **Sin servicios pagos por ahora**: el dueño del proyecto decidió no pagar
+  dominio, plan de Supabase ni SMTP (2026-11-18); la app es para mostrar el
+  proyecto. El correo gratuito de Supabase tiene un tope bajo por hora: en
+  una demo, no crear muchas cuentas seguidas.
 - jsqr — lectura de códigos QR desde la cámara dentro de la propia app
   (`/escanear`), pensado para hacer la demo sin depender del lector de
   QR nativo del celular.
@@ -749,7 +765,12 @@ uno de base:
   teléfono, muestra un aviso cerrable (no bloqueante) invitando a
   cargarlo en `/perfil`.
 - **`Perfil.jsx`** (pantalla nueva, ruta `/perfil`) — ver y editar
-  nombre y teléfono, nada más por ahora.
+  nombre y teléfono. Desde el 2026-11-18 también **eliminar la propia
+  cuenta** (derecho de supresión, Ley 25.326): pide escribir ELIMINAR y
+  llama a la Edge Function `eliminar-cuenta` en modo `{ propia: true }`
+  (la misma que usa el administrador; borra fotos, datos y usuario; los
+  avisos dados sobre mascotas ajenas quedan anónimos). Una cuenta admin
+  no puede borrarse a sí misma.
 - `ficha_publica()` — corrección de privacidad real, no solo de UI:
   antes devolvía `contacto_tel`/`contacto_whatsapp` en **cualquier**
   escaneo si el dueño tenía teléfono cargado, sin importar si la

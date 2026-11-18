@@ -34,6 +34,7 @@ const PRUEBAS = [
   { archivo: 'fotos-storage.mjs', que: 'Fotos: reemplazo y rollback en Storage', servidor: 'preview' },
   { archivo: 'estadisticas.mjs', que: 'Estadísticas de administración (DAT05)', servidor: 'preview' },
   { archivo: 'admin-cuentas.mjs', que: 'Pantalla de cuentas del administrador', servidor: 'preview' },
+  { archivo: 'privacidad.mjs', que: 'Política de privacidad, consentimiento y eliminar la propia cuenta (Ley 25.326)', servidor: 'preview' },
   { archivo: 'encabezados.mjs', que: 'Encabezados de seguridad; la CSP no bloquea nada en ninguna pantalla', servidor: 'preview' },
   { archivo: 'push.mjs', que: 'Web Push de punta a punta en Chrome', servidor: 'preview' },
 ]
@@ -81,8 +82,8 @@ if (!elegidas.length) {
 }
 
 const previos = await limpiarRestos()
-if (previos.cuentas.length || previos.placas.length) {
-  console.log(`Restos de pruebas anteriores borrados: ${previos.cuentas.length} cuentas, ${previos.placas.length} placas`)
+if (previos.cuentas.length || previos.placas.length || previos.fotos.length) {
+  console.log(`Restos de pruebas anteriores borrados: ${previos.cuentas.length} cuentas, ${previos.placas.length} placas, ${previos.fotos.length} fotos`)
 }
 const base0 = db('select ' + COLS)[0]
 
@@ -107,8 +108,8 @@ try {
 } finally {
   for (const proceso of levantados) proceso.kill()
   const restos = await limpiarRestos()
-  if (restos.cuentas.length || restos.placas.length) {
-    console.log(`\nRestos que dejaron las pruebas (ya borrados): ${restos.cuentas.length} cuentas, ${restos.placas.length} placas`)
+  if (restos.cuentas.length || restos.placas.length || restos.fotos.length) {
+    console.log(`\nRestos que dejaron las pruebas (ya borrados): ${restos.cuentas.length} cuentas, ${restos.placas.length} placas, ${restos.fotos.length} fotos`)
   }
 }
 

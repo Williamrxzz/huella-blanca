@@ -1876,3 +1876,50 @@ OpenStreetMap de la política.
 - Batería completa: todas en verde (la primera corrida tuvo un corte 520 de
   la API de Supabase y dos fallas intermitentes en `fotos-ia`; repetidas,
   98/98).
+
+## 2026-11-18 — Privacidad (Ley 25.326), eliminar la propia cuenta y Supabase sin pausa
+
+Decisión del dueño del proyecto: nada pago por ahora (dominio, plan de
+Supabase, SMTP); la app es para mostrar el proyecto. Se hizo lo que no cuesta.
+
+- **Política de privacidad** (`/privacidad`): escrita a partir de cómo
+  funciona la app (qué se guarda; qué ve quien escanea —nunca el domicilio,
+  el teléfono solo en los botones y con caso abierto—; para qué; servicios
+  que intervienen: Supabase, Vercel, Anthropic para las fotos,
+  OpenStreetMap, el servicio de notificaciones del navegador; cuánto se
+  conserva; derechos), con la leyenda de acceso del art. 14 inc. 3 y la de la
+  Agencia de Acceso a la Información Pública. Enlazada desde el inicio, el
+  login, el perfil y el formulario para avisar ("Cómo usamos estos datos").
+- **Consentimiento**: casilla obligatoria para crear una cuenta (en
+  `/registro` y en la cuenta opcional después de avisar); la fecha queda en
+  `perfiles.privacidad_aceptada_en` (migración
+  `20261118000000_consentimiento_privacidad.sql`), también en el perfil
+  diferido (confirmación de email). Avisar no pide nada: quien encuentra una
+  mascota sigue sin registrarse.
+- **Eliminar la propia cuenta** (derecho de supresión): en `/perfil`, con
+  explicación de qué se borra y la palabra ELIMINAR para confirmar. La Edge
+  Function `eliminar-cuenta` suma el modo `{ propia: true }` (misma
+  secuencia: fotos, datos, usuario). Un admin no puede borrarse así.
+- **Supabase sin pausa**: el plan gratuito pausa el proyecto tras 7 días sin
+  actividad (en una demo, la ficha no cargaría). `api/mantener-activo.js` +
+  cron diario gratuito de Vercel: una lectura liviana por día.
+- **Escaneos de Doggie**: con el visto bueno del dueño se borraron los 3
+  escaneos que había sumado por error la medición de velocidad
+  (2026-11-18 07:10–07:11, sin ubicación).
+- **Verificado**: `tests/e2e/privacidad.mjs` 21/21 (política y leyendas;
+  registro inválido sin la casilla; avisar sin pedir nada; fecha guardada en
+  el perfil diferido; admin no puede borrarse; A elimina su cuenta desde el
+  perfil y no queda su usuario, perfil, mascota ni escaneos; su aviso sobre
+  la mascota de B queda sin cuenta ni contacto; B intacta; la placa de A deja
+  de funcionar). `api/mantener-activo.js` probado en local contra la base:
+  200.
+- Límite que queda (gratis): el correo de Supabase tiene un tope bajo por
+  hora para confirmaciones y recuperación de contraseña.
+- **Batería completa** después del cambio: 19 pruebas, todas en verde (la
+  corrida tuvo dos interrupciones de red: una consulta del CLI colgada 25
+  minutos, que se cortó, y una suspensión de la Mac de 12 minutos; las dos
+  pruebas afectadas, `eliminar-cuenta` y `push`, se repitieron: 28/28 y
+  15/15). Para que un corte no vuelva a colgar todo, las consultas al CLI de
+  las pruebas tienen un límite de 90 s con un reintento, y la limpieza de
+  restos ahora reconoce también las placas `TP…` y las fotos en carpetas
+  `prueba-…/` que deja `eliminar-cuenta.py` si se interrumpe.
