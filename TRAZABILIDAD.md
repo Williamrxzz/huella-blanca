@@ -1923,3 +1923,75 @@ Supabase, SMTP); la app es para mostrar el proyecto. Se hizo lo que no cuesta.
   las pruebas tienen un límite de 90 s con un reintento, y la limpieza de
   restos ahora reconoce también las placas `TP…` y las fotos en carpetas
   `prueba-…/` que deja `eliminar-cuenta.py` si se interrumpe.
+
+## 2026-11-18 — Cierre del backlog: las 8 historias restantes
+
+Decisión de arquitectura tomada con el dueño del proyecto, con el mismo
+criterio que el retiro de los comercios adheridos (2026-09-18) y de las placas
+por lote (2026-11-17): ¿resuelve un problema real con lo que la app es hoy (una
+PWA gratuita, sin dominio ni servicios pagos, para mostrar el proyecto) y
+respeta sus principios? Estado real verificado antes contra el código y la base
+en producción (ver la respuesta del 2026-11-18): ninguna de las 8 estaba
+terminada. El texto de cada historia es el del PDF de Historias de Usuario v4.
+
+**Construir (2):**
+
+- **DUE08** — "Como dueño, quiero desvincular o reemplazar una placa para
+  reutilizar la ficha si el collar se pierde o rompe." Se construye
+  **reducida a "Reemplazar código QR"**: con confirmación, da de baja el código
+  viejo y genera uno nuevo para la misma mascota. La mitad "desvincular para
+  reutilizar" pertenecía al circuito de placas por lote, ya retirado. La
+  necesidad que queda es real (collar perdido o roto) y tiene un costado de
+  seguridad: el QR del collar perdido tiene que dejar de mostrar la ficha.
+  Corrige además un riesgo encontrado al verificar: `generar_placa()` permitía
+  que una mascota quedara con dos placas activas.
+- **DUE11** — "Como dueño, quiero activar un modo paseo o viaje por un tiempo
+  determinado para pausar la detección automática cuando salgo con mi
+  mascota." La base ya lo soportaba (`mascotas.pausado_hasta`, leído por
+  `registrar_escaneo()` y `notificar_escaneo()`; probado el 2026-11-18: con el
+  modo activo un escaneo a 8,8 km no abre caso ni avisa). Falta la pantalla:
+  un control en el panel para activarlo por un tiempo a elección.
+
+**Descartar con justificación (4):**
+
+- **TRA10** — "Como rescatista con la app instalada, quiero recibir alertas de
+  mascotas perdidas cerca de mi ubicación para colaborar en la búsqueda." y
+  **PER09** — "Como dueño, quiero que se notifique a los usuarios cercanos
+  cuando reporto una pérdida para ampliar la búsqueda." Son la misma idea vista
+  de los dos lados. Por qué no aplica: una PWA no tiene acceso confiable a la
+  ubicación en segundo plano (solo la conoce con la app abierta), así que
+  "cerca de mí" no se puede cumplir; la alternativa (pedir y guardar el barrio
+  de cada usuario) es guardar la ubicación de quienes no son dueños, contra la
+  minimización de datos de `/privacidad`; y abre un canal de avisos masivos a
+  desconocidos, cuando hoy los avisos solo le llegan al dueño y están
+  limitados. Con el volumen actual, además, no habría a quién avisar. Qué lo
+  cubre: "Compartir la búsqueda" (IA03), que llega a las redes reales del
+  dueño (WhatsApp, estados, Instagram) con afiche y enlace a la ficha.
+- **REC08** — "Como dueño, quiero agradecer públicamente a quien encontró a mi
+  mascota." Por qué no aplica: publicar quién la encontró expone su nombre y
+  la zona donde estaba sin su consentimiento, y pediría pantallas y casos para
+  pedirlo. Qué lo cubre: REC02, el agradecimiento privado (mensaje y foto del
+  reencuentro) que la persona ve en `/mi-historial`; el dueño elige a quién
+  agradecer al cerrar el caso (PER08, 2026-11-17).
+- **ADM07** — "Como administrador, quiero configurar el radio por defecto y el
+  tiempo de espera antes de pasar de posible pérdida a perdida para ajustar el
+  comportamiento del sistema." Por qué no aplica: los dos valores ya se
+  configuran por mascota (`radio_metros` en el alta, DUE10;
+  `horas_confirmacion`, PER03), que es donde tienen sentido; un valor global
+  del administrador no agrega nada con el volumen de uso actual. Los valores
+  por defecto (100 m y 24 h) quedan como default de las columnas.
+
+**Opcionales, si sobra tiempo (2)** — no se tocan ahora:
+
+- **TRA07** — "Como transeúnte, quiero adjuntar una foto del lugar o de la
+  mascota para dar más contexto al aviso." Útil, pero toca la verificación por
+  IA (IA02) y el límite de uso de la API para quien avisa sin cuenta; no es
+  prioritaria. Hoy solo existe la columna `avistamientos.foto_url`, sin uso.
+- **ADM03** — "Como administrador, quiero moderar fichas o dar de baja cuentas
+  para evitar usos indebidos." La mitad "dar de baja cuentas" está terminada
+  (`/admin/cuentas`, 2026-11-16). Falta moderar fichas: hoy el administrador
+  solo puede borrar la cuenta entera; ocultar una ficha sería un cambio chico,
+  pero no urgente.
+
+Conteo del backlog después de construir DUE08 y DUE11: 39 terminadas, 2
+opcionales pendientes (TRA07, ADM03 parcial) y 22 descartadas o retiradas.
