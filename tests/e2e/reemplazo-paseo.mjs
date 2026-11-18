@@ -8,6 +8,8 @@ const TAG = 'prueba-paseo-' + randomBytes(3).toString('hex')
 const clave = randomBytes(12).toString('hex') + 'Aa1!'
 const ids = []
 const codigosCreados = []
+// Conteo de placas al empezar: la prueba tiene que dejarlo igual.
+const placas0 = db('select count(*)::int c from placas')[0].c
 let chrome
 
 async function cuenta(sufijo) {
@@ -121,5 +123,5 @@ try {
   for (const codigo of codigosCreados.filter(Boolean)) db(`delete from placas where codigo = '${codigo}' and mascota_id is null`)
   try { chrome?.kill() } catch { /* ya cerrado */ }
   const quedan = db(`select (select count(*)::int from auth.users where email like '${TAG}%') cuentas, (select count(*)::int from placas) placas, (select count(*)::int from escaneos where mascota_id is null and placa_id is null and ocurrido_en > now() - interval '1 hour') huerfanos`)[0]
-  check('no quedó nada de la prueba', quedan.cuentas === 0 && quedan.placas === 49 && quedan.huerfanos === 0, JSON.stringify(quedan))
+  check('no quedó nada de la prueba', quedan.cuentas === 0 && quedan.placas === placas0 && quedan.huerfanos === 0, JSON.stringify(quedan))
 }

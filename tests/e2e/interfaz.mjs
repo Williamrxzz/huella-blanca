@@ -9,6 +9,8 @@ const B = process.env.BASE || 'http://localhost:4173'
 const email = `prueba-ui-${randomBytes(3).toString('hex')}@example.com`
 const clave = randomBytes(12).toString('hex') + 'Aa1!'
 const codigos = []
+// Conteo de placas al empezar: la prueba tiene que dejarlo igual.
+const placas0 = db('select count(*)::int c from placas')[0].c
 let id, chrome
 try {
   const FOTO = await fotoDePerro()
@@ -83,5 +85,5 @@ try {
   await borrarCuenta(id)
   for (const c of codigos) db(`delete from placas where codigo = '${c}' and mascota_id is null`)
   const quedan = db(`select (select count(*)::int from auth.users where email = '${email}') cuenta, (select count(*)::int from placas) placas`)[0]
-  check('no quedó nada de la prueba', quedan.cuenta === 0 && quedan.placas === 49, JSON.stringify(quedan))
+  check('no quedó nada de la prueba', quedan.cuenta === 0 && quedan.placas === placas0, JSON.stringify(quedan))
 }
