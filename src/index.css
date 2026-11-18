@@ -1427,3 +1427,7 @@ html[data-tema="oscuro"] .opciones-rescatista small { color: #a8a7a1; }
 html[data-contraste="alto"] .opciones-rescatista label { border: 2px solid #000; }
 html[data-contraste="alto"] .opciones-rescatista label:has(input:checked) { background: #000; color: #fff; }
 html[data-contraste="alto"] .opciones-rescatista label:has(input:checked) small { color: #fff; }
+
+/* Lugar del mapa mientras se descarga (MapasFicha.jsx se carga aparte). */
+.mapa-cargando { background: #ece9e4; }
+html[data-tema="oscuro"] .mapa-cargando { background: #24282e; }

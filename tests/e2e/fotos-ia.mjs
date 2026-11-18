@@ -210,7 +210,7 @@ try {
   await foto('ia02-reencuentro.png')
   ws.close()
 } catch (e) {
-  console.log('ERROR', e)
+  check('la prueba terminó sin excepciones', false, e.message || String(e))
 } finally {
   console.log('limpiando…')
   for (const id of ids) {

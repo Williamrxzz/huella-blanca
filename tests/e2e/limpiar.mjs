@@ -7,7 +7,7 @@
 //
 //   PRUEBAS_EN_PRODUCCION=si node tests/e2e/limpiar.mjs
 import { pathToFileURL } from 'node:url'
-import { api, db } from './comun.mjs'
+import { api, borrarCuenta, db } from './comun.mjs'
 
 const EMAIL_PRUEBA = /^prueba-[a-z0-9-]+@example\.com$/
 
@@ -15,12 +15,7 @@ export async function limpiarRestos() {
   const borradas = []
   const { j } = await api('GET', '/auth/v1/admin/users?per_page=1000')
   for (const u of (j?.users || []).filter((x) => EMAIL_PRUEBA.test(x.email))) {
-    const lista = (await api('POST', '/storage/v1/object/list/fotos-mascotas', { prefix: u.id, limit: 1000 })).j
-    if (Array.isArray(lista) && lista.length) {
-      await api('DELETE', '/storage/v1/object/fotos-mascotas', { prefixes: lista.map((o) => `${u.id}/${o.name}`) })
-    }
-    await api('POST', '/rest/v1/rpc/purgar_cuenta', { p_id: u.id })
-    await api('DELETE', '/auth/v1/admin/users/' + u.id)
+    await borrarCuenta(u.id)
     borradas.push(u.email)
   }
   const placas = db("delete from placas where mascota_id is null and codigo ~ '^(T[0-9A-F]{7}|PP[0-9A-F]{6})$' returning codigo")

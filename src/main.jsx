@@ -2,8 +2,6 @@
 // (ver el módulo). Tiene que correr antes de crear el cliente de Supabase.
 import './lib/desvioRecuperacion'
 import { createRoot } from 'react-dom/client'
-import 'leaflet/dist/leaflet.css'
-import './lib/leaflet-iconos'
 import './index.css'
 import App from './App.jsx'
 import { aplicarPreferencias, leerPreferencias } from './lib/accesibilidad'

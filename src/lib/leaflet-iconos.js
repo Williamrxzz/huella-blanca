@@ -1,3 +1,7 @@
+// Se importa desde cada pantalla que usa mapas (no desde main.jsx), para que
+// Leaflet no viaje en la carga inicial: la ficha pública no lo necesita
+// salvo que muestre un mapa.
+import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import marcador2x from 'leaflet/dist/images/marker-icon-2x.png'
 import marcador from 'leaflet/dist/images/marker-icon.png'

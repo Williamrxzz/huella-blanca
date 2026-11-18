@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from 'react-leaflet'
 import { Phone } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { pedirUbicacion, pedirUbicacionSiYaHayPermiso } from '../lib/ubicacion'
@@ -33,14 +32,10 @@ const INFO_CARACTER = {
 
 const CENTRO_INICIAL = { lat: -46.4380, lng: -67.5280 } // Caleta Olivia
 
-function SelectorMapa({ onSeleccionar }) {
-  useMapEvents({
-    click(e) {
-      onSeleccionar({ lat: e.latlng.lat, lng: e.latlng.lng })
-    },
-  })
-  return null
-}
+// Los mapas se descargan recién cuando se muestran (ver MapasFicha.jsx).
+const ZonaUltimaUbicacion = lazy(() => import('../components/MapasFicha').then((m) => ({ default: m.ZonaUltimaUbicacion })))
+const SelectorLugar = lazy(() => import('../components/MapasFicha').then((m) => ({ default: m.SelectorLugar })))
+const MapaCargando = () => <div className="mapa-domicilio mapa-cargando" aria-hidden="true" />
 
 // `demo`: la ficha de ejemplo de /ejemplo. Misma pantalla, datos fijos
 // (src/lib/fichaEjemplo.js); no lee ni escribe nada en la base.
@@ -298,21 +293,9 @@ export default function FichaPublica({ demo = false }) {
       {perdida && ficha.ultima_lat != null && ficha.ultima_lng != null && (
         <>
           <p className="subtitulo-mapa">Última ubicación donde se encontraba {ficha.nombre}</p>
-          <MapContainer
-            center={[ficha.ultima_lat, ficha.ultima_lng]}
-            zoom={15}
-            className="mapa-domicilio"
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <Circle
-              center={[ficha.ultima_lat, ficha.ultima_lng]}
-              radius={100}
-              pathOptions={{ color: '#2e5c8a', weight: 1, fillOpacity: 0.12 }}
-            />
-          </MapContainer>
+          <Suspense fallback={<MapaCargando />}>
+            <ZonaUltimaUbicacion lat={ficha.ultima_lat} lng={ficha.ultima_lng} />
+          </Suspense>
         </>
       )}
 
@@ -436,19 +419,9 @@ export default function FichaPublica({ demo = false }) {
                   ? 'Ubicación obtenida. Tocá el mapa si querés corregir el punto exacto.'
                   : 'No pudimos obtener tu ubicación. Tocá el mapa para marcar dónde la viste, o contanos el lugar más abajo.'}
               </p>
-              <MapContainer
-                key={`${centroMapa.lat}-${centroMapa.lng}`}
-                center={[centroMapa.lat, centroMapa.lng]}
-                zoom={ubicacion ? 16 : 13}
-                className="mapa-domicilio"
-              >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                <SelectorMapa onSeleccionar={elegirEnMapa} />
-                {ubicacion && <Marker position={[ubicacion.lat, ubicacion.lng]} />}
-              </MapContainer>
+              <Suspense fallback={<MapaCargando />}>
+                <SelectorLugar centro={centroMapa} ubicacion={ubicacion} onSeleccionar={elegirEnMapa} />
+              </Suspense>
             </>
           )}
 

@@ -67,7 +67,7 @@ try {
   await sleep(6000)
   const proc = db(`select count(*) filter (where resultado->>'omitida' is null and enviada_en is not null)::int procesadas, count(*) filter (where resultado->>'omitida' is null and enviada_en is null)::int pendientes, count(*) filter (where resultado->>'omitida' is not null and enviada_en is not null)::int omitidas_enviadas from notificaciones where mascota_id='${M}'`)[0]
   check('las enviadas pasaron por la Edge Function; las omitidas no', proc.pendientes === 0 && proc.omitidas_enviadas === 0 && proc.procesadas > 0, JSON.stringify(proc))
-} catch (e) { console.log('ERROR', e) } finally {
+} catch (e) { check('la prueba terminó sin excepciones', false, e.message || String(e)) } finally {
   if (id) { await api('POST', '/rest/v1/rpc/purgar_cuenta', { p_id: id }); await api('DELETE', '/auth/v1/admin/users/' + id) }
   db(`delete from placas where codigo='${CODIGO}'`)
   const f = db('select ' + cols)[0]

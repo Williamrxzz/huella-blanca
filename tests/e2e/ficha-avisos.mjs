@@ -98,7 +98,7 @@ try {
   await foto('panel-reclamo.png')
   r = await rpc('reclamar_avistamiento', { p_avistamiento_id: idViejo }, tokC)
   check('reclamarlo de nuevo → no_reclamable', r.j?.ok === false, JSON.stringify(r.j))
-} catch (e) { console.log('ERROR', e) } finally {
+} catch (e) { check('la prueba terminó sin excepciones', false, e.message || String(e)) } finally {
   for (const id of ids) { await api('POST', '/rest/v1/rpc/purgar_cuenta', { p_id: id }); await api('DELETE', '/auth/v1/admin/users/' + id) }
   db(`delete from placas where codigo='${CODIGO}'`)
   try { chrome?.kill() } catch {}

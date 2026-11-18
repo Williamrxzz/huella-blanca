@@ -40,9 +40,10 @@ Requisitos:
   en cada ejecución; no están en el repositorio ni se imprimen.
 - Google Chrome instalado (o `CHROME_PATH` apuntando al ejecutable).
 - `python3` para `eliminar-cuenta.py`.
-- `correr.mjs` levanta el servidor de desarrollo (5173) y el build de producción
-  (4173, para el service worker de push) si no están corriendo, y los apaga al
-  terminar.
+- `correr.mjs` reconstruye el build de producción y lo sirve con `vite preview`
+  (4173) con los mismos encabezados que Vercel: las pruebas de pantalla corren
+  contra lo mismo que se publica. Con `BASE=https://huella-blanca.vercel.app`
+  se prueba directamente producción.
 
 Para correr solo algunas: `PRUEBAS_EN_PRODUCCION=si npm run test:e2e -- telefono push`.
 
@@ -64,6 +65,7 @@ Para correr solo algunas: `PRUEBAS_EN_PRODUCCION=si npm run test:e2e -- telefono
 | `e2e/fotos-storage.mjs` | Reemplazar una foto borra la anterior; un guardado que falla borra la recién subida. |
 | `e2e/estadisticas.mjs` | DAT05: `/admin/estadisticas` muestra los totales reales. |
 | `e2e/admin-cuentas.mjs` | La pantalla de cuentas del administrador y su confirmación. |
+| `e2e/encabezados.mjs` | Los encabezados de seguridad de `vercel.json` están, y la política de contenido no bloquea nada: recorre todas las pantallas (mapas, fotos, cámara del lector, afiche, gráficos) y falla ante cualquier violación que reporte el navegador. |
 | `e2e/push.mjs` | Web Push de punta a punta: activar avisos, escaneo lejos de casa, notificación mostrada. |
 
 Las pruebas de IA (`fotos-ia`, `limite-ia`) necesitan la foto de un animal real:

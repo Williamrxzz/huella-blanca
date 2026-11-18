@@ -93,7 +93,25 @@ Ya instalado y funcionando:
   producción (`npm run build && npm run preview`), no en `npm run dev`.
   Después de cambiar algo en `public/` (íconos, favicon) hay que
   reconstruir para verlo: `dist/` copia esos archivos al momento del
-  build, no los sirve en vivo desde `public/`.
+  build, no los sirve en vivo desde `public/`. **Desde el 2026-11-18 el
+  service worker lo registra la app** (`src/lib/serviceWorker.js`,
+  `injectRegister: false`) y no en la ficha pública (`/m/…`, `/ejemplo`):
+  al registrarse descarga la app entera en segundo plano, y quien solo
+  escanea un collar no la necesita. Se registra en cualquier otra pantalla.
+- **Carga por partes** (desde el 2026-11-18): cada pantalla se descarga
+  recién al abrirla (`lazy` en `App.jsx`), y los mapas de la ficha pública
+  (`src/components/MapasFicha.jsx`) solo cuando se muestran. Leaflet no está
+  en la carga inicial: lo importa cada pantalla con mapa a través de
+  `src/lib/leaflet-iconos.js` (que trae también su CSS). La ficha pasó de
+  376 KB a 153 KB hasta verse, y de ~2,5 s a ~1,5 s en 4G lento.
+- **Encabezados de seguridad** en `vercel.json` (desde el 2026-11-18):
+  Content-Security-Policy (solo la app, Supabase y los mosaicos de
+  OpenStreetMap), X-Content-Type-Options, Referrer-Policy (los sitios
+  externos reciben el origen, no la ruta con el código de la placa),
+  X-Frame-Options y Permissions-Policy (cámara y ubicación solo para la app).
+  `vite preview` usa los mismos (los lee `vite.config.js`). **Si la app
+  empieza a cargar algo de otro dominio, hay que sumarlo a la CSP**; la
+  prueba `tests/e2e/encabezados.mjs` lo detecta.
 - jsqr — lectura de códigos QR desde la cámara dentro de la propia app
   (`/escanear`), pensado para hacer la demo sin depender del lector de
   QR nativo del celular.
@@ -949,9 +967,9 @@ que sale agrega "Además: N avisos más. Mirá el mapa". Y
 2. El resto de las pendientes (DUE08, DUE11, TRA07, TRA10, PER09,
    REC08, ADM03, ADM07) no tienen todavía un plan de trabajo asignado a un sprint
    más allá de figurar en el Sprint 5.
-3. Optimizar el bundle: Vite avisa que el JS de producción pasa los
-   500 KB (sobre todo por Leaflet). No es urgente, pero si se nota lento
-   en el celular, dividir en chunks con `import()` dinámico.
+3. ~~Optimizar el bundle~~: hecho el 2026-11-18 (carga por partes, ver
+   sección 3). Lo único grande que queda aparte es Recharts, y solo lo
+   descarga `/admin/estadisticas`.
 4. **Deuda técnica conocida, pospuesta a propósito** (ver
    `TRAZABILIDAD.md`, entrada del 2026-09-21): los `useEffect` de
    `Panel.jsx` y `MapaAvistamientos.jsx` llaman a `cargar()`

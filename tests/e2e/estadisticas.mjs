@@ -84,7 +84,7 @@ try {
   const enl = await ev("[...document.querySelectorAll('a')].map(a=>a.getAttribute('href')).filter(h=>h&&h.startsWith('/admin/'))")
   check('el panel muestra los dos enlaces de administración', ['/admin/estadisticas','/admin/cuentas'].every(h=>enl.includes(h)) && !enl.includes('/admin/placas'), JSON.stringify(enl))
   ws.close()
-} catch (e) { console.log('ERROR', e) } finally {
+} catch (e) { check('la prueba terminó sin excepciones', false, e.message || String(e)) } finally {
   console.log('limpiando…')
   for (const id of ids) { await api('DELETE', '/rest/v1/perfiles?id=eq.' + id); await api('DELETE', '/auth/v1/admin/users/' + id) }
   try { chrome?.kill() } catch {}

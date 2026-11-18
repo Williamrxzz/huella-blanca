@@ -81,7 +81,7 @@ try {
   await salir(); await entrar(E); await sleep(1500)
   const filaE = db(`select count(*)::int c, max(telefono) t from perfiles where id='${E.id}'`)[0]
   check('diferido con número imposible → perfil creado igual, sin teléfono', filaE.c === 1 && filaE.t === null, JSON.stringify(filaE))
-} catch (e) { console.log('ERROR', e) } finally {
+} catch (e) { check('la prueba terminó sin excepciones', false, e.message || String(e)) } finally {
   for (const id of ids) { await api('POST', '/rest/v1/rpc/purgar_cuenta', { p_id: id }); await api('DELETE', '/auth/v1/admin/users/' + id) }
   try { chrome?.kill() } catch {}
   const f = db('select ' + cols)[0]

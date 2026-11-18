@@ -1,21 +1,26 @@
-import { useEffect, useState } from 'react'
-import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom'
-import FichaPublica from './pages/FichaPublica'
-import GeneradorQR from './pages/GeneradorQR'
-import Login from './pages/Login'
-import Registro from './pages/Registro'
-import Recuperar from './pages/Recuperar'
-import Restablecer from './pages/Restablecer'
-import Panel from './pages/Panel'
-import Perfil from './pages/Perfil'
-import AltaMascota from './pages/AltaMascota'
-import MapaAvistamientos from './pages/MapaAvistamientos'
-import Escanear from './pages/Escanear'
-import AdminCuentas from './pages/AdminCuentas'
-import AdminEstadisticas from './pages/AdminEstadisticas'
-import HistorialColaboracion from './pages/HistorialColaboracion'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom'
 import BotonAccesibilidad from './components/BotonAccesibilidad'
 import { supabase } from './lib/supabase'
+import { registrarServiceWorkerSiCorresponde } from './lib/serviceWorker'
+
+// Cada pantalla se descarga recién cuando se abre (code splitting): quien
+// escanea un collar baja solo la ficha pública, no el panel, los formularios
+// ni los gráficos de administración.
+const FichaPublica = lazy(() => import('./pages/FichaPublica'))
+const GeneradorQR = lazy(() => import('./pages/GeneradorQR'))
+const Login = lazy(() => import('./pages/Login'))
+const Registro = lazy(() => import('./pages/Registro'))
+const Recuperar = lazy(() => import('./pages/Recuperar'))
+const Restablecer = lazy(() => import('./pages/Restablecer'))
+const Panel = lazy(() => import('./pages/Panel'))
+const Perfil = lazy(() => import('./pages/Perfil'))
+const AltaMascota = lazy(() => import('./pages/AltaMascota'))
+const MapaAvistamientos = lazy(() => import('./pages/MapaAvistamientos'))
+const Escanear = lazy(() => import('./pages/Escanear'))
+const AdminCuentas = lazy(() => import('./pages/AdminCuentas'))
+const AdminEstadisticas = lazy(() => import('./pages/AdminEstadisticas'))
+const HistorialColaboracion = lazy(() => import('./pages/HistorialColaboracion'))
 
 function Inicio() {
   const [verificando, setVerificando] = useState(true)
@@ -67,9 +72,17 @@ function Inicio() {
   )
 }
 
+function ServiceWorker() {
+  const { pathname } = useLocation()
+  useEffect(() => { registrarServiceWorkerSiCorresponde(pathname) }, [pathname])
+  return null
+}
+
 export default function App() {
   return (
     <BrowserRouter>
+      <ServiceWorker />
+      <Suspense fallback={<main className="pagina" aria-busy="true" />}>
       <Routes>
         <Route path="/" element={<Inicio />} />
         <Route path="/placas" element={<GeneradorQR />} />
@@ -89,6 +102,7 @@ export default function App() {
         <Route path="/m/:codigo" element={<FichaPublica />} />
         <Route path="/ejemplo" element={<FichaPublica demo />} />
       </Routes>
+      </Suspense>
       <BotonAccesibilidad />
     </BrowserRouter>
   )

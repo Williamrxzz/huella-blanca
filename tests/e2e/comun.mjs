@@ -113,3 +113,18 @@ export async function fotoDePerro() {
   writeFileSync(fotoCache, Buffer.from(await r.arrayBuffer()))
   return fotoCache
 }
+
+// Borra una cuenta de prueba con todo lo suyo. `purgar_cuenta` se niega a
+// borrar administradores (protección de producción), así que a una cuenta de
+// prueba admin primero se le baja el rol. Sin esto, la cuenta se borraba por
+// la cascada de Auth y dejaba escaneos huérfanos (se vio el 2026-11-18).
+export async function borrarCuenta(id) {
+  if (!id) return
+  await api('PATCH', `/rest/v1/perfiles?id=eq.${id}`, { rol: 'usuario' })
+  const lista = (await api('POST', '/storage/v1/object/list/fotos-mascotas', { prefix: id, limit: 1000 })).j
+  if (Array.isArray(lista) && lista.length) {
+    await api('DELETE', '/storage/v1/object/fotos-mascotas', { prefixes: lista.map((o) => `${id}/${o.name}`) })
+  }
+  await api('POST', '/rest/v1/rpc/purgar_cuenta', { p_id: id })
+  await api('DELETE', '/auth/v1/admin/users/' + id)
+}

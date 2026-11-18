@@ -94,7 +94,7 @@ try {
   const antes = cuenta().esc
   await ir(`${B}/m/${CODIGO}`); await sleep(2000)
   check('el dueño abre su propia ficha: no suma escaneo', cuenta().esc === antes, `${antes} → ${cuenta().esc}`)
-} catch (e) { console.log('ERROR', e.message || e) } finally {
+} catch (e) { check('la prueba terminó sin excepciones', false, e.message || String(e)) } finally {
   if (id) { await api('POST', '/rest/v1/rpc/purgar_cuenta', { p_id: id }); await api('DELETE', '/auth/v1/admin/users/' + id) }
   db(`delete from placas where codigo='${CODIGO}'`)
   try { chrome?.kill() } catch {}

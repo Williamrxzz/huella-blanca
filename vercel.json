@@ -11,6 +11,36 @@
       ],
       "destination": "/api/og?codigo=:codigo"
     },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://pgnxanjiswmytdocdhuw.supabase.co https://*.tile.openstreetmap.org; connect-src 'self' https://pgnxanjiswmytdocdhuw.supabase.co wss://pgnxanjiswmytdocdhuw.supabase.co; media-src 'self' blob:; font-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(self), geolocation=(self), microphone=(), payment=(), usb=()"
+        }
+      ]
+    }
   ]
 }

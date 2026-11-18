@@ -124,7 +124,7 @@ try {
   const fn2 = await fetch(URL_ + '/functions/v1/notificar', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ id: n.id }) })
   check('...también con una sesión de usuario', fn2.status === 401, fn2.status)
 } catch (e) {
-  console.log('ERROR', e)
+  check('la prueba terminó sin excepciones', false, e.message || String(e))
 } finally {
   console.log('limpiando…')
   for (const id of ids) { await rpc('purgar_cuenta', { p_id: id }, SERVICE); await api('DELETE', '/auth/v1/admin/users/' + id) }

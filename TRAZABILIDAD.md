@@ -1818,3 +1818,61 @@ absurda"), que delegó la solución en la revisión de ingeniería.
 - Si algún día hay placas grabadas para repartir, el circuito está en el
   historial de git (migraciones de septiembre, `AdminPlacas.jsx`) y descrito
   en la entrada del 2026-09-21.
+
+## 2026-11-18 — Ficha pública más rápida y encabezados de seguridad
+
+De la evaluación de "¿está lista para el público?". La app no es solo para la
+cátedra: va a usarse de verdad.
+
+**Velocidad de la ficha pública.** Toda la app era un solo archivo de 1,25 MB
+(375 KB comprimido): quien escanea un collar en la calle, con datos móviles,
+descargaba también el panel, los formularios y los gráficos de administración.
+Además, el service worker de la PWA se registraba en la ficha y descargaba en
+segundo plano la app entera para dejarla instalable.
+
+- Cada pantalla se descarga al abrirla (`lazy` en `App.jsx`).
+- Los mapas de la ficha (`src/components/MapasFicha.jsx`) se cargan solo
+  cuando se muestran: una mascota en casa no muestra ninguno. Leaflet salió de
+  la carga inicial (lo importa cada pantalla con mapa vía `leaflet-iconos.js`).
+- El service worker lo registra la app (`src/lib/serviceWorker.js`), nunca en
+  `/m/…` ni `/ejemplo`; en cualquier otra pantalla sí (las notificaciones del
+  dueño siguen funcionando).
+- Medido con el build de producción, primera visita, 4G lento y CPU de
+  celular (mediana de 3):
+
+  | Ficha | Antes | Después | KB hasta verla | KB en los 6 s siguientes |
+  |---|---|---|---|---|
+  | Mascota perdida (con mapa) | 2,40 s | 1,42 s | 376 → 153 | 663 → 497 |
+  | Mascota en casa | 2,68 s | 1,73 s | 378 → 154 | 608 → 179 |
+
+**Encabezados de seguridad** (`vercel.json`; producción solo mandaba HSTS):
+Content-Security-Policy (solo la app, Supabase y los mosaicos de
+OpenStreetMap; sin scripts de otros sitios; `frame-ancestors 'none'`),
+X-Content-Type-Options, Referrer-Policy (los sitios externos, como WhatsApp o
+los mosaicos del mapa, reciben el origen y no la ruta con el código de la
+placa), X-Frame-Options y Permissions-Policy (cámara y ubicación solo para la
+app). `vite preview` usa los mismos, leídos de `vercel.json`.
+`tests/e2e/encabezados.mjs` (13/13) recorre todas las pantallas (mapas, fotos,
+cámara del lector con un dispositivo falso, afiche, gráficos) y falla ante
+cualquier violación de la política; se comprobó que la detecta sacando
+OpenStreetMap de la política.
+
+**Pruebas.**
+- Las pruebas de pantalla pasaron a correr contra el build de producción
+  (`vite preview`, con los mismos encabezados que Vercel) en vez del servidor
+  de desarrollo; el runner reconstruye antes de empezar.
+- Nueve scripts atrapaban las excepciones con un `console.log('ERROR')` sin
+  marcar falla: un corte a mitad de camino figuraba como aprobado (pasó con
+  `estadisticas`, "6/6" en vez de 12). Ahora cuenta como falla.
+- `purgar_cuenta` se niega a borrar administradores (protección correcta), y
+  la limpieza de las pruebas no lo contemplaba: una cuenta de prueba admin con
+  mascota se borraba por la cascada de Auth y dejaba escaneos huérfanos. Se
+  agregó `borrarCuenta()` (baja el rol antes de purgar), el runner controla
+  los escaneos sin mascota ni placa, y se borraron los 3 que habían dejado
+  las corridas de `encabezados` de ese día.
+- Al medir la velocidad se usó por error la placa real de Doggie: quedaron 3
+  escaneos reales de más en Doggie (sin ubicación, sin caso ni aviso). No se
+  borraron (bajas lógicas); queda a criterio del dueño del proyecto.
+- Batería completa: todas en verde (la primera corrida tuvo un corte 520 de
+  la API de Supabase y dos fallas intermitentes en `fotos-ia`; repetidas,
+  98/98).
