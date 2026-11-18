@@ -6,7 +6,10 @@ import { supabase } from '../lib/supabase'
 import { borrarFoto, fotoAJpegBase64, subirFoto, verificarFoto } from '../lib/fotos'
 import Encabezado from '../components/Encabezado'
 import CompartirBusqueda from '../components/CompartirBusqueda'
-import { Megaphone } from 'lucide-react'
+import { MapPin, Megaphone } from 'lucide-react'
+import Cargando from '../components/Cargando'
+import EstadoVacio from '../components/EstadoVacio'
+import SelectorFoto from '../components/SelectorFoto'
 
 const ETIQUETA_SITUACION = {
   conmigo: 'Está con esta persona',
@@ -146,10 +149,12 @@ function FormularioReencuentro({ mascota, casoId, onCancelar, onConfirmar, envia
           rows={3}
         />
 
-        <label className="campo-archivo">
-          Foto del reencuentro (opcional)
-          <input type="file" accept="image/*" onChange={elegirFoto} />
-        </label>
+        <SelectorFoto
+          etiqueta="Foto del reencuentro (opcional)"
+          vistaPrevia={foto ? `data:image/jpeg;base64,${foto.base64}` : null}
+          onChange={elegirFoto}
+          alt="Foto del reencuentro"
+        />
 
         {analizando && <p className="ayuda">Analizando la foto…</p>}
         {avisoFoto?.tipo === 'rechazada' && (
@@ -296,7 +301,7 @@ export default function MapaAvistamientos() {
     else cargar()
   }
 
-  if (cargando) return <main className="pagina"><p>Cargando…</p></main>
+  if (cargando) return <Cargando texto="Cargando los avisos…" />
 
   if (error) return (
     <main className="pagina">
@@ -364,7 +369,11 @@ export default function MapaAvistamientos() {
       )}
 
       {avistamientos.length === 0 && (
-        <p className="ayuda">Todavía no reportaron haber visto a {mascota.nombre}.</p>
+        <EstadoVacio icono={MapPin} titulo={`Todavía nadie avisó que vio a ${mascota.nombre}`}>
+          {caso
+            ? 'Cuando alguien escanee su placa y avise, el aviso aparece acá con el lugar y la hora, y te llega una notificación. Compartir la búsqueda hace que más gente la vea.'
+            : 'Si alguna vez se pierde y alguien la ve, el aviso aparece acá con el lugar y la hora.'}
+        </EstadoVacio>
       )}
 
       {sinUbicacion > 0 && (

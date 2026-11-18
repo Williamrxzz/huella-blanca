@@ -5,6 +5,7 @@ import {
 } from 'recharts'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
+import Cargando from '../components/Cargando'
 
 const ESTADOS = {
   perdida: 'Perdidas',
@@ -98,7 +99,7 @@ export default function AdminEstadisticas() {
     iniciar()
   }, [navigate])
 
-  if (!datos && !error) return <main className="pagina"><p>Cargando…</p></main>
+  if (!datos && !error) return <Cargando texto="Calculando las estadísticas…" />
 
   const t = datos?.totales
   const casos = (datos?.casos_por_estado || []).map((c) => ({

@@ -1486,3 +1486,110 @@ html[data-contraste="alto"] .estado-paseo { background: #fff; border: 2px solid 
 .opciones-duracion legend { font-weight: 600; padding: 0; margin-bottom: 6px; }
 .opciones-duracion label { display: flex; align-items: center; gap: 10px; min-height: 44px; }
 .opciones-duracion input { width: 18px; height: 18px; margin: 0; flex-shrink: 0; }
+
+/* Foto vacía: la huella centrada; en la ficha, con "Sin foto" debajo. */
+.miniatura.vacia { display: grid; place-items: center; }
+.foto.vacia { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+
+/* Cargando: indicador que gira y una frase. Con "reducir animaciones" (o la
+   preferencia del sistema) deja de girar: la regla general de arriba anula
+   las animaciones. */
+.pagina.cargando {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 60dvh;
+  color: #5c5a55;
+}
+.pagina.cargando p { margin: 0; }
+.cargando-indicador {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid #dfe7ef;
+  border-top-color: #2e5c8a;
+  animation: girar 0.9s linear infinite;
+}
+@keyframes girar { to { transform: rotate(360deg); } }
+html[data-tema="oscuro"] .pagina.cargando { color: #b0b4ba; }
+html[data-tema="oscuro"] .cargando-indicador { border-color: #34383d; border-top-color: #6a9fd4; }
+
+/* Estado vacío: qué significa y qué hacer, centrado y tranquilo. */
+.estado-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 24px 16px;
+  margin: 8px 0 16px;
+  border: 1px dashed #d8d5cf;
+  border-radius: 16px;
+  color: #6f6e6a;
+}
+.estado-vacio-titulo {
+  margin: 4px 0 0;
+  font-weight: 600;
+  color: #1f1f1f;
+  font-size: calc(16px * var(--escala-texto));
+}
+.estado-vacio .ayuda { margin: 0; max-width: 34ch; }
+html[data-tema="oscuro"] .estado-vacio { border-color: #3a3e44; color: #a8a7a1; }
+html[data-tema="oscuro"] .estado-vacio-titulo { color: #f0efec; }
+html[data-contraste="alto"] .estado-vacio { border: 2px dashed #000; color: #000; }
+html[data-contraste="alto"] .estado-vacio-titulo { color: #000; }
+
+/* Selector de foto propio: etiqueta, vista previa y botón. */
+.selector-foto { display: flex; flex-direction: column; gap: 8px; }
+.selector-foto-etiqueta { font-size: calc(14px * var(--escala-texto)); color: #6f6e6a; }
+.selector-foto-fila { display: flex; align-items: center; gap: 14px; }
+.selector-foto-fila .miniatura { flex-shrink: 0; }
+.selector-foto-boton { margin: 0; flex: 1; cursor: pointer; }
+.selector-foto-boton:focus-within { outline: 3px solid #2e5c8a; outline-offset: 2px; }
+html[data-tema="oscuro"] .selector-foto-etiqueta { color: #a8a7a1; }
+
+/* Hoja "Más" del panel: una opción por fila, con su explicación. */
+.opciones-hoja { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.opcion-hoja {
+  width: 100%;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #1f1f1f;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.opcion-hoja:hover, .opcion-hoja:focus-visible { background: #f2f0ec; }
+.opcion-hoja span { display: flex; flex-direction: column; gap: 2px; }
+.opcion-hoja strong { font-size: calc(15.5px * var(--escala-texto)); }
+.opcion-hoja small { color: #6f6e6a; font-size: calc(13px * var(--escala-texto)); line-height: 1.35; }
+.opcion-hoja svg { flex-shrink: 0; color: #2e5c8a; }
+.opcion-hoja.peligro, .opcion-hoja.peligro svg { color: #b23b3b; }
+html[data-tema="oscuro"] .hoja-acciones { background: #1c1f24; color: #f0efec; }
+html[data-tema="oscuro"] .opcion-hoja { color: #f0efec; }
+html[data-tema="oscuro"] .opcion-hoja:hover, html[data-tema="oscuro"] .opcion-hoja:focus-visible { background: #2a2e34; }
+html[data-tema="oscuro"] .opcion-hoja small { color: #a8a7a1; }
+html[data-tema="oscuro"] .opcion-hoja svg { color: #6a9fd4; }
+html[data-tema="oscuro"] .opcion-hoja.peligro, html[data-tema="oscuro"] .opcion-hoja.peligro svg { color: #f2a8a8; }
+html[data-contraste="alto"] .opcion-hoja { color: #000; border: 2px solid #000; }
+html[data-contraste="alto"] .opcion-hoja small { color: #000; }
+
+/* Etiqueta visible de cada campo del formulario de mascota: el placeholder
+   desaparece al escribir y no alcanza para saber qué se está completando. */
+.etiqueta-campo {
+  display: block;
+  margin: 10px 0 -4px;
+  font-weight: 600;
+  font-size: calc(14.5px * var(--escala-texto));
+  color: #3c3b38;
+}
+html[data-tema="oscuro"] .etiqueta-campo { color: #d6d5d1; }
+html[data-contraste="alto"] .etiqueta-campo { color: #000; }

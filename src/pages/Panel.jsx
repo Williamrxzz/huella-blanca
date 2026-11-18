@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
-import { ChevronRight, Footprints, House, LogOut, MapPin, Megaphone, Pencil, QrCode, RefreshCw, Trash2, TriangleAlert } from 'lucide-react'
+import { ChevronRight, Ellipsis, Footprints, House, LogOut, MapPin, Megaphone, PawPrint, Pencil, QrCode, RefreshCw, Trash2, TriangleAlert, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import '../lib/leaflet-iconos'
 import { normalizarTelefono } from '../lib/telefono'
 import Encabezado from '../components/Encabezado'
 import AvisosPush from '../components/AvisosPush'
 import CompartirBusqueda from '../components/CompartirBusqueda'
+import Cargando from '../components/Cargando'
+import SinFoto from '../components/SinFoto'
+import EstadoVacio from '../components/EstadoVacio'
 
 function SelectorMapa({ onSeleccionar }) {
   useMapEvents({
@@ -148,12 +151,60 @@ function FormularioPaseo({ mascota, onCancelar, onConfirmar, guardando }) {
   )
 }
 
+// Acciones ocasionales de una mascota, en una hoja aparte para que el panel
+// muestre solo lo del día a día. Cada opción dice para qué sirve, así no hace
+// falta un instructivo.
+function HojaMas({ mascota, opciones, onCerrar }) {
+  useEffect(() => {
+    function alTeclear(e) { if (e.key === 'Escape') onCerrar() }
+    window.addEventListener('keydown', alTeclear)
+    return () => window.removeEventListener('keydown', alTeclear)
+  }, [onCerrar])
+
+  return (
+    <div className="superposicion" onClick={onCerrar}>
+      <div
+        className="hoja-compartir hoja-acciones"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titulo-mas"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="hoja-compartir-cabecera">
+          <h2 id="titulo-mas">{mascota.nombre}</h2>
+          <button className="hoja-compartir-cerrar" type="button" onClick={onCerrar} aria-label="Cerrar">
+            <X size={20} aria-hidden="true" />
+          </button>
+        </div>
+        <ul className="opciones-hoja">
+          {opciones.map(({ icono: Icono, titulo, descripcion, onElegir, peligro }) => (
+            <li key={titulo}>
+              <button
+                type="button"
+                className={peligro ? 'opcion-hoja peligro' : 'opcion-hoja'}
+                onClick={() => { onCerrar(); onElegir() }}
+              >
+                <Icono size={20} aria-hidden="true" />
+                <span>
+                  <strong>{titulo}</strong>
+                  <small>{descripcion}</small>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
 function FilaMascota({ mascota, caso, onCodigoCreado, onEliminada, onCasoActualizado }) {
   const [generando, setGenerando] = useState(false)
   const [eligiendoPaseo, setEligiendoPaseo] = useState(false)
   const [guardandoPaseo, setGuardandoPaseo] = useState(false)
   const [confirmandoReemplazo, setConfirmandoReemplazo] = useState(false)
   const [reemplazando, setReemplazando] = useState(false)
+  const [viendoMas, setViendoMas] = useState(false)
   const navigate = useNavigate()
   const [eliminando, setEliminando] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
@@ -267,7 +318,7 @@ function FilaMascota({ mascota, caso, onCodigoCreado, onEliminada, onCasoActuali
     <li>
       {mascota.foto_url
         ? <img className="miniatura" src={mascota.foto_url} alt={mascota.nombre} />
-        : <div className="miniatura vacia">Sin foto</div>}
+        : <SinFoto />}
       <div>
         <span className="nombre">{mascota.nombre}</span>
         <span className="ayuda">{mascota.especie}{mascota.raza ? ` · ${mascota.raza}` : ''}</span>
@@ -320,25 +371,10 @@ function FilaMascota({ mascota, caso, onCodigoCreado, onEliminada, onCasoActuali
               Compartir búsqueda
             </button>
           )}
-          {!caso && (enPaseo ? (
-            <button className="boton-accion" type="button" onClick={terminarPaseo} disabled={guardandoPaseo}>
-              <Footprints size={17} aria-hidden="true" />
-              {guardandoPaseo ? 'Terminando…' : 'Terminar paseo'}
-            </button>
-          ) : (
-            <button className="boton-accion" type="button" onClick={() => setEligiendoPaseo(true)}>
-              <Footprints size={17} aria-hidden="true" />
-              Modo paseo
-            </button>
-          ))}
 
           <Link className="boton-accion" to={`/mascotas/${mascota.id}/mapa`}>
             <MapPin size={17} aria-hidden="true" />
             Avisos
-          </Link>
-          <Link className="boton-accion" to={`/mascotas/${mascota.id}/editar`}>
-            <Pencil size={17} aria-hidden="true" />
-            Editar
           </Link>
           {placaActiva && (
             <Link className="boton-accion" to={`/placas?codigo=${placaActiva.codigo}`}>
@@ -346,16 +382,9 @@ function FilaMascota({ mascota, caso, onCodigoCreado, onEliminada, onCasoActuali
               Código QR
             </Link>
           )}
-          {placaActiva && (
-            <button className="boton-accion" type="button" onClick={() => setConfirmandoReemplazo(true)}>
-              <RefreshCw size={17} aria-hidden="true" />
-              Reemplazar QR
-            </button>
-          )}
-
-          <button className="boton-accion peligro" type="button" onClick={() => setConfirmando(true)}>
-            <Trash2 size={16} aria-hidden="true" />
-            Eliminar mascota
+          <button className="boton-accion" type="button" onClick={() => setViendoMas(true)} aria-haspopup="dialog">
+            <Ellipsis size={17} aria-hidden="true" />
+            Más
           </button>
         </div>
 
@@ -376,6 +405,45 @@ function FilaMascota({ mascota, caso, onCodigoCreado, onEliminada, onCasoActuali
 
       {compartiendo && (
         <CompartirBusqueda mascota={mascota} caso={caso} onCerrar={() => setCompartiendo(false)} />
+      )}
+
+      {viendoMas && (
+        <HojaMas
+          mascota={mascota}
+          onCerrar={() => setViendoMas(false)}
+          opciones={[
+            {
+              icono: Pencil,
+              titulo: 'Editar datos',
+              descripcion: 'Nombre, foto, señas, domicilio y qué se muestra en su ficha.',
+              onElegir: () => navigate(`/mascotas/${mascota.id}/editar`),
+            },
+            ...(!caso ? [enPaseo ? {
+              icono: Footprints,
+              titulo: 'Terminar modo paseo',
+              descripcion: 'Volvé a recibir la alerta si escanean su placa lejos de casa.',
+              onElegir: terminarPaseo,
+            } : {
+              icono: Footprints,
+              titulo: 'Modo paseo',
+              descripcion: 'Si salís a pasear o de viaje con ella, pausá la alerta de "lejos de casa" por un rato.',
+              onElegir: () => setEligiendoPaseo(true),
+            }] : []),
+            ...(placaActiva ? [{
+              icono: RefreshCw,
+              titulo: 'Reemplazar código QR',
+              descripcion: 'Si se perdió o se rompió el collar: el código viejo deja de funcionar y te damos uno nuevo.',
+              onElegir: () => setConfirmandoReemplazo(true),
+            }] : []),
+            {
+              icono: Trash2,
+              titulo: 'Eliminar mascota',
+              descripcion: 'Deja de aparecer en tu panel y su placa deja de funcionar.',
+              onElegir: () => setConfirmando(true),
+              peligro: true,
+            },
+          ]}
+        />
       )}
 
       {eligiendoPaseo && (
@@ -505,7 +573,7 @@ export default function Panel() {
     navigate('/login')
   }
 
-  if (cargando) return <main className="pagina"><p>Cargando…</p></main>
+  if (cargando) return <Cargando texto="Cargando tus mascotas…" />
 
   return (
     <main className="pagina">
@@ -544,7 +612,10 @@ export default function Panel() {
       )}
 
       {mascotas.length === 0 ? (
-        <p className="ayuda">Todavía no cargaste ninguna mascota.</p>
+        <EstadoVacio icono={PawPrint} titulo="Todavía no cargaste ninguna mascota">
+          Cargala en un par de minutos: te damos su código QR para el collar y, si alguien la
+          encuentra y lo escanea, te avisamos al instante.
+        </EstadoVacio>
       ) : (
         <ul className="lista-mascotas">
           {mascotas.map((m) => (

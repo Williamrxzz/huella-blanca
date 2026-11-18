@@ -7,6 +7,8 @@ import { borrarFoto, fotoAJpegBase64, subirFoto, verificarFoto } from '../lib/fo
 import { pedirUbicacion } from '../lib/ubicacion'
 import { X } from 'lucide-react'
 import Encabezado from '../components/Encabezado'
+import Cargando from '../components/Cargando'
+import SelectorFoto from '../components/SelectorFoto'
 
 const CENTRO_INICIAL = { lat: -46.4380, lng: -67.5280 } // Caleta Olivia
 
@@ -18,6 +20,15 @@ function SelectorMapa({ onSeleccionar }) {
   })
   return null
 }
+
+// DUE10: radio de aviso, con opciones que se entienden sin pensar en metros.
+const RADIOS = [
+  { metros: 100, etiqueta: 'Una cuadra (100 m)' },
+  { metros: 300, etiqueta: 'Unas tres cuadras (300 m)' },
+  { metros: 500, etiqueta: 'El barrio (500 m)' },
+  { metros: 1000, etiqueta: 'Un kilómetro' },
+  { metros: 3000, etiqueta: 'Tres kilómetros' },
+]
 
 export default function AltaMascota() {
   const { id } = useParams()
@@ -323,7 +334,7 @@ export default function AltaMascota() {
     navigate(`/placas?codigo=${codigo}&nueva=1`)
   }
 
-  if (!sesion || cargandoMascota) return <main className="pagina"><p>Cargando…</p></main>
+  if (!sesion || cargandoMascota) return <Cargando texto="Cargando…" />
 
   if (errorCarga) return (
     <main className="pagina">
@@ -338,105 +349,9 @@ export default function AltaMascota() {
       <h1>{editando ? 'Editar mascota' : 'Cargar mascota'}</h1>
 
       <form className="formulario-aviso" onSubmit={guardar}>
-        <input
-          className="entrada"
-          type="text"
-          placeholder="Nombre"
-          aria-label="Nombre"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-          required
-        />
-
-        <select
-          className="entrada"
-          aria-label="Especie"
-          value={especie}
-          onChange={(e) => setEspecie(e.target.value)}
-        >
-          <option value="perro">Perro</option>
-          <option value="gato">Gato</option>
-          <option value="otro">Otro</option>
-        </select>
-
-        <select
-          className="entrada"
-          aria-label="Sexo"
-          value={sexo}
-          onChange={(e) => setSexo(e.target.value)}
-        >
-          <option value="macho">Macho</option>
-          <option value="hembra">Hembra</option>
-        </select>
-
-        <input
-          className="entrada"
-          type="text"
-          placeholder="Raza (opcional)"
-          aria-label="Raza"
-          value={raza}
-          onChange={(e) => setRaza(e.target.value)}
-        />
-
-        <select
-          className="entrada"
-          aria-label="Tamaño"
-          value={tamano}
-          onChange={(e) => setTamano(e.target.value)}
-        >
-          <option value="pequeno">Pequeño</option>
-          <option value="mediano">Mediano</option>
-          <option value="grande">Grande</option>
-        </select>
-
-        <input
-          className="entrada"
-          type="text"
-          placeholder="Color"
-          aria-label="Color"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-        />
-
-        <textarea
-          className="entrada"
-          placeholder="Señas particulares (opcional)"
-          aria-label="Señas particulares"
-          value={senas}
-          onChange={(e) => setSenas(e.target.value)}
-          rows={3}
-        />
-
-        <select
-          className="entrada"
-          aria-label="Quién ve las señas particulares"
-          value={visibilidadSenas}
-          onChange={(e) => setVisibilidadSenas(e.target.value)}
-        >
-          <option value="publico">Señas: las ve cualquiera que escanee la placa</option>
-          <option value="perdida">Señas: solo si está perdida</option>
-          <option value="privado">Señas: no se muestran</option>
-        </select>
-
-        <select
-          className="entrada"
-          aria-label="Carácter"
-          value={caracter}
-          onChange={(e) => setCaracter(e.target.value)}
-        >
-          <option value="amigable">Amigable</option>
-          <option value="temerosa">Temerosa</option>
-          <option value="no_acercarse">Mejor no acercarse</option>
-        </select>
-
-        {fotoUrlActual && !foto && (
-          <img className="miniatura" src={fotoUrlActual} alt={nombre} />
-        )}
-
-        <label className="campo-archivo">
-          {fotoUrlActual ? 'Cambiar foto (opcional)' : 'Foto (opcional)'}
-          <input type="file" accept="image/*" onChange={elegirFoto} />
-        </label>
+        {/* La foto va primero: con ella la IA sugiere especie, tamaño, color y
+            señas, y el resto del formulario se completa casi solo. */}
+        <SelectorFoto etiqueta="Foto (opcional, pero recomendada)" archivo={foto} urlActual={fotoUrlActual} onChange={elegirFoto} alt={nombre} />
 
         {/* Recomendación suave: solo informa, no cambia nada (la foto sigue siendo
             opcional). Se muestra al cargar una mascota nueva y desaparece apenas
@@ -490,6 +405,110 @@ export default function AltaMascota() {
           </p>
         )}
 
+
+        <label className="etiqueta-campo" htmlFor="nombre-mascota">Nombre</label>
+        <input
+          id="nombre-mascota"
+          className="entrada"
+          type="text"
+          placeholder="Ej.: Blanca"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          required
+        />
+
+        <label className="etiqueta-campo" htmlFor="especie">Especie</label>
+        <select
+          id="especie"
+          className="entrada"
+          value={especie}
+          onChange={(e) => setEspecie(e.target.value)}
+        >
+          <option value="perro">Perro</option>
+          <option value="gato">Gato</option>
+          <option value="otro">Otro</option>
+        </select>
+
+        <label className="etiqueta-campo" htmlFor="sexo">Sexo</label>
+        <select
+          id="sexo"
+          className="entrada"
+          value={sexo}
+          onChange={(e) => setSexo(e.target.value)}
+        >
+          <option value="macho">Macho</option>
+          <option value="hembra">Hembra</option>
+        </select>
+
+        <label className="etiqueta-campo" htmlFor="raza">Raza (opcional)</label>
+        <input
+          id="raza"
+          className="entrada"
+          type="text"
+          placeholder="Ej.: mestiza, caniche"
+          value={raza}
+          onChange={(e) => setRaza(e.target.value)}
+        />
+
+        <label className="etiqueta-campo" htmlFor="tamano">Tamaño</label>
+        <select
+          id="tamano"
+          className="entrada"
+          value={tamano}
+          onChange={(e) => setTamano(e.target.value)}
+        >
+          <option value="pequeno">Pequeño</option>
+          <option value="mediano">Mediano</option>
+          <option value="grande">Grande</option>
+        </select>
+
+        <label className="etiqueta-campo" htmlFor="color">Color</label>
+        <input
+          id="color"
+          className="entrada"
+          type="text"
+          placeholder="Ej.: negra con pecho blanco"
+          value={color}
+          onChange={(e) => setColor(e.target.value)}
+        />
+
+        <label className="etiqueta-campo" htmlFor="senas">Señas particulares (opcional)</label>
+        <textarea
+          id="senas"
+          className="entrada"
+          placeholder="Ej.: mancha blanca en la pata derecha, cola cortita"
+          value={senas}
+          onChange={(e) => setSenas(e.target.value)}
+          rows={3}
+        />
+
+        <label className="etiqueta-campo" htmlFor="visibilidad-senas">¿Quién ve las señas?</label>
+        <select
+          id="visibilidad-senas"
+          className="entrada"
+          value={visibilidadSenas}
+          onChange={(e) => setVisibilidadSenas(e.target.value)}
+        >
+          <option value="publico">Cualquiera que escanee la placa</option>
+          <option value="perdida">Solo si está perdida</option>
+          <option value="privado">Nadie (solo vos)</option>
+        </select>
+
+        <label className="etiqueta-campo" htmlFor="caracter">¿Cómo reacciona con desconocidos?</label>
+        <select
+          id="caracter"
+          className="entrada"
+          value={caracter}
+          onChange={(e) => setCaracter(e.target.value)}
+        >
+          <option value="amigable">Es amigable</option>
+          <option value="temerosa">Es temerosa: hay que acercarse despacio</option>
+          <option value="no_acercarse">Mejor no acercarse</option>
+        </select>
+        <p className="ayuda">Se lo decimos a quien la encuentre, para que sepa cómo acercarse.</p>
+
+        <label className="etiqueta-campo">¿Dónde vive?</label>
+        <p className="ayuda">Se guarda solo como un punto en el mapa y no se le muestra nunca a nadie: sirve para avisarte si la escanean lejos de casa.</p>
         <button
           type="button"
           className="boton secundario"
@@ -529,48 +548,56 @@ export default function AltaMascota() {
           )}
         </MapContainer>
 
-        <label className="campo-archivo">
-          Radio de aviso (metros)
-          <input
-            className="entrada"
-            type="number"
-            value={radioMetros}
-            onChange={(e) => setRadioMetros(Number(e.target.value))}
-            min={100}
-            step={100}
-          />
-        </label>
-
+        <label className="etiqueta-campo" htmlFor="radio-aviso">¿A qué distancia de tu casa te avisamos?</label>
         <select
+          id="radio-aviso"
           className="entrada"
-          aria-label="Plazo para confirmar una posible pérdida"
+          value={radioMetros}
+          onChange={(e) => setRadioMetros(Number(e.target.value))}
+        >
+          {/* Un radio que no esté en la lista (cargado antes) se conserva. */}
+          {!RADIOS.some((r) => r.metros === radioMetros) && <option value={radioMetros}>{radioMetros} m</option>}
+          {RADIOS.map((r) => <option key={r.metros} value={r.metros}>{r.etiqueta}</option>)}
+        </select>
+        <p className="ayuda">
+          Si escanean su placa más lejos que esto, te avisamos que podría estar perdida. Si suele andar
+          suelta por el barrio, elegí un radio más grande.
+        </p>
+
+        <label className="etiqueta-campo" htmlFor="plazo-confirmacion">Si te llega una alerta y no respondés, ¿cuánto esperamos?</label>
+        <select
+          id="plazo-confirmacion"
+          className="entrada"
           value={horasConfirmacion}
           onChange={(e) => setHorasConfirmacion(Number(e.target.value))}
         >
-          <option value={6}>Si no respondo a una posible pérdida en 6 h, marcarla como perdida</option>
-          <option value={12}>Si no respondo a una posible pérdida en 12 h, marcarla como perdida</option>
-          <option value={24}>Si no respondo a una posible pérdida en 24 h, marcarla como perdida</option>
-          <option value={48}>Si no respondo a una posible pérdida en 48 h, marcarla como perdida</option>
+          <option value={6}>6 horas</option>
+          <option value={12}>12 horas</option>
+          <option value={24}>24 horas</option>
+          <option value={48}>48 horas</option>
         </select>
+        <p className="ayuda">Pasado ese tiempo la marcamos como perdida, y su ficha muestra cómo contactarte.</p>
 
+        <label className="etiqueta-campo" htmlFor="salud">Salud (opcional)</label>
         <textarea
+          id="salud"
           className="entrada"
-          placeholder="Información de salud (opcional)"
-          aria-label="Información de salud"
+          placeholder="Ej.: toma medicación, es alérgica a…"
           value={salud}
           onChange={(e) => setSalud(e.target.value)}
           rows={2}
         />
 
+        <label className="etiqueta-campo" htmlFor="visibilidad-salud">¿Quién ve la información de salud?</label>
         <select
+          id="visibilidad-salud"
           className="entrada"
-          aria-label="Quién ve la información de salud"
           value={visibilidadSalud}
           onChange={(e) => setVisibilidadSalud(e.target.value)}
         >
-          <option value="publico">Salud: la ve cualquiera que escanee la placa</option>
-          <option value="perdida">Salud: solo si está perdida</option>
-          <option value="privado">Salud: no se muestra</option>
+          <option value="publico">Cualquiera que escanee la placa</option>
+          <option value="perdida">Solo si está perdida</option>
+          <option value="privado">Nadie (solo vos)</option>
         </select>
 
         {error && <p className="ayuda error" role="alert">{error}</p>}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
+import Cargando from '../components/Cargando'
 
 function formatearFecha(iso) {
   if (!iso) return '—'
@@ -158,7 +159,7 @@ export default function AdminCuentas() {
     setEliminando(null)
   }
 
-  if (verificando) return <main className="pagina"><p>Cargando…</p></main>
+  if (verificando) return <Cargando texto="Cargando las cuentas…" />
 
   const texto = busqueda.trim().toLowerCase()
   const visibles = cuentas.filter((c) =>

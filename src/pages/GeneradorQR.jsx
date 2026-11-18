@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { QRCodeCanvas } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
+import Cargando from '../components/Cargando'
 
 export default function GeneradorQR() {
   const navigate = useNavigate()
@@ -124,7 +125,7 @@ export default function GeneradorQR() {
     await copiarLink()
   }
 
-  if (verificando) return <main className="pagina"><p>Cargando…</p></main>
+  if (verificando) return <Cargando texto="Cargando el código…" />
 
   return (
     <main className="pagina">

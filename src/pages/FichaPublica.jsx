@@ -6,6 +6,8 @@ import { pedirUbicacion, pedirUbicacionSiYaHayPermiso } from '../lib/ubicacion'
 import Encabezado from '../components/Encabezado'
 import { FICHA_EJEMPLO } from '../lib/fichaEjemplo'
 import AceptoPrivacidad from '../components/AceptoPrivacidad'
+import Cargando from '../components/Cargando'
+import SinFoto from '../components/SinFoto'
 
 function IconoWhatsApp(props) {
   return (
@@ -206,7 +208,7 @@ export default function FichaPublica({ demo = false }) {
     setCuentaCreada(true)
   }
 
-  if (cargando) return <main className="pagina"><p>Buscando la mascota…</p></main>
+  if (cargando) return <Cargando texto="Buscando la mascota…" />
 
   if (error) return (
     <main className="pagina">
@@ -232,7 +234,7 @@ export default function FichaPublica({ demo = false }) {
       <div className="ficha-foto-fija">
         {ficha.foto_url
           ? <img className="foto" src={ficha.foto_url} alt={ficha.nombre} />
-          : <div className="foto vacia">Sin foto</div>}
+          : <SinFoto grande />}
       </div>
 
       <div className="ficha-contenido">

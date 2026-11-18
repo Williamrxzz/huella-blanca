@@ -5,6 +5,7 @@ import Encabezado from '../components/Encabezado'
 import CampoTelefono from '../components/CampoTelefono'
 import { normalizarTelefono, telefonoLegible } from '../lib/telefono'
 import { Trash2 } from 'lucide-react'
+import Cargando from '../components/Cargando'
 
 export default function Perfil() {
   const navigate = useNavigate()
@@ -87,7 +88,7 @@ export default function Perfil() {
     navigate('/', { replace: true, state: { cuentaEliminada: true } })
   }
 
-  if (cargando) return <main className="pagina"><p>Cargando…</p></main>
+  if (cargando) return <Cargando texto="Cargando tu perfil…" />
 
   return (
     <main className="pagina">

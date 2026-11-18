@@ -66,6 +66,7 @@ Para correr solo algunas: `PRUEBAS_EN_PRODUCCION=si npm run test:e2e -- telefono
 | `e2e/fotos-storage.mjs` | Reemplazar una foto borra la anterior; un guardado que falla borra la recién subida. |
 | `e2e/estadisticas.mjs` | DAT05: `/admin/estadisticas` muestra los totales reales. |
 | `e2e/admin-cuentas.mjs` | La pantalla de cuentas del administrador y su confirmación. |
+| `e2e/interfaz.mjs` | La interfaz se explica sola: estados vacíos que dicen qué hacer, radio de aviso con opciones con significado, selector de foto propio con vista previa, huella en vez de "Sin foto", y la hoja "Más" del panel con una explicación por opción. |
 | `e2e/privacidad.mjs` | Ley 25.326: la política está y enlazada; el registro exige el consentimiento y avisar no; la fecha de aceptación se guarda; cada persona elimina su propia cuenta y no queda nada suyo (sus avisos sobre mascotas ajenas quedan anónimos); un admin no puede borrarse a sí mismo. |
 | `e2e/encabezados.mjs` | Los encabezados de seguridad de `vercel.json` están, y la política de contenido no bloquea nada: recorre todas las pantallas (mapas, fotos, cámara del lector, afiche, gráficos) y falla ante cualquier violación que reporte el navegador. |
 | `e2e/push.mjs` | Web Push de punta a punta: activar avisos, escaneo lejos de casa, notificación mostrada. |

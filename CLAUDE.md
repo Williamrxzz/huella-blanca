@@ -166,6 +166,15 @@ Infraestructura:
 Sin librerías de UI por ahora: los estilos son CSS propio en
 `src/index.css`. No agregar Tailwind ni shadcn/ui sin consultar.
 
+**Interfaz que se explica sola (desde el 2026-11-18):** componentes
+compartidos en `src/components/`: `Cargando` (indicador y una frase que dice
+qué se busca), `EstadoVacio` (qué significa que no haya nada y qué hacer),
+`SinFoto` (huella en vez del texto) y `SelectorFoto` (botón "Elegir foto" /
+"Cambiar foto" con vista previa, en vez del control del navegador). En el
+formulario de mascota la foto va primero (la IA completa el resto), cada
+campo tiene etiqueta visible y las opciones son cortas; el radio de aviso se
+elige entre opciones con significado ("Una cuadra (100 m)"…).
+
 **Sistema de botones (desde el 2026-11-17, ver `TRAZABILIDAD.md`):** tres
 niveles de énfasis, como Material 3. `.boton` primario (relleno, uno por
 pantalla), `.boton.secundario` tonal (fondo suave) y `.boton.terciario` solo
@@ -580,11 +589,13 @@ Usuario", con siete listas, una por bloque.
   `.limit()` en la consulta) — foto, nombre, especie/raza y el código
   de placa si ya tiene una activa. Si una mascota quedó sin código
   (falló al crearla), ofrece "Crear su código QR" (`generar_placa`).
-  Desde el 2026-11-18 cada mascota tiene además "Reemplazar QR" (DUE08:
-  collar perdido o roto; con confirmación, el código viejo deja de
-  funcionar) y "Modo paseo" (DUE11: pausa la detección automática por el
-  tiempo elegido; muestra "De paseo hasta…" y "Terminar paseo"; no se
-  ofrece con un caso abierto).
+  Desde el 2026-11-18 cada mascota muestra a la vista solo lo del día a
+  día ("Se perdió" o "Compartir búsqueda", "Avisos", "Código QR") y el
+  resto en la hoja **"Más"**, con una línea que explica cada opción:
+  "Editar datos", "Modo paseo" (DUE11: pausa la detección automática por
+  el tiempo elegido; la tarjeta muestra "De paseo hasta…"; no se ofrece
+  con un caso abierto), "Reemplazar código QR" (DUE08: con confirmación,
+  el código viejo deja de funcionar) y "Eliminar mascota".
   Cada mascota tiene enlaces para editar, ver el mapa de avistamientos,
   y eliminar (borrado lógico). Desde el 2026-11-18, dar de baja una
   mascota cierra su caso de pérdida abierto en la misma operación (trigger

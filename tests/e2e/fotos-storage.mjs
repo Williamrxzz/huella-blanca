@@ -78,7 +78,7 @@ try {
 
   // ---- 1. editar y reemplazar la foto: la vieja se borra ----
   await ir(`${B}/mascotas/${M}/editar`); await sleep(1500)
-  check('el formulario de edición carga la mascota', (await ev(`document.querySelector('input[placeholder*="Nombre"], input[aria-label*="Nombre"]')?.value`)) === 'Fotito' || (await ev('document.body.innerText')).includes('Fotito'))
+  check('el formulario de edición carga la mascota', (await ev(`document.querySelector('#nombre-mascota')?.value`)) === 'Fotito' || (await ev('document.body.innerText')).includes('Fotito'))
   let habilitado = await elegirArchivo()
   check('foto nueva elegida y verificada (guardar habilitado)', habilitado === false, 'disabled=' + habilitado)
   await ev(`document.querySelector('button[type=submit]').click(); true`)
@@ -102,8 +102,8 @@ try {
   await ir(`${B}/mascotas/${M}/editar`); await sleep(1500)
   habilitado = await elegirArchivo()
   check('segunda foto nueva verificada', habilitado === false, 'disabled=' + habilitado)
-  await ev(`(()=>{const s=document.querySelector('select[aria-label="Plazo para confirmar una posible pérdida"]'); const o=document.createElement('option'); o.value='999'; o.textContent='999'; s.appendChild(o); return true})()`)
-  await set('select[aria-label="Plazo para confirmar una posible pérdida"]', '999')
+  await ev(`(()=>{const s=document.querySelector('#plazo-confirmacion'); const o=document.createElement('option'); o.value='999'; o.textContent='999'; s.appendChild(o); return true})()`)
+  await set('#plazo-confirmacion', '999')
   await ev(`document.querySelector('button[type=submit]').click(); true`)
   for (let i = 0; i < 30; i++) { const t = await ev(`document.querySelector('.error')?.innerText || ''`); if (t) break; await sleep(500) }
   const errorTxt = await ev(`document.querySelector('.error')?.innerText || ''`)
@@ -116,13 +116,13 @@ try {
 
   // ---- 4. crear con foto, con fallo y sin fallo ----
   await ir(`${B}/mascotas/nueva`); await sleep(1500)
-  await set('input[placeholder*="Nombre"]', 'Nuevito')
+  await set('#nombre-mascota', 'Nuevito')
   await ev(`[...document.querySelectorAll('button')].find(b=>/ubicación actual/i.test(b.innerText)).click(); true`)
   await sleep(2500)
   habilitado = await elegirArchivo()
   check('alta: foto elegida y verificada', habilitado === false, 'disabled=' + habilitado)
-  await ev(`(()=>{const s=document.querySelector('select[aria-label="Plazo para confirmar una posible pérdida"]'); const o=document.createElement('option'); o.value='999'; o.textContent='999'; s.appendChild(o); return true})()`)
-  await set('select[aria-label="Plazo para confirmar una posible pérdida"]', '999')
+  await ev(`(()=>{const s=document.querySelector('#plazo-confirmacion'); const o=document.createElement('option'); o.value='999'; o.textContent='999'; s.appendChild(o); return true})()`)
+  await set('#plazo-confirmacion', '999')
   await ev(`document.querySelector('button[type=submit]').click(); true`)
   for (let i = 0; i < 30; i++) { const t = await ev(`document.querySelector('.error')?.innerText || ''`); if (t) break; await sleep(500) }
   check('alta fallida muestra el error', /horas_confirmacion|check/i.test(await ev(`document.querySelector('.error')?.innerText || ''`)))
@@ -130,7 +130,7 @@ try {
   check('alta fallida: la foto subida se borró', JSON.stringify(fotosDe(A.id)) === JSON.stringify([rutaActual]), JSON.stringify(fotosDe(A.id)))
   check('alta fallida: no se creó la mascota', Number(db(`select count(*) from mascotas where dueno_id='${A.id}'`)[0].count) === 1)
   // ahora con un plazo válido
-  await set('select[aria-label="Plazo para confirmar una posible pérdida"]', '24')
+  await set('#plazo-confirmacion', '24')
   await ev(`document.querySelector('button[type=submit]').click(); true`)
   for (let i = 0; i < 40; i++) { if ((await ev('location.pathname')) !== '/mascotas/nueva') break; await sleep(500) }
   check('alta correcta: salió del formulario', (await ev('location.pathname')) !== '/mascotas/nueva', await ev('location.pathname'))

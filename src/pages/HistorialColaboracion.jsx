@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
+import Cargando from '../components/Cargando'
+import SinFoto from '../components/SinFoto'
+import EstadoVacio from '../components/EstadoVacio'
+import { HeartHandshake } from 'lucide-react'
 
 const ETIQUETA_SITUACION = {
   conmigo: 'Estaba con vos',
@@ -46,7 +50,7 @@ export default function HistorialColaboracion() {
     verificarSesion()
   }, [navigate])
 
-  if (cargando) return <main className="pagina"><p>Cargando…</p></main>
+  if (cargando) return <Cargando texto="Cargando tu historial…" />
 
   return (
     <main className="pagina">
@@ -65,7 +69,7 @@ export default function HistorialColaboracion() {
             <li key={r.id}>
               {r.mascota_foto
                 ? <img className="miniatura" src={r.mascota_foto} alt={r.mascota_nombre} />
-                : <div className="miniatura vacia">Sin foto</div>}
+                : <SinFoto />}
               <div>
                 <span className="nombre">{r.mascota_nombre}</span>
                 <span className="ayuda">Volvió a casa el {formatearFecha(r.cerrado_en)}</span>
@@ -87,14 +91,17 @@ export default function HistorialColaboracion() {
 
       <h2>Avisos que diste</h2>
       {avistamientos.length === 0 ? (
-        <p className="ayuda">Todavía no avisaste sobre ninguna mascota.</p>
+        <EstadoVacio icono={HeartHandshake} titulo="Todavía no avisaste sobre ninguna mascota">
+          Si encontrás una mascota con una placa de Huella Blanca, escaneá el código y avisá desde su
+          ficha: tu ayuda queda registrada acá.
+        </EstadoVacio>
       ) : (
         <ul className="lista-mascotas">
           {avistamientos.map((a) => (
             <li key={a.id}>
               {a.mascota_foto
                 ? <img className="miniatura" src={a.mascota_foto} alt={a.mascota_nombre} />
-                : <div className="miniatura vacia">Sin foto</div>}
+                : <SinFoto />}
               <div>
                 <span className="nombre">{a.mascota_nombre}</span>
                 <span className="ayuda">

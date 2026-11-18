@@ -55,8 +55,11 @@ try {
   const ir = async (u) => { await cmd('Page.navigate', { url: B + u }); await sleep(3500) }
   const escribir = (sel, v) => ev(`(()=>{const el=document.querySelector(${JSON.stringify(sel)}); if(!el) return false; Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,${JSON.stringify(v)}); el.dispatchEvent(new Event('input',{bubbles:true})); return true})()`)
   const clic = (texto) => ev(`(()=>{const b=[...document.querySelectorAll('button')].find(b=>b.innerText.trim()===${JSON.stringify(texto)}); if(!b) return false; b.click(); return true})()`)
-  const hayBoton = (texto) => ev(`[...document.querySelectorAll('button')].some(b=>b.innerText.trim()===${JSON.stringify(texto)})`)
   const texto = () => ev('document.body.innerText')
+  // Desde el 2026-11-18 las acciones ocasionales están en la hoja "Más" del panel.
+  const abrirMas = async () => { const ok = await clic('Más'); await sleep(400); return ok }
+  const opcionesMas = async () => { await abrirMas(); const o = await ev("[...document.querySelectorAll('.opcion-hoja strong')].map(s=>s.innerText)"); await ev("document.querySelector('.hoja-compartir-cerrar')?.click()"); await sleep(300); return o || [] }
+  const elegirEnMas = async (titulo) => { await abrirMas(); return ev(`(()=>{const b=[...document.querySelectorAll('.opcion-hoja')].find(b=>b.querySelector('strong')?.innerText.trim()===${JSON.stringify(titulo)}); if(!b) return false; b.click(); return true})()`) }
   await cmd('Page.enable')
   await cmd('Emulation.setDeviceMetricsOverride', { width: 390, height: 900, deviceScaleFactor: 2, mobile: true })
   await ir('/login')
@@ -64,7 +67,11 @@ try {
   await ev("document.querySelector('button[type=submit]').click(); true"); await sleep(4500)
 
   // ---- DUE08 en pantalla ----
-  check('el panel ofrece "Reemplazar QR"', await clic('Reemplazar QR'))
+  await abrirMas()
+  const explicacion = await ev("[...document.querySelectorAll('.opcion-hoja')].find(b=>/Reemplazar código QR/.test(b.innerText))?.innerText || ''")
+  check('la hoja "Más" ofrece reemplazar el QR y explica para qué sirve', /Si se perdió o se rompió el collar/.test(explicacion), explicacion.replace(/\n/g, ' · '))
+  await ev("document.querySelector('.hoja-compartir-cerrar')?.click()"); await sleep(300)
+  check('elegirlo abre la confirmación', await elegirEnMas('Reemplazar código QR'))
   await sleep(400)
   const cartel = await texto()
   check('la confirmación nombra el código actual y avisa que deja de funcionar', cartel.includes(viejo) && /deja de funcionar al instante/.test(cartel))
@@ -85,27 +92,28 @@ try {
 
   // ---- DUE11 en pantalla ----
   await ir('/panel')
-  check('el panel ofrece "Modo paseo"', await clic('Modo paseo'))
+  check('la hoja "Más" ofrece el modo paseo', await elegirEnMas('Modo paseo'))
   await sleep(400)
   check('explica qué hace y ofrece duraciones', /lejos de casa no se abre una\s+posible pérdida/.test(await texto()) && (await ev("document.querySelectorAll('.opciones-duracion input').length")) === 5)
   await ev("[...document.querySelectorAll('.opciones-duracion label')].find(l=>l.innerText.includes('1 día')).querySelector('input').click(); true")
   await clic('Activar'); await sleep(3500)
   const pausa = db(`select extract(epoch from (pausado_hasta - now()))/3600 as horas from mascotas where id = '${M}'`)[0]
   check('activado por 1 día', Math.abs(Number(pausa.horas) - 24) < 0.2, Number(pausa.horas).toFixed(2))
-  check('el panel muestra "De paseo hasta…" y "Terminar paseo"', /De paseo hasta/.test(await texto()) && await hayBoton('Terminar paseo'))
+  check('el panel muestra "De paseo hasta…" y "Más" ofrece terminarlo', /De paseo hasta/.test(await texto()) && (await opcionesMas()).includes('Terminar modo paseo'))
   r = await rpc('registrar_escaneo', { p_codigo: nuevo, p_lat: -46.5, p_lng: -67.6 })
   check('en paseo, un escaneo a 8,8 km no abre caso ni avisa', r.j?.lejos_de_casa === false && JSON.stringify(casosY(M)) === '{"casos":0,"notis":0}', JSON.stringify(casosY(M)))
-  await clic('Terminar paseo'); await sleep(3000)
-  check('terminar el paseo lo apaga', db(`select pausado_hasta from mascotas where id = '${M}'`)[0].pausado_hasta === null && await hayBoton('Modo paseo'))
+  await elegirEnMas('Terminar modo paseo'); await sleep(3000)
+  check('terminar el paseo lo apaga', db(`select pausado_hasta from mascotas where id = '${M}'`)[0].pausado_hasta === null && (await opcionesMas()).includes('Modo paseo'))
   // Un modo paseo vencido no cuenta
   await api('PATCH', `/rest/v1/mascotas?id=eq.${M}`, { pausado_hasta: new Date(Date.now() - 60e3).toISOString() })
   await ir('/panel')
-  check('un paseo vencido no se muestra como activo', !/De paseo hasta/.test(await texto()) && await hayBoton('Modo paseo'))
+  check('un paseo vencido no se muestra como activo', !/De paseo hasta/.test(await texto()) && (await opcionesMas()).includes('Modo paseo'))
   r = await rpc('registrar_escaneo', { p_codigo: nuevo, p_lat: -46.5, p_lng: -67.6 })
   const c = casosY(M)
   check('sin paseo, el mismo escaneo abre la posible pérdida y avisa', r.j?.lejos_de_casa === true && c.casos === 1 && c.notis === 1, JSON.stringify(c))
   await ir('/panel')
-  check('con un caso abierto no se ofrece el modo paseo', !(await hayBoton('Modo paseo')) && !(await hayBoton('Terminar paseo')))
+  const conCaso = await opcionesMas()
+  check('con un caso abierto no se ofrece el modo paseo', !conCaso.includes('Modo paseo') && !conCaso.includes('Terminar modo paseo'), JSON.stringify(conCaso))
 } catch (e) {
   check('la prueba terminó sin excepciones', false, e.message)
 } finally {

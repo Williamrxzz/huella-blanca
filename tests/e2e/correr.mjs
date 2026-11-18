@@ -35,6 +35,7 @@ const PRUEBAS = [
   { archivo: 'fotos-storage.mjs', que: 'Fotos: reemplazo y rollback en Storage', servidor: 'preview' },
   { archivo: 'estadisticas.mjs', que: 'Estadísticas de administración (DAT05)', servidor: 'preview' },
   { archivo: 'admin-cuentas.mjs', que: 'Pantalla de cuentas del administrador', servidor: 'preview' },
+  { archivo: 'interfaz.mjs', que: 'Interfaz que se explica sola: estados vacíos, radio, foto, hoja Más', servidor: 'preview' },
   { archivo: 'privacidad.mjs', que: 'Política de privacidad, consentimiento y eliminar la propia cuenta (Ley 25.326)', servidor: 'preview' },
   { archivo: 'encabezados.mjs', que: 'Encabezados de seguridad; la CSP no bloquea nada en ninguna pantalla', servidor: 'preview' },
   { archivo: 'push.mjs', que: 'Web Push de punta a punta en Chrome', servidor: 'preview' },
@@ -48,6 +49,16 @@ const SERVIDORES = {
 }
 const BASE = process.env.BASE || SERVIDORES.preview.url.replace(/\/$/, '')
 let construido = false
+
+// Chrome de pruebas que haya quedado vivo (una prueba cortada, un corte de
+// red): si sigue escuchando en el puerto de depuración, la prueba siguiente que
+// use ese puerto se conecta a él, con su caché y su service worker viejos, y
+// prueba una versión anterior de la app sin darse cuenta (pasó el 2026-11-18
+// con un Chrome de un día antes en el 9446). Se cierran antes de cada prueba.
+// Solo los que tienen --remote-debugging-port: nunca el Chrome de la persona.
+function cerrarChromesDePrueba() {
+  spawnSync('pkill', ['-f', 'remote-debugging-port=94[0-9][0-9]'])
+}
 
 async function responde(url) {
   try { return (await fetch(url)).ok } catch { return false }
@@ -91,6 +102,7 @@ const base0 = db('select ' + COLS)[0]
 const resumen = []
 try {
   for (const p of elegidas) {
+    cerrarChromesDePrueba()
     if (p.servidor) await asegurarServidor(p.servidor)
     console.log(`\n=== ${p.archivo} — ${p.que}`)
     const ruta = join(CWD, 'tests', 'e2e', p.archivo)

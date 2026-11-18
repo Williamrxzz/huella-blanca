@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Encabezado from '../components/Encabezado'
+import Cargando from '../components/Cargando'
 
 export default function Restablecer() {
   const navigate = useNavigate()
@@ -44,7 +45,7 @@ export default function Restablecer() {
     setEstado('guardado')
   }
 
-  if (estado === 'verificando') return <main className="pagina"><p>Un momento…</p></main>
+  if (estado === 'verificando') return <Cargando texto="Un momento…" />
 
   if (estado === 'vencido') return (
     <main className="pagina">

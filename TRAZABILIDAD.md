@@ -2072,3 +2072,53 @@ Encontrado al revisar los datos de producción antes de la demo.
   agradecimiento, foto ni rescatista, y no queda ningún caso abierto de una
   mascota dada de baja en la base. Los datos de prueba se borraron (la base
   quedó con 11 casos y 4 mascotas, como antes).
+
+## 2026-11-18 — Interfaz que se explica sola (sin instructivo)
+
+Pedido del dueño del proyecto: que un usuario final pueda usar la app sin
+instrucciones. Se atendieron los tres puntos de usabilidad de la evaluación de
+diseño (el panel cargado, los estados vacíos y de carga, los controles
+nativos); la identidad visual (logo y paleta) quedó afuera a propósito: no
+mejora la comprensión y el logo conviene que lo defina el dueño.
+
+- **Panel:** cada mascota muestra a la vista solo lo del día a día ("Se
+  perdió" o "Compartir búsqueda", "Avisos", "Código QR") y el resto en la hoja
+  **"Más"**, con una línea que explica para qué sirve cada opción: "Editar
+  datos", "Modo paseo" / "Terminar modo paseo", "Reemplazar código QR" y
+  "Eliminar mascota" (al final, en rojo). Se cierra con Escape o tocando
+  afuera. La tarjeta pasó de hasta 8 botones a 4.
+- **Formulario de mascota:** la foto va **primero** (la IA completa especie,
+  tamaño, color y señas a partir de ella); cada campo tiene **etiqueta
+  visible** (antes había selectores sueltos: "Perro", "Macho", "Amigable", sin
+  decir qué eran) y opciones cortas que ya no se cortan en pantalla: "¿Cómo
+  reacciona con desconocidos?", "¿Quién ve las señas?", "Si te llega una
+  alerta y no respondés, ¿cuánto esperamos?" (6 / 12 / 24 / 48 horas). El
+  domicilio tiene título ("¿Dónde vive?") y aclara que nunca se muestra. El
+  radio de aviso se elige entre opciones con significado ("Una cuadra
+  (100 m)", "El barrio (500 m)"…); un valor cargado antes que no esté en la
+  lista se conserva.
+- **Componentes compartidos nuevos** (`src/components/`): `Cargando`
+  (indicador y una frase que dice qué se busca, en 10 pantallas; deja de girar
+  con "reducir animaciones"), `EstadoVacio` (qué significa que no haya nada y
+  qué hacer: panel sin mascotas, mapa sin avisos, historial sin avisos),
+  `SinFoto` (huella con texto alternativo) y `SelectorFoto` ("Elegir foto" /
+  "Cambiar foto" con vista previa, en vez del control del navegador; en el
+  alta de mascota y en la foto del reencuentro).
+- **Pruebas:** nueva `tests/e2e/interfaz.mjs` (14/14). `reemplazo-paseo` y
+  `bajas-logicas` se adaptaron a la hoja "Más"; `fotos-ia` y `fotos-storage`
+  usan ahora los `id` estables de los campos (`#nombre-mascota`,
+  `#plazo-confirmacion`) en vez del texto del placeholder o del aria-label.
+- **Problema serio encontrado en las pruebas:** las dos de fotos fallaron con
+  la interfaz nueva aunque la pantalla funcionaba. La causa: un **Chrome de
+  pruebas de un día antes** había quedado vivo escuchando en el puerto de
+  depuración 9446; el Chrome nuevo de la prueba no podía usar ese puerto y la
+  prueba se conectaba al viejo, que tenía en caché una versión anterior de la
+  app. Esas dos pruebas venían probando la interfaz vieja (pasaban porque el
+  comportamiento no había cambiado); lo del servidor (IA, Storage, permisos)
+  sí se probaba de verdad. Se cerraron los Chrome colgados y el runner ahora
+  cierra cualquier Chrome de pruebas (`--remote-debugging-port=94xx`, nunca
+  el de la persona) antes de cada prueba. Repetidas: fotos-storage 21/21 y
+  fotos-ia 37/37, ya contra la interfaz nueva.
+- Batería completa con la interfaz nueva (antes de corregir lo de Chrome): 19
+  de 21 en verde; una corrida anterior se había cortado por falta de internet
+  y se repitió entera.
