@@ -55,6 +55,7 @@ Para correr solo algunas: `PRUEBAS_EN_PRODUCCION=si npm run test:e2e -- telefono
 | `e2e/notificaciones.mjs` | PER04/PER03: qué hechos avisan al dueño, el envío por la Edge Function y la baja de suscripciones muertas. |
 | `e2e/limite-push.mjs` | Límite de frecuencia de los push; "Está conmigo" prioritario; tope de 20 avisos por hora. |
 | `e2e/eliminar-cuenta.py` | Eliminar una cuenta desde `/admin/cuentas` borra todo lo suyo y no toca a nadie más. |
+| `e2e/reemplazo-paseo.mjs` | DUE08: reemplazar el QR da de baja el viejo (deja de mostrar la ficha y de contar escaneos) y crea uno nuevo; nunca hay dos placas activas por mascota. DUE11: el modo paseo por un tiempo elegido pausa la detección automática, se termina a mano o vence solo. |
 | `e2e/placas.mjs` | Tras retirar las placas por lote: una placa sin mascota no se reconoce ni se puede "activar"; las funciones retiradas no existen; el panel crea el código QR de una mascota que quedó sin él. |
 | `e2e/recuperar-contrasena.mjs` | `/recuperar` responde igual exista o no la cuenta; el enlace del email lleva a `/restablecer` aunque Supabase vuelva al inicio; la contraseña nueva entra y la vieja no. |
 | `e2e/telefono.mjs` | TRA05 en pantalla: `/perfil`, `/registro`, perfil diferido y el check de la base. |

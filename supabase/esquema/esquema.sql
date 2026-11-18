@@ -199,6 +199,7 @@ CREATE INDEX idx_mascotas_dueno ON public.mascotas USING btree (dueno_id);
 CREATE INDEX notificaciones_mascota_fecha_idx ON public.notificaciones USING btree (mascota_id, creado_en DESC);
 CREATE INDEX notificaciones_perfil_idx ON public.notificaciones USING btree (perfil_id, creado_en DESC);
 CREATE INDEX idx_placas_codigo ON public.placas USING btree (codigo);
+CREATE UNIQUE INDEX placas_una_activa_por_mascota ON public.placas USING btree (mascota_id) WHERE (estado = 'activa'::text);
 CREATE INDEX suscripciones_push_perfil_idx ON public.suscripciones_push USING btree (perfil_id);
 CREATE INDEX uso_ia_perfil_fecha ON public.uso_ia USING btree (perfil_id, creado_en DESC);
 
@@ -637,25 +638,23 @@ CREATE OR REPLACE FUNCTION public.generar_placa(p_mascota_id uuid)
 AS $function$
 declare
   v_codigo text;
-  v_existe boolean;
 begin
   if auth.uid() is null then
     raise exception 'no_autenticado';
   end if;
 
-  if not exists (select 1 from mascotas where id = p_mascota_id and dueno_id = auth.uid()) then
+  -- Se bloquea la mascota para que dos pedidos simultáneos no creen dos placas.
+  perform 1 from mascotas where id = p_mascota_id and dueno_id = auth.uid() for update;
+  if not found then
     raise exception 'mascota_no_encontrada';
   end if;
 
-  loop
-    v_codigo := upper(substr(md5(random()::text || clock_timestamp()::text), 1, 8));
-    select exists(select 1 from placas where codigo = v_codigo) into v_existe;
-    exit when not v_existe;
-  end loop;
+  if exists (select 1 from placas where mascota_id = p_mascota_id and estado = 'activa') then
+    raise exception 'ya_tiene_placa';
+  end if;
 
-  insert into placas (codigo, mascota_id, estado)
-  values (v_codigo, p_mascota_id, 'activa');
-
+  v_codigo := nuevo_codigo_placa();
+  insert into placas (codigo, mascota_id, estado) values (v_codigo, p_mascota_id, 'activa');
   return v_codigo;
 end;
 $function$;
@@ -869,6 +868,25 @@ $function$;
 revoke all on function public.notificar_escaneo() from public, anon, authenticated;
 grant execute on function public.notificar_escaneo() to service_role;
 
+CREATE OR REPLACE FUNCTION public.nuevo_codigo_placa()
+ RETURNS text
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+declare
+  v_codigo text;
+begin
+  loop
+    v_codigo := upper(encode(extensions.gen_random_bytes(4), 'hex'));
+    exit when not exists (select 1 from placas where codigo = v_codigo);
+  end loop;
+  return v_codigo;
+end;
+$function$;
+revoke all on function public.nuevo_codigo_placa() from public, anon, authenticated;
+grant execute on function public.nuevo_codigo_placa() to service_role;
+
 CREATE OR REPLACE FUNCTION public.proteger_rol_perfil()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -974,6 +992,38 @@ end;
 $function$;
 revoke all on function public.reclamar_avistamiento(uuid) from public, anon, authenticated;
 grant execute on function public.reclamar_avistamiento(uuid) to authenticated, service_role;
+
+CREATE OR REPLACE FUNCTION public.reemplazar_placa(p_mascota_id uuid)
+ RETURNS json
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+declare
+  v_anterior text;
+  v_codigo text;
+begin
+  if auth.uid() is null then
+    return json_build_object('ok', false, 'motivo', 'no_autenticado');
+  end if;
+
+  perform 1 from mascotas where id = p_mascota_id and dueno_id = auth.uid() and activa for update;
+  if not found then
+    return json_build_object('ok', false, 'motivo', 'mascota_no_encontrada');
+  end if;
+
+  update placas set estado = 'baja'
+   where mascota_id = p_mascota_id and estado = 'activa'
+  returning codigo into v_anterior;
+
+  v_codigo := nuevo_codigo_placa();
+  insert into placas (codigo, mascota_id, estado) values (v_codigo, p_mascota_id, 'activa');
+
+  return json_build_object('ok', true, 'codigo', v_codigo, 'anterior', v_anterior);
+end;
+$function$;
+revoke all on function public.reemplazar_placa(uuid) from public, anon, authenticated;
+grant execute on function public.reemplazar_placa(uuid) to authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION public.registrar_avistamiento(p_codigo text, p_lat double precision, p_lng double precision, p_origen text DEFAULT 'gps'::text, p_situacion text DEFAULT NULL::text, p_mensaje text DEFAULT NULL::text, p_contacto text DEFAULT NULL::text)
  RETURNS json

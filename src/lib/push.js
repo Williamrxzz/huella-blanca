@@ -3,6 +3,7 @@
 // Edge Function `notificar`, que firma con la clave privada VAPID; esta es la
 // clave pública, que no es secreta.
 import { supabase } from './supabase'
+import { registrarServiceWorkerSiCorresponde } from './serviceWorker'
 
 export const CLAVE_PUBLICA_VAPID =
   'BF_I5bjyWIILm8s9Y5DliwA50vYwgoXaA4AHBOmGprB9lEzBi1psn6wUHqAar7zerco8tmLQaGyZ_GjwuNC2FDo'
@@ -26,10 +27,25 @@ export function esIosSinInstalar() {
   return ios && !instalada
 }
 
+// Para consultar el estado: si todavía no hay service worker, no hay
+// suscripción posible (o estamos en `npm run dev`).
 async function registroActivo() {
-  // Si vite-plugin-pwa todavía no registró el SW (o estamos en `npm run dev`), no hay push.
   if (!navigator.serviceWorker.controller && !(await navigator.serviceWorker.getRegistration())) return null
   return navigator.serviceWorker.ready
+}
+
+// Para activar: desde el 2026-11-18 el service worker lo registra la app un
+// instante después de abrir cada pantalla (src/lib/serviceWorker.js), así que
+// si la persona toca "Activar avisos" enseguida puede no estar todavía. En vez
+// de rendirse, lo registra en ese momento y espera a que esté listo (hasta 20 s).
+async function registroParaActivar() {
+  const existente = await registroActivo()
+  if (existente) return existente
+  registrarServiceWorkerSiCorresponde(window.location.pathname)
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise((resolve) => setTimeout(() => resolve(null), 20000)),
+  ])
 }
 
 // 'no_soportado' | 'denegado' | 'activo' | 'inactivo'
@@ -47,7 +63,7 @@ export async function activarPush(perfilId) {
   const permiso = await Notification.requestPermission()
   if (permiso !== 'granted') throw new Error('denegado')
 
-  const registro = await registroActivo()
+  const registro = await registroParaActivar()
   if (!registro) throw new Error('sin_service_worker')
 
   const suscripcion =

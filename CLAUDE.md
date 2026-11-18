@@ -238,9 +238,9 @@ cargadas antes de este campo no lo tienen), raza, tamano ('pequeno' |
 'mediano' | 'grande'), color, senas, caracter ('amigable' |
 'temerosa' | 'no_acercarse'), foto_url, domicilio_lat, domicilio_lng,
 radio_metros (por defecto 100), pausado_hasta (modo paseo: suspende
-la detección automática mientras esté en el futuro — el chequeo ya
-está implementado en `registrar_escaneo()`, pero no existe ninguna
-pantalla para que el dueño lo active; es DUE11, pendiente),
+la detección automática mientras esté en el futuro; lo leen
+`registrar_escaneo()` y `notificar_escaneo()`, y desde el 2026-11-18 el
+dueño lo activa desde el panel con "Modo paseo", por 2 h a 1 semana: DUE11),
 mostrar_salud (sin uso desde 2026-10-19; se elimina en una migración
 aparte), salud, visibilidad_senas y visibilidad_salud ('publico' |
 'perdida' | 'privado', por defecto 'publico' y 'privado'; DUE05),
@@ -352,8 +352,16 @@ sesión o el rol adentro). El detalle exacto está en
 - `distancia_metros(lat1, lng1, lat2, lng2)` → fórmula de Haversine.
 - `generar_placa(p_mascota_id uuid)` → genera un código aleatorio de 8
   caracteres, crea la placa en estado `activa` vinculada a esa mascota y
-  devuelve el código. Valida que la mascota sea del dueño autenticado.
+  devuelve el código. Valida que la mascota sea del dueño autenticado y,
+  desde el 2026-11-18, que no tenga ya una placa activa (`ya_tiene_placa`).
   Solo ejecutable por `authenticated` (no por `anon`).
+- `reemplazar_placa(p_mascota_id uuid)` → DUE08 (2026-11-18): en una
+  transacción da de baja la placa activa (conserva `mascota_id` para el
+  historial; deja de mostrar la ficha) y crea una nueva. Devuelve
+  `{"ok": true, "codigo", "anterior"}`. Solo `authenticated`. Una sola placa
+  activa por mascota está garantizada por el índice único parcial
+  `placas_una_activa_por_mascota`. Los códigos salen de
+  `nuevo_codigo_placa()` (interna, con `gen_random_bytes`).
 - `vincular_placa()` y `generar_lote_placas()`: **eliminadas** el
   2026-11-17 junto con el circuito de placas por lote (ADM01 retirada).
 - `historial_colaboracion()` → JSON con los avisos dados y los
@@ -567,6 +575,11 @@ Usuario", con siete listas, una por bloque.
   `.limit()` en la consulta) — foto, nombre, especie/raza y el código
   de placa si ya tiene una activa. Si una mascota quedó sin código
   (falló al crearla), ofrece "Crear su código QR" (`generar_placa`).
+  Desde el 2026-11-18 cada mascota tiene además "Reemplazar QR" (DUE08:
+  collar perdido o roto; con confirmación, el código viejo deja de
+  funcionar) y "Modo paseo" (DUE11: pausa la detección automática por el
+  tiempo elegido; muestra "De paseo hasta…" y "Terminar paseo"; no se
+  ofrece con un caso abierto).
   Cada mascota tiene enlaces para editar, ver el mapa de avistamientos,
   y eliminar (borrado lógico). Además (**PER01**) un botón que cambia
   según el caso abierto que tenga esa mascota: "Marcar como perdida" si
@@ -924,9 +937,9 @@ del 2026-09-21.
   trello https://mcp.trello.com/v1 --scope user`), así que falta
   retomarlo en una sesión nueva que sí lo tenga disponible.
 
-### Estado de las 63 historias (actualizado el 2026-11-04)
+### Estado de las 63 historias (actualizado el 2026-11-18)
 
-- **37 terminadas** (ADM01 se retiró el 2026-11-17 después de terminada; DAT05 primera versión, PER04 y PER03 completas el 2026-11-16, IA02 completa el 2026-11-17 — ver `TRAZABILIDAD.md`). Incluye **IA03**, construida el 2026-11-04 y
+- **39 terminadas** (DUE08 —reducida a reemplazar el código QR— y DUE11 el 2026-11-18; ADM01 se retiró el 2026-11-17 después de terminada; DAT05 primera versión, PER04 y PER03 completas el 2026-11-16, IA02 completa el 2026-11-17 — ver `TRAZABILIDAD.md`). Incluye **IA03**, construida el 2026-11-04 y
   rediseñada el 2026-11-17: con la mascota en `perdida`, el panel y la
   pantalla de avisos ofrecen "Compartir búsqueda", una hoja
   (`src/components/CompartirBusqueda.jsx`) con un **afiche** PNG
@@ -952,11 +965,13 @@ del 2026-09-21.
   el 2026-11-17 (ver la sección de IA01 + IA02). PER03 estuvo Parcial entre el 2026-10-25 y el 2026-11-16: la alerta con
   la distancia y el paso automático a `perdida` se construyeron junto con
   PER04 (ver "Notificaciones push" más abajo).
-- **8 pendientes**: DUE08, DUE11, TRA07, TRA10, PER09, REC08, ADM03,
-  ADM07.
-- **18 descartadas o retiradas**: REC03 a REC07, COM01 a COM03, ADM04,
-  ADM05, ADM06, ADM08, ADM09, ADM10, ADM11, ADM12, DAT04 y ADM01 (esta
-  última construida, entregada en el MVP y retirada el 2026-11-17) — el
+- **2 pendientes, opcionales** (cierre del backlog del 2026-11-18): TRA07
+  (foto en el aviso) y ADM03 (moderar fichas; la mitad "dar de baja
+  cuentas" está hecha). Se hacen solo si sobra tiempo.
+- **22 descartadas o retiradas**: REC03 a REC07, COM01 a COM03, ADM04,
+  ADM05, ADM06, ADM08, ADM09, ADM10, ADM11, ADM12, DAT04, ADM01 (esta
+  construida, entregada en el MVP y retirada el 2026-11-17) y, desde el
+  cierre del backlog del 2026-11-18, TRA10, PER09, REC08 y ADM07 — el
   detalle y el motivo de cada una están en `TRAZABILIDAD.md`.
 
 ### Notificaciones push (PER04 + PER03 completas, 2026-11-16)
@@ -985,9 +1000,8 @@ que sale agrega "Además: N avisos más. Mirá el mapa". Y
 
 1. **DAT05** (analítica con Recharts): primera versión hecha el
    2026-11-16; queda decidir si se suman más métricas.
-2. El resto de las pendientes (DUE08, DUE11, TRA07, TRA10, PER09,
-   REC08, ADM03, ADM07) no tienen todavía un plan de trabajo asignado a un sprint
-   más allá de figurar en el Sprint 5.
+2. ~~El resto de las pendientes~~: backlog cerrado el 2026-11-18 (ver
+   `TRAZABILIDAD.md`). Quedan solo TRA07 y ADM03, como opcionales.
 3. ~~Optimizar el bundle~~: hecho el 2026-11-18 (carga por partes, ver
    sección 3). Lo único grande que queda aparte es Recharts, y solo lo
    descarga `/admin/estadisticas`.

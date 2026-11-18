@@ -63,8 +63,11 @@ try {
 
   // activar
   await ev(`[...document.querySelectorAll('.avisos-push button')].find(b=>/Activar/.test(b.innerText)).click(); true`)
-  for (let i = 0; i < 50; i++) { const t = await ev(`document.querySelector('.avisos-push')?.innerText || ''`); if (/Desactivar avisos|error|No pudimos/.test(t)) break; await sleep(500) }
-  console.log('botón tras 25 s:', await ev(`document.querySelector('.avisos-push button')?.innerText`))
+  // La suscripción la resuelve el servicio de push del navegador (FCM en
+  // Chrome): con una conexión lenta puede tardar bastante más de 25 s.
+  const t0 = Date.now()
+  for (let i = 0; i < 120; i++) { const t = await ev(`document.querySelector('.avisos-push')?.innerText || ''`); if (/Desactivar avisos|error|No pudimos/.test(t)) break; await sleep(500) }
+  console.log(`activación: ${((Date.now() - t0) / 1000).toFixed(1)} s · botón:`, await ev(`document.querySelector('.avisos-push button')?.innerText`))
   console.log('sondeo subscribe directo:', await ev(`(async()=>{try{const r=await navigator.serviceWorker.ready; const k='BF_I5bjyWIILm8s9Y5DliwA50vYwgoXaA4AHBOmGprB9lEzBi1psn6wUHqAar7zerco8tmLQaGyZ_GjwuNC2FDo'; const pad='='.repeat((4-k.length%4)%4); const b=atob((k+pad).replace(/-/g,'+').replace(/_/g,'/')); const key=Uint8Array.from(b,c=>c.charCodeAt(0)); const s=await Promise.race([r.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:key}), new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout 15s')),15000))]); return 'OK '+s.endpoint.slice(0,50)}catch(e){return 'ERR '+e.name+': '+e.message}})()`))
   const despues = await ev(`document.querySelector('.avisos-push')?.innerText || ''`)
   check('tras el clic la tarjeta pasa a "Desactivar avisos" sin error', /Desactivar avisos/.test(despues) && !/No pudimos/.test(despues), despues.slice(0, 120))

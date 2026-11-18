@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
-import { ChevronRight, House, LogOut, MapPin, Megaphone, Pencil, QrCode, Trash2, TriangleAlert } from 'lucide-react'
+import { ChevronRight, Footprints, House, LogOut, MapPin, Megaphone, Pencil, QrCode, RefreshCw, Trash2, TriangleAlert } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import '../lib/leaflet-iconos'
 import { normalizarTelefono } from '../lib/telefono'
@@ -74,7 +74,7 @@ function FormularioPerdida({ mascota, onCancelar, onConfirmar, enviando }) {
   )
 }
 
-function CartelConfirmacion({ titulo, texto, onCancelar, onConfirmar, confirmando }) {
+function CartelConfirmacion({ titulo, texto, onCancelar, onConfirmar, confirmando, accion = 'Eliminar', accionEnCurso = 'Eliminando…', peligro = true }) {
   return (
     <div className="superposicion">
       <div className="tarjeta-confirmacion" role="alertdialog" aria-modal="true" aria-labelledby="titulo-confirmacion">
@@ -84,8 +84,8 @@ function CartelConfirmacion({ titulo, texto, onCancelar, onConfirmar, confirmand
           <button className="boton terciario" type="button" onClick={onCancelar}>
             Cancelar
           </button>
-          <button className="boton peligro" type="button" onClick={onConfirmar} disabled={confirmando}>
-            {confirmando ? 'Eliminando…' : 'Eliminar'}
+          <button className={peligro ? 'boton peligro' : 'boton'} type="button" onClick={onConfirmar} disabled={confirmando}>
+            {confirmando ? accionEnCurso : accion}
           </button>
         </div>
       </div>
@@ -96,8 +96,65 @@ function CartelConfirmacion({ titulo, texto, onCancelar, onConfirmar, confirmand
 // IA03: texto listo para compartir mientras la mascota está perdida. Se arma en
 // cada render con los datos actuales de la ficha y del caso, así que se
 // actualiza solo si cambian (por ejemplo, al volver de editar la mascota).
+// DUE11: modo paseo o viaje. Mientras está activo (mascotas.pausado_hasta en
+// el futuro), un escaneo lejos de casa no abre una posible pérdida ni avisa
+// (lo resuelven registrar_escaneo() y notificar_escaneo() en la base). Un aviso
+// deliberado de alguien que la vio sí llega igual. Siempre por un tiempo
+// determinado: se apaga solo.
+const DURACIONES_PASEO = [
+  { horas: 2, etiqueta: '2 horas' },
+  { horas: 6, etiqueta: '6 horas' },
+  { horas: 24, etiqueta: '1 día' },
+  { horas: 72, etiqueta: '3 días' },
+  { horas: 168, etiqueta: '1 semana' },
+]
+
+function horaDeFin(iso) {
+  const fin = new Date(iso)
+  const hoy = new Date()
+  const mismoDia = fin.toDateString() === hoy.toDateString()
+  return mismoDia
+    ? fin.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })
+    : fin.toLocaleString('es-AR', { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+}
+
+function FormularioPaseo({ mascota, onCancelar, onConfirmar, guardando }) {
+  const [horas, setHoras] = useState(2)
+  return (
+    <div className="superposicion">
+      <div className="tarjeta-confirmacion" role="dialog" aria-modal="true" aria-labelledby="titulo-paseo">
+        <h2 id="titulo-paseo">Modo paseo</h2>
+        <p className="ayuda">
+          Mientras esté activo, si escanean la placa de {mascota.nombre} lejos de casa no se abre una
+          posible pérdida ni te avisamos. Si alguien avisa que la vio, el aviso te llega igual.
+        </p>
+        <fieldset className="opciones-duracion">
+          <legend>¿Por cuánto tiempo?</legend>
+          {DURACIONES_PASEO.map((d) => (
+            <label key={d.horas}>
+              <input type="radio" name="duracion-paseo" checked={horas === d.horas} onChange={() => setHoras(d.horas)} />
+              {d.etiqueta}
+            </label>
+          ))}
+        </fieldset>
+        <div className="acciones-tarjeta">
+          <button className="boton terciario" type="button" onClick={onCancelar} disabled={guardando}>Cancelar</button>
+          <button className="boton" type="button" onClick={() => onConfirmar(horas)} disabled={guardando}>
+            {guardando ? 'Activando…' : 'Activar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function FilaMascota({ mascota, caso, onCodigoCreado, onEliminada, onCasoActualizado }) {
   const [generando, setGenerando] = useState(false)
+  const [eligiendoPaseo, setEligiendoPaseo] = useState(false)
+  const [guardandoPaseo, setGuardandoPaseo] = useState(false)
+  const [confirmandoReemplazo, setConfirmandoReemplazo] = useState(false)
+  const [reemplazando, setReemplazando] = useState(false)
+  const navigate = useNavigate()
   const [eliminando, setEliminando] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
   const [mostrandoFormularioPerdida, setMostrandoFormularioPerdida] = useState(false)
@@ -144,6 +201,44 @@ function FilaMascota({ mascota, caso, onCodigoCreado, onEliminada, onCasoActuali
     else onCasoActualizado()
   }
 
+  const enPaseo = mascota.pausado_hasta && new Date(mascota.pausado_hasta) > new Date()
+
+  async function activarPaseo(horas) {
+    setGuardandoPaseo(true)
+    setError(null)
+    const hasta = new Date(Date.now() + horas * 3600 * 1000).toISOString()
+    const { error: errorPaseo } = await supabase.from('mascotas').update({ pausado_hasta: hasta }).eq('id', mascota.id)
+    setGuardandoPaseo(false)
+    setEligiendoPaseo(false)
+    if (errorPaseo) setError('No pudimos activar el modo paseo. Probá de nuevo.')
+    else onCodigoCreado()
+  }
+
+  async function terminarPaseo() {
+    setGuardandoPaseo(true)
+    setError(null)
+    const { error: errorPaseo } = await supabase.from('mascotas').update({ pausado_hasta: null }).eq('id', mascota.id)
+    setGuardandoPaseo(false)
+    if (errorPaseo) setError('No pudimos terminar el modo paseo. Probá de nuevo.')
+    else onCodigoCreado()
+  }
+
+  // DUE08: reemplazar el código QR (collar perdido o roto). La base da de baja
+  // el código viejo y crea el nuevo en la misma transacción (reemplazar_placa);
+  // el viejo deja de mostrar la ficha al instante.
+  async function reemplazarCodigo() {
+    setReemplazando(true)
+    setError(null)
+    const { data, error: errorRpc } = await supabase.rpc('reemplazar_placa', { p_mascota_id: mascota.id })
+    setReemplazando(false)
+    setConfirmandoReemplazo(false)
+    if (errorRpc || !data?.ok) {
+      setError('No pudimos reemplazar el código. Probá de nuevo en un momento.')
+      return
+    }
+    navigate(`/placas?codigo=${data.codigo}&reemplazo=1`)
+  }
+
   // El código QR se crea solo al cargar la mascota (AltaMascota). Si en ese
   // momento falló (por ejemplo, sin conexión), se puede crear desde acá.
   async function crearCodigo() {
@@ -184,6 +279,13 @@ function FilaMascota({ mascota, caso, onCodigoCreado, onEliminada, onCasoActuali
           </span>
         )}
 
+        {enPaseo && !caso && (
+          <span className="estado-paseo">
+            <Footprints size={14} aria-hidden="true" />
+            De paseo hasta {horaDeFin(mascota.pausado_hasta)}
+          </span>
+        )}
+
         {!placaActiva && (
           <button className="boton secundario" type="button" onClick={crearCodigo} disabled={generando}>
             <QrCode size={18} aria-hidden="true" />
@@ -218,6 +320,17 @@ function FilaMascota({ mascota, caso, onCodigoCreado, onEliminada, onCasoActuali
               Compartir búsqueda
             </button>
           )}
+          {!caso && (enPaseo ? (
+            <button className="boton-accion" type="button" onClick={terminarPaseo} disabled={guardandoPaseo}>
+              <Footprints size={17} aria-hidden="true" />
+              {guardandoPaseo ? 'Terminando…' : 'Terminar paseo'}
+            </button>
+          ) : (
+            <button className="boton-accion" type="button" onClick={() => setEligiendoPaseo(true)}>
+              <Footprints size={17} aria-hidden="true" />
+              Modo paseo
+            </button>
+          ))}
 
           <Link className="boton-accion" to={`/mascotas/${mascota.id}/mapa`}>
             <MapPin size={17} aria-hidden="true" />
@@ -232,6 +345,12 @@ function FilaMascota({ mascota, caso, onCodigoCreado, onEliminada, onCasoActuali
               <QrCode size={17} aria-hidden="true" />
               Código QR
             </Link>
+          )}
+          {placaActiva && (
+            <button className="boton-accion" type="button" onClick={() => setConfirmandoReemplazo(true)}>
+              <RefreshCw size={17} aria-hidden="true" />
+              Reemplazar QR
+            </button>
           )}
 
           <button className="boton-accion peligro" type="button" onClick={() => setConfirmando(true)}>
@@ -257,6 +376,28 @@ function FilaMascota({ mascota, caso, onCodigoCreado, onEliminada, onCasoActuali
 
       {compartiendo && (
         <CompartirBusqueda mascota={mascota} caso={caso} onCerrar={() => setCompartiendo(false)} />
+      )}
+
+      {eligiendoPaseo && (
+        <FormularioPaseo
+          mascota={mascota}
+          onCancelar={() => setEligiendoPaseo(false)}
+          onConfirmar={activarPaseo}
+          guardando={guardandoPaseo}
+        />
+      )}
+
+      {confirmandoReemplazo && (
+        <CartelConfirmacion
+          titulo={`¿Reemplazar el código QR de ${mascota.nombre}?`}
+          texto={`El código actual (${placaActiva?.codigo}) deja de funcionar al instante: si alguien escanea el collar perdido, ya no ve su ficha. Vas a tener que imprimir el código nuevo.`}
+          onCancelar={() => setConfirmandoReemplazo(false)}
+          onConfirmar={reemplazarCodigo}
+          confirmando={reemplazando}
+          accion="Reemplazar"
+          accionEnCurso="Reemplazando…"
+          peligro={false}
+        />
       )}
 
       {mostrandoFormularioPerdida && (

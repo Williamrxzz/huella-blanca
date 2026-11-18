@@ -1995,3 +1995,51 @@ terminada. El texto de cada historia es el del PDF de Historias de Usuario v4.
 
 Conteo del backlog después de construir DUE08 y DUE11: 39 terminadas, 2
 opcionales pendientes (TRA07, ADM03 parcial) y 22 descartadas o retiradas.
+
+## 2026-11-18 — DUE08 (reemplazar código QR) y DUE11 (modo paseo): construidas
+
+Las dos historias que el cierre del backlog decidió construir (ver la entrada
+anterior).
+
+**DUE08, reducida a "Reemplazar código QR"** (migración
+`20261118000001_reemplazar_placa.sql`):
+- `reemplazar_placa()`: en una transacción da de baja la placa activa y crea
+  una nueva. La vieja conserva su mascota (el historial de escaneos sigue
+  teniendo sentido) pero, en `baja`, `ficha_publica()` y `registrar_escaneo()`
+  la ignoran: el collar perdido deja de mostrar la ficha.
+- Corrige el riesgo encontrado al verificar la historia: `generar_placa()`
+  permitía dos placas activas por mascota. Ahora la rechaza
+  (`ya_tiene_placa`), bloquea la fila de la mascota para que dos pedidos
+  simultáneos no creen dos placas, y además la base lo garantiza con el
+  índice único parcial `placas_una_activa_por_mascota`. Los códigos salen de
+  `nuevo_codigo_placa()` con `gen_random_bytes` (criptográfico) en vez de
+  `md5(random())`, con el mismo formato.
+- Panel: "Reemplazar QR" con confirmación que nombra el código actual y
+  avisa que deja de funcionar; lleva al QR nuevo
+  (`/placas?codigo=…&reemplazo=1`, "El código anterior ya no funciona").
+
+**DUE11, modo paseo:** la base ya lo resolvía (`mascotas.pausado_hasta`).
+Panel: "Modo paseo" abre una hoja que explica qué hace (un escaneo lejos de
+casa no abre una posible pérdida ni avisa; un aviso de alguien que la vio sí
+llega) y ofrece 2 h, 6 h, 1 día, 3 días o 1 semana. Activo, la mascota muestra
+"De paseo hasta 13:30" y "Terminar paseo"; vence solo. No se ofrece con un
+caso abierto.
+
+**Verificado** con `tests/e2e/reemplazo-paseo.mjs`, 23/23, contra el build de
+producción: la segunda placa activa se rechaza por función y por índice (409);
+otra cuenta y sin sesión no pueden reemplazar; el reemplazo deja el viejo en
+baja y uno solo activo; el viejo no muestra la ficha ni cuenta escaneos; en
+paseo, un escaneo a 8,8 km no abre caso ni avisa, y sin paseo el mismo escaneo
+sí; un paseo vencido no se muestra activo; con caso abierto no se ofrece. Se
+revisaron capturas en modo oscuro del panel, la hoja del paseo y la
+confirmación del reemplazo. Batería completa: 19 de 20 en verde.
+
+**La prueba de push** (`push.mjs`) falló en la batería completa por segunda
+vez en el día y pasaba sola. Midiendo, la activación de los avisos tarda unos
+30 s en dos de cada tres corridas: es el registro en el servicio de push de
+Google con un Chrome sin perfil, y la prueba esperaba 25 s. Se subió la espera
+a 60 s (3/3). Al revisarlo apareció una carrera real, causada por registrar el
+service worker desde la app (2026-11-18): si la persona tocaba "Activar
+avisos" apenas abría el panel, antes de que terminara el registro, veía
+"recargá la página". Ahora `activarPush()` registra el service worker en ese
+momento y espera a que esté listo (hasta 20 s).

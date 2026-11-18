@@ -9,6 +9,7 @@ export default function GeneradorQR() {
   const [searchParams] = useSearchParams()
   const codigoParam = (searchParams.get('codigo') || '').trim().toUpperCase()
   const esMascotaNueva = searchParams.get('nueva') === '1'
+  const esReemplazo = searchParams.get('reemplazo') === '1'
   const contenedorRef = useRef(null)
 
   const [verificando, setVerificando] = useState(true)
@@ -128,7 +129,7 @@ export default function GeneradorQR() {
   return (
     <main className="pagina">
       <Encabezado volver="/panel" />
-      <h1>{esMascotaNueva ? '¡Mascota cargada!' : 'Código QR'}</h1>
+      <h1>{esMascotaNueva ? '¡Mascota cargada!' : esReemplazo ? 'Código QR nuevo' : 'Código QR'}</h1>
 
       {sinAcceso && (
         <p className="ayuda error" role="alert">No tenés acceso a esa placa.</p>
@@ -143,7 +144,9 @@ export default function GeneradorQR() {
           <p className="ayuda">
             {esMascotaNueva
               ? 'Descargá este QR e imprimilo (podés pegarlo en el collar mientras conseguís una chapita resistente).'
-              : `Código de ${placa.mascotas?.nombre || 'tu mascota'}.`}
+              : esReemplazo
+                ? `El código anterior de ${placa.mascotas?.nombre || 'tu mascota'} ya no funciona. Descargá este y ponelo en el collar.`
+                : `Código de ${placa.mascotas?.nombre || 'tu mascota'}.`}
           </p>
           <div className="qr" ref={contenedorRef}>
             <QRCodeCanvas value={url} size={240} level="H" includeMargin />
