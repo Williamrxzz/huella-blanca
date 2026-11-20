@@ -92,7 +92,9 @@ regenera con `npm run esquema:exportar`; los cambios, en
 
 Los documentos de la entrega (Historias de Usuario, Diseño de Base de
 Datos, Modelo de Datos, Product Backlog / Sprint Board y User Story
-Mapping) están en [`docs/`](docs/). El detalle de decisiones, qué se
+Mapping, más el Plan de Pruebas y la entrega del Sprint 5) están en
+[`docs/`](docs/); las versiones vigentes se listan en
+[`docs/LEEME.md`](docs/LEEME.md). El detalle de decisiones, qué se
 construyó y qué se descartó y por qué está en `TRAZABILIDAD.md`; el
 contexto completo del proyecto y el estado de cada sprint, en
 `CLAUDE.md`.

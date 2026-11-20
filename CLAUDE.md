@@ -438,12 +438,20 @@ El sistema cubre los cinco componentes que exige la cátedra:
 
 ### Documentos ya entregados
 
-Los archivos de la entrega viven en `docs/` (agregados el 2026-09-21):
-`Historias_de_Usuario_Huella_Blanca_v4.pdf`,
-`Diseno_Base_Datos_Huella_Blanca_v3.pdf`,
-`Modelo_datos_Huella_Blanca_v2.pdf`,
-`Product_Backlog_Sprint_Board_v3.pdf`,
-`User_Story_Mapping_Huella_Blanca_v3.pdf`.
+Los archivos de la entrega viven en `docs/`. Desde el 2026-11-20 están las
+**versiones vigentes**, actualizadas al cierre del backlog (índice en
+`docs/LEEME.md`):
+`Historias_de_Usuario_HuellaBlanca_v5.pdf`,
+`User_Story_Mapping_HuellaBlanca_v4.pdf`,
+`Product_Backlog_Sprint_Board_v5.pdf`,
+`Plan_de_Pruebas_HuellaBlanca_v3.pdf`,
+`Diseno_Base_Datos_HuellaBlanca_v4.pdf`,
+`Modelo_datos_HuellaBlanca_v3.pdf` y
+`Sprint5_Entrega_HuellaBlanca_final.pdf`.
+Las versiones de septiembre (Historias v4, Mapping v3, Backlog v3, Diseño de
+base v3, Modelo v2 y el plan de pruebas en Markdown) se quitaron de la carpeta
+para que no se confundan; siguen en el historial de git (por ejemplo,
+`git show ae275b2:docs/Historias_de_Usuario_Huella_Blanca_v4.pdf`).
 
 1. **Historias de Usuario** — 63 historias en siete bloques, con
    prioridad Alta, Media o Baja. Prefijos: DUE (dueño), PER (pérdida y
@@ -1040,8 +1048,8 @@ que sale agrega "Además: N avisos más. Mirá el mapa". Y
   `tests/README.md`): `npm test` corre las unitarias (lógica pura, sin red,
   menos de un segundo); `PRUEBAS_EN_PRODUCCION=si npm run test:e2e` corre
   las de punta a punta contra la base real, con cuentas temporales
-  `prueba-…@example.com` que se borran solas (13 pruebas, 240
-  verificaciones, unos 20 minutos). Correr las unitarias antes de cada
+  `prueba-…@example.com` que se borran solas (21 pruebas, unos 30
+  minutos). Correr las unitarias antes de cada
   commit y las de punta a punta antes de publicar un cambio de base, de
   Edge Function o de una pantalla del recorrido principal. Una prueba nueva
   va en `tests/`, nunca solo en una carpeta temporal.
