@@ -12,15 +12,21 @@ el código de la aplicación no cambió** y sigue siendo el del tag `sprint-5-en
 | User Story Mapping (v4) | `User_Story_Mapping_HuellaBlanca_v4.pdf` |
 | Product Backlog y Sprint Board (v5) | `Product_Backlog_Sprint_Board_v5.pdf` |
 | Plan de Pruebas (v3) | `Plan_de_Pruebas_HuellaBlanca_v3.pdf` |
+| Diseño de la Base de Datos (v4) | `Diseno_Base_Datos_HuellaBlanca_v4.pdf` |
+| Modelo de datos (v3) | `Modelo_datos_HuellaBlanca_v3.pdf` |
 
 Reflejan el cierre del backlog del 18/11/2026: 39 historias terminadas, 2 opcionales
 y 22 descartadas o retiradas, cada una con su fundamento.
 
 ## Versiones anteriores
 
-`Historias_de_Usuario_Huella_Blanca_v4.pdf`, `User_Story_Mapping_Huella_Blanca_v3.pdf`
-y `Product_Backlog_Sprint_Board_v3.pdf` corresponden al cierre del Sprint 4
+`Historias_de_Usuario_Huella_Blanca_v4.pdf`, `User_Story_Mapping_Huella_Blanca_v3.pdf`,
+`Product_Backlog_Sprint_Board_v3.pdf`, `Diseno_Base_Datos_Huella_Blanca_v3.pdf` y
+`Modelo_datos_Huella_Blanca_v2.pdf` corresponden al cierre del Sprint 4
 (septiembre de 2026). Se conservan por trazabilidad y quedan reemplazadas por las
 versiones vigentes.
+
+Los dos documentos de base de datos se armaron a partir del esquema exportado de la base en producción
+(`supabase/esquema/esquema.sql`, 9 tablas).
 
 El detalle de cada decisión, con su commit y su prueba, está en `TRAZABILIDAD.md`.
