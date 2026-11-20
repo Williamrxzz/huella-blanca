@@ -199,28 +199,32 @@ al pie. Íconos: `lucide-react`, nunca emojis.
   archivo está en `.gitignore` y **no debe subirse ni imprimirse en
   pantalla**. Después de modificarlo hay que reiniciar Vite.
 
-Estructura actual:
+Estructura actual (resumida):
 
 ```
 huella-blanca/
+├── index.html, package.json, vite.config.js, vercel.json, eslint.config.js
 ├── .env.local            (credenciales, ignorado por git)
-├── index.html
-├── package.json
-├── vite.config.js
-└── src/
-    ├── main.jsx
-    ├── App.jsx           (rutas)
-    ├── index.css         (todos los estilos)
-    ├── lib/
-    │   ├── supabase.js   (cliente de Supabase)
-    │   ├── ubicacion.js  (geolocalización compartida, con timeout propio)
-    │   └── leaflet-iconos.js (fix de íconos default de Leaflet con Vite)
-    └── pages/
-        ├── FichaPublica.jsx
-        ├── GeneradorQR.jsx
-        ├── Login.jsx
-        ├── Panel.jsx
-        └── AltaMascota.jsx
+├── README.md             (entrada al proyecto)
+├── CLAUDE.md             (este documento)
+├── TRAZABILIDAD.md       (registro de decisiones, con commit y prueba)
+├── api/                  (funciones de Vercel: og.js, mantener-activo.js)
+├── docs/                 (documentos de la entrega; índice en docs/LEEME.md)
+├── public/               (íconos, favicon, sw-push.js)
+├── src/
+│   ├── main.jsx, App.jsx (rutas con carga por partes), index.css
+│   ├── pages/            (15 pantallas: ficha pública, panel, alta de mascota,
+│   │                      mapa de avisos, perfil, administración, login, etc.)
+│   ├── components/       (Cargando, EstadoVacio, SelectorFoto, MapasFicha, etc.)
+│   └── lib/              (supabase, teléfono, fotos, push, afiche, ubicación, etc.)
+├── supabase/
+│   ├── esquema/          (esquema.sql: foto completa de la base; exportar.mjs)
+│   ├── migrations/       (cambios de la base, en orden)
+│   └── functions/        (Edge Functions: sugerir-ficha, subir-foto, notificar,
+│                          eliminar-cuenta; _shared con la lógica común)
+└── tests/
+    ├── unit/             (22 pruebas sin red)
+    └── e2e/              (21 pruebas de punta a punta contra producción)
 ```
 
 ---
@@ -301,7 +305,8 @@ a `perdida` (PER03). Se elige en el formulario de mascota.
 
 ### Seguridad
 
-RLS está activo en las seis tablas. Las políticas hacen que cada dueño
+RLS está activo en las nueve tablas (las seis del circuito principal más
+`suscripciones_push`, `notificaciones` y `uso_ia`). Las políticas hacen que cada dueño
 acceda únicamente a sus mascotas, casos, escaneos y avistamientos.
 Política agregada para el registro: `perfiles` permite `insert` a
 `authenticated` cuando `auth.uid() = id`, para que un dueño recién

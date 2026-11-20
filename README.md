@@ -39,6 +39,46 @@ Lo principal:
   por columna); bajas lógicas garantizadas por la base; política de
   privacidad (Ley 25.326) y consentimiento; encabezados de seguridad (CSP).
 
+## Arquitectura
+
+```
+Celular (PWA React + Vite)  ──►  Supabase
+   │  ficha pública sin cuenta        ├─ PostgreSQL: 9 tablas, RLS, funciones y triggers
+   │  panel del dueño                 ├─ Auth: cuentas de dueño y administrador
+   │  panel de administración         ├─ Storage: fotos de mascotas
+   │                                  └─ Edge Functions: verificación de fotos (IA), avisos push
+   └─► Vercel: hosting, vista previa para redes (api/og.js) y tarea diaria anti-pausa
+```
+
+Las reglas importantes viven en la base y no en la pantalla: la ficha pública
+solo se sirve por la función `ficha_publica()`, el domicilio nunca se expone,
+el rol de una cuenta no lo elige el navegador y las bajas son lógicas (ningún
+rol del navegador puede borrar casos, avisos ni escaneos).
+
+## Estructura del repositorio
+
+| Carpeta | Contenido |
+|---|---|
+| `src/` | La aplicación: `pages/` (pantallas), `components/` y `lib/` |
+| `api/` | Funciones de Vercel (vista previa en redes, tarea anti-pausa) |
+| `supabase/` | `esquema/` (foto completa de la base), `migrations/` y `functions/` (Edge Functions) |
+| `tests/` | `unit/` y `e2e/` (ver `tests/README.md`) |
+| `docs/` | Documentos de la entrega; el índice es `docs/LEEME.md` |
+
+## Limitaciones conocidas
+
+- `npm run lint` informa 2 errores y 2 advertencias de `react-hooks`
+  (`set-state-in-effect`) en `Panel.jsx` y `MapaAvistamientos.jsx`: cargan datos
+  llamando a una función con `setState` dentro de un `useEffect`. Funciona y está
+  probado; se dejó como deuda técnica documentada.
+- Las notificaciones push se probaron en un solo teléfono; falta probarlas en la
+  otra plataforma (Android o iPhone).
+- El correo de recuperación de contraseña usa la plantilla por defecto de
+  Supabase (en inglés) y su límite de envíos por hora. No hay servicios pagos.
+- No hay integración continua: las pruebas se corren a mano (`npm test` y
+  `npm run test:e2e`).
+- Historias opcionales sin hacer: TRA07 (foto en el aviso) y ADM03 (moderar fichas).
+
 ## Stack
 
 React + Vite (PWA con vite-plugin-pwa), Supabase (PostgreSQL, Auth,
