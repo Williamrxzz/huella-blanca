@@ -11,7 +11,7 @@ registrarse. El dueño usa la app instalable para gestionar la búsqueda.
 **Producción**: https://huella-blanca.vercel.app ·
 **Ficha de ejemplo** (sin tocar datos reales): https://huella-blanca.vercel.app/ejemplo
 
-## Estado (cierre del 18/11/2026, tag `sprint-5-entrega`)
+## Estado (versión final de la entrega: tag `entrega-final`)
 
 Sprints 1 a 5 completos y backlog cerrado: de las 63 historias, **39
 terminadas**, **2 opcionales** (TRA07 y ADM03, para seguir si hay
@@ -67,10 +67,11 @@ rol del navegador puede borrar casos, avisos ni escaneos).
 
 ## Limitaciones conocidas
 
-- `npm run lint` informa 2 errores y 2 advertencias de `react-hooks`
-  (`set-state-in-effect`) en `Panel.jsx` y `MapaAvistamientos.jsx`: cargan datos
-  llamando a una función con `setState` dentro de un `useEffect`. Funciona y está
-  probado; se dejó como deuda técnica documentada.
+- `Panel.jsx` (653 líneas), `AltaMascota.jsx` (619) y `index.css` (1.595) son
+  archivos grandes que convendría dividir en componentes y hojas de estilo más chicos.
+  En `Panel.jsx` y `MapaAvistamientos.jsx` la carga inicial de datos usa una función que
+  también llaman las acciones de la pantalla; por eso la regla de lint `set-state-in-effect`
+  se desactiva en esa línea, con su comentario (`npm run lint` pasa sin errores).
 - Las notificaciones push se probaron en un solo teléfono; falta probarlas en la
   otra plataforma (Android o iPhone).
 - El correo de recuperación de contraseña usa la plantilla por defecto de
@@ -101,7 +102,7 @@ npm run preview
 
 ## Variables de entorno
 
-Van en un archivo `.env.local` en la raíz (nunca se commitea):
+Van en un archivo `.env.local` en la raíz (nunca se commitea; `.env.example` es la plantilla):
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`

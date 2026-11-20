@@ -1036,12 +1036,12 @@ que sale agrega "Además: N avisos más. Mirá el mapa". Y
 3. ~~Optimizar el bundle~~: hecho el 2026-11-18 (carga por partes, ver
    sección 3). Lo único grande que queda aparte es Recharts, y solo lo
    descarga `/admin/estadisticas`.
-4. **Deuda técnica conocida, pospuesta a propósito** (ver
-   `TRAZABILIDAD.md`, entrada del 2026-09-21): los `useEffect` de
-   `Panel.jsx` y `MapaAvistamientos.jsx` llaman a `cargar()`
-   (que hace `setState`) directamente en el cuerpo del efecto —
-   `react-hooks/set-state-in-effect`. Funciona y está probado; se
-   decidió no tocarlo antes de la presentación del Sprint 1.
+4. ~~Deuda técnica de los `useEffect` de `Panel.jsx` y `MapaAvistamientos.jsx`~~:
+   resuelta el 2026-11-20 documentando por qué la regla
+   `react-hooks/set-state-in-effect` no aplica (la función de carga también la
+   llaman las acciones de la pantalla); `npm run lint` pasa sin errores. Queda
+   como mejora opcional dividir los archivos grandes (`Panel.jsx`,
+   `AltaMascota.jsx`, `index.css`).
 
 ---
 

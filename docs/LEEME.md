@@ -1,8 +1,10 @@
 # Documentos de la entrega
 
-Actualización del 20/11/2026. **Solo se actualizaron los documentos de esta carpeta;
-el código de la aplicación no cambió** y sigue siendo el del tag `sprint-5-entrega`
-(commit `ae275b2`).
+Actualización del 20/11/2026, versión final de la entrega (tag `entrega-final`).
+El funcionamiento de la aplicación es el del cierre del backlog del 18/11/2026
+(commit `ae275b2`, tag `sprint-5-entrega`); después solo se actualizaron documentos y se
+ordenó el repositorio (lint sin errores, `.env.example`, metadatos de `package.json`), sin
+cambios de comportamiento.
 
 Todos los documentos de esta carpeta son **versiones vigentes** y reflejan el cierre
 del backlog del 18/11/2026: 39 historias terminadas, 2 opcionales y 22 descartadas o
