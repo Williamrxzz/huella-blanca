@@ -14,6 +14,7 @@ el código de la aplicación no cambió** y sigue siendo el del tag `sprint-5-en
 | Plan de Pruebas (v3) | `Plan_de_Pruebas_HuellaBlanca_v3.pdf` |
 | Diseño de la Base de Datos (v4) | `Diseno_Base_Datos_HuellaBlanca_v4.pdf` |
 | Modelo de datos (v3) | `Modelo_datos_HuellaBlanca_v3.pdf` |
+| Entrega del Sprint 5 (versión final) | `Sprint5_Entrega_HuellaBlanca_final.pdf` |
 
 Reflejan el cierre del backlog del 18/11/2026: 39 historias terminadas, 2 opcionales
 y 22 descartadas o retiradas, cada una con su fundamento.
