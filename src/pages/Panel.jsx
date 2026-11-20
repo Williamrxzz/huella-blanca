@@ -564,8 +564,13 @@ export default function Panel() {
     setCargando(false)
   }
 
+  // Carga inicial desde Supabase: el estado se actualiza cuando responde la base,
+  // no de forma sincrónica. `cargar` también la llaman las acciones de la pantalla,
+  // por eso no se mueve dentro del efecto.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     cargar()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate])
 
   async function cerrarSesion() {

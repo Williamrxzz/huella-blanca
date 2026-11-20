@@ -260,8 +260,12 @@ export default function MapaAvistamientos() {
     setCargando(false)
   }
 
+  // Carga inicial desde Supabase: el estado se actualiza cuando responde la base,
+  // no de forma sincrónica. `cargar` también la llaman las acciones de la pantalla.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     cargar()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, navigate])
 
   async function volvioACasa({ rescatistaId, mensaje, foto }) {

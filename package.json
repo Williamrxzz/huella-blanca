@@ -1,7 +1,7 @@
 {
   "name": "huella-blanca",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -39,5 +39,6 @@
     "supabase": "^2.117.0",
     "vite": "^8.2.2",
     "vite-plugin-pwa": "^1.3.0"
-  }
+  },
+  "description": "PWA de identificación y recuperación de mascotas con código QR (proyecto académico, UNPA Caleta Olivia)"
 }
